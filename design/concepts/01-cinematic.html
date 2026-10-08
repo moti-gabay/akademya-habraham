@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Akademya Habraham — Concept 1: Dark / Cinematic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Oswald:wght@500&family=Rubik:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0B0F1A;--slate:#141A2B;--raised:#1E2638;--ivory:#F3EEE3;--mist:#8A93A8;--gold:#D9A441;
+  --bar:44px;--to-end:to right;--display:'Secular One',Oswald,sans-serif;
+  --dots:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36'%3E%3Ccircle cx='7' cy='10' r='1' fill='%23F3EEE3' fill-opacity='.22'/%3E%3Ccircle cx='27' cy='25' r='.8' fill='%23F3EEE3' fill-opacity='.14'/%3E%3Ccircle cx='20' cy='4' r='.6' fill='%23F3EEE3' fill-opacity='.1'/%3E%3C/svg%3E");
+}
+[dir=rtl]{--to-end:to left}
+*{box-sizing:border-box;margin:0}
+body{font-family:Rubik,system-ui,sans-serif;color:var(--ivory);background:#262626;padding-block-start:var(--bar);line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input{font:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+[hidden]{display:none}
+.num{unicode-bidi:isolate;direction:ltr;font-variant-numeric:tabular-nums}
+svg{flex:none}
+[dir=rtl] .mirror{transform:scaleX(-1)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* ---- control bar: not part of the design ---- */
+.ctl{position:fixed;inset-block-start:0;inset-inline:0;height:var(--bar);z-index:50;display:flex;align-items:center;gap:14px;padding-inline:12px;background:#e4e4e4;color:#222;font:13px system-ui,sans-serif;border-block-end:1px solid #c6c6c6;overflow-x:auto;white-space:nowrap}
+.ctl .tag{color:#666}
+.ctl a{color:#222;margin-inline-start:auto}
+.seg{display:flex;border:1px solid #9a9a9a;border-radius:6px;overflow:hidden}
+.seg button{padding:4px 10px;background:#f7f7f7;color:#222}
+.seg button+button{border-inline-start:1px solid #9a9a9a}
+.seg button[aria-pressed=true]{background:#333;color:#fff}
+
+/* ---- frame ---- */
+.frame{container:frame / inline-size;background:var(--night);min-height:calc(100vh - var(--bar));overflow:clip}
+.frame.phone{max-width:390px;margin:16px auto;border:1px solid #5a5a5a;border-radius:30px;min-height:0}
+
+/* ---- shared ---- */
+.art{background:var(--dots),radial-gradient(ellipse at var(--gx,80%) var(--gy,20%),rgba(217,164,65,.5),transparent 55%),linear-gradient(var(--a,160deg),hsl(var(--h,225) 38% 24%),hsl(var(--h,225) 45% 7%))}
+.t0{--h:228;--a:200deg;--gx:70%;--gy:30%}
+.t1{--h:222;--a:150deg;--gx:85%;--gy:15%}
+.t2{--h:205;--a:30deg;--gx:20%;--gy:80%}
+.t3{--h:245;--a:120deg;--gx:50%;--gy:10%}
+.t4{--h:190;--a:200deg;--gx:85%;--gy:85%}
+.t5{--h:260;--a:60deg;--gx:15%;--gy:20%}
+.t6{--h:215;--a:170deg;--gx:65%;--gy:65%}
+.t7{--h:30;--a:140deg;--gx:50%;--gy:50%}
+.t8{--h:235;--a:100deg;--gx:90%;--gy:40%}
+.top{position:sticky;inset-block-start:var(--bar);z-index:10;display:flex;align-items:center;gap:6px;height:56px;padding-inline:8px 16px;background:rgba(11,15,26,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.brand{font-family:var(--display);font-size:20px;white-space:nowrap;margin-inline-end:auto}
+.icon-btn{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;color:var(--ivory);transition:background .15s}
+.icon-btn:hover{background:var(--raised)}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--raised);display:grid;place-items:center;font-size:13px;font-weight:500;color:var(--gold)}
+.nav,.search{display:none}
+.nav button{min-height:44px;padding-inline:12px;border-radius:6px;color:var(--mist);transition:color .15s}
+.nav button:hover,.nav button[aria-current]{color:var(--ivory)}
+.search{align-items:center;gap:8px;height:40px;width:300px;padding-inline:12px;border-radius:6px;background:var(--raised);color:var(--mist)}
+.search input{flex:1;min-width:0;background:none;border:0;color:var(--ivory);outline:0}
+.search input::placeholder{color:var(--mist)}
+.kicker{color:var(--gold);font-size:13px;font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding-inline:18px;border-radius:6px;font-weight:500;font-size:15px;transition:background .15s}
+.btn.primary{background:var(--gold);color:var(--night)}
+.btn.primary:hover{background:#E6B45A}
+.btn.ghost{background:rgba(30,38,56,.85);color:var(--ivory)}
+.btn.ghost:hover{background:var(--raised)}
+
+/* ---- hero ---- */
+.hero{position:relative;height:clamp(460px,55vh,640px);display:flex;align-items:flex-end;overflow:hidden}
+.poster{position:absolute;inset-block:0;inset-inline-end:0;width:100%}
+.poster::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,var(--night) 10%,rgba(11,15,26,.4) 55%,transparent)}
+.hero-body{position:relative;width:100%;padding:0 16px 28px}
+.hero-title{font-family:var(--display);font-weight:400;font-size:44px;line-height:52px;max-width:13ch;margin-block:10px 12px;text-wrap:balance}
+.hero-meta{display:flex;flex-wrap:wrap;gap:0 8px;color:var(--mist);font-size:13px;margin-block-end:18px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+
+/* ---- rows + cards ---- */
+.rows{display:grid;grid-template-columns:minmax(0,1fr);gap:30px;padding-block:28px 48px}
+.row-head{display:flex;align-items:center;justify-content:space-between;padding-inline:16px;margin-block-end:12px}
+.row-title{font-family:var(--display);font-weight:400;font-size:20px}
+.arrows{display:none;gap:4px}
+.arrows button{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--mist);transition:background .15s,color .15s}
+.arrows button:hover{background:var(--raised);color:var(--ivory)}
+.track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding-inline:16px;scroll-padding-inline:16px;scrollbar-width:none;scroll-behavior:smooth}
+.track::-webkit-scrollbar{display:none}
+.card{flex:0 0 calc((100% - 12px)/1.4);min-width:0;scroll-snap-align:start}
+.card-btn{display:block;width:100%;text-align:start}
+.thumb{display:block;position:relative;aspect-ratio:16/9;border-radius:6px;overflow:hidden;transition:filter .2s}
+.card-btn:hover .thumb,.card-btn:focus-visible .thumb{filter:brightness(1.25)}
+.dur{position:absolute;inset-block-end:10px;inset-inline-end:8px;background:var(--slate);font-size:12px;font-weight:500;padding:2px 6px;border-radius:4px}
+.prog{position:absolute;inset-block-end:0;inset-inline-start:0;height:3px;background:var(--gold)}
+.card-title{display:block;margin-block-start:8px;font-size:15px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.card-btn:hover .card-title,.card-btn:focus-visible .card-title{color:var(--gold)}
+.meta{display:block;font-size:13px;color:var(--mist);margin-block-start:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---- player ---- */
+.back{display:inline-flex;align-items:center;gap:2px;min-height:44px;padding-inline:8px 12px;color:var(--mist);border-radius:6px;font-size:14px}
+.back:hover{color:var(--ivory)}
+.player{position:relative;aspect-ratio:16/9;overflow:hidden;background:var(--slate)}
+.player .art{position:absolute;inset:0}
+.player .art::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(11,15,26,.85),transparent 45%)}
+.big-play{position:absolute;inset:0;margin:auto;width:64px;height:64px;border-radius:50%;background:var(--gold);color:var(--night);display:grid;place-items:center;transition:background .15s}
+.big-play:hover{background:#E6B45A}
+.resume{position:absolute;inset-block-start:12px;inset-inline-start:12px;background:rgba(20,26,43,.85);color:var(--gold);font-size:13px;font-weight:500;padding:6px 10px;border-radius:6px}
+.wm{position:absolute;inset-block-end:58px;inset-inline-start:12px;font-size:12px;opacity:.08;pointer-events:none;direction:ltr}
+.chrome{position:absolute;inset-block-end:0;inset-inline:0;padding:8px 8px 4px;background:rgba(20,26,43,.92)}
+.scrub{position:relative;height:3px;margin:0 6px 6px;border-radius:2px;background:var(--raised)}
+.scrub-fill{position:absolute;inset-block:0;inset-inline-start:0;width:30%;border-radius:2px;background:var(--gold)}
+.scrub-knob{position:absolute;inset-block-start:50%;inset-inline-start:30%;width:12px;height:12px;margin-block-start:-6px;margin-inline-start:-6px;border-radius:50%;background:var(--gold)}
+.ctrls{display:flex;align-items:center;gap:2px}
+.ctrls .icon-btn{width:40px;height:40px}
+.time{font-size:12px;color:var(--mist);margin-inline:6px auto}
+.lesson{padding:20px 16px 0}
+.v-title{font-family:var(--display);font-weight:400;font-size:28px;line-height:1.2;margin-block:6px 14px}
+.teacher{display:flex;align-items:center;gap:12px;margin-block-end:16px}
+.teacher .avatar{width:40px;height:40px;font-size:15px}
+.teacher b{font-weight:500;display:block}
+.teacher small{color:var(--mist);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-block-end:18px}
+.chip{min-height:36px;padding-inline:14px;border-radius:18px;background:var(--raised);font-size:14px;display:inline-flex;align-items:center;transition:background .15s}
+.chip[aria-pressed=true]{background:var(--gold);color:var(--night);font-weight:500}
+.desc{font-size:15px;line-height:1.65;max-width:62ch;margin-block-end:18px}
+.attach{display:inline-flex;align-items:center;gap:10px;background:var(--slate);border-radius:6px;padding:10px 14px;font-size:14px;margin-block-end:22px;transition:background .15s}
+.attach:hover{background:var(--raised)}
+.attach svg{color:var(--gold)}
+.v-actions{display:flex;flex-wrap:wrap;gap:10px;margin-block-end:28px}
+.sub-h{font-size:15px;font-weight:500;margin-block-end:4px}
+.chapters{list-style:none;padding:0;margin-block-end:24px}
+.chapters button{display:flex;width:100%;justify-content:space-between;gap:12px;padding-block:10px;border-block-start:1px solid var(--raised);font-size:14px;text-align:start;min-height:44px;align-items:center}
+.chapters li:first-child button{border:0}
+.chapters .num{color:var(--mist)}
+.chapters button[aria-current]{color:var(--gold)}
+.chapters button[aria-current] .num{color:var(--gold)}
+.subscribe{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;background:var(--slate);border-radius:6px;padding:16px;margin-block-end:8px}
+.subscribe p{font-size:15px}
+
+/* ---- desktop (container, not viewport) ---- */
+@container frame (min-width:900px){
+  .top{height:64px;padding-inline:48px;gap:16px}
+  .menu-btn,.search-btn{display:none}
+  .nav{display:flex;gap:2px;margin-inline-end:auto}
+  .top:has(.nav) .brand{margin-inline-end:16px}
+  .search{display:flex}
+  .hero{height:70vh;min-height:560px}
+  .poster{width:72%}
+  .poster::after{background:linear-gradient(var(--to-end),var(--night),rgba(11,15,26,.65) 35%,transparent 75%),linear-gradient(to top,var(--night),transparent 45%)}
+  .hero-body{max-width:1296px;margin-inline:auto;padding:0 48px 64px}
+  .hero-title{font-size:72px;line-height:1.05;max-width:16ch;margin-block:14px 18px}
+  .kicker,.hero-meta{font-size:14px}
+  .rows{max-width:1296px;margin-inline:auto;width:100%;padding-block:40px 64px;gap:40px}
+  .row-head,.track{padding-inline:48px}
+  .track{scroll-padding-inline:48px}
+  .card{flex-basis:calc((100% - 48px)/5)}
+  .row:hover .arrows,.row:focus-within .arrows{display:flex}
+  .player-wrap,.lesson{max-width:1296px;margin-inline:auto;padding-inline:48px}
+  .player{border-radius:6px}
+  .lesson{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:0 48px;padding-block-start:28px}
+  .v-title{font-size:32px}
+}
+</style>
+</head>
+<body>
+
+<div class="ctl" dir="ltr">
+  <span class="tag">Concept 1 · Cinematic</span>
+  <div class="seg" role="group" aria-label="Screen">
+    <button type="button" data-ctl="screen" data-val="home" aria-pressed="true">Home</button>
+    <button type="button" data-ctl="screen" data-val="player" aria-pressed="false">Player</button>
+  </div>
+  <div class="seg" role="group" aria-label="Direction">
+    <button type="button" data-ctl="dir" data-val="rtl" aria-pressed="true">עברית · RTL</button>
+    <button type="button" data-ctl="dir" data-val="ltr" aria-pressed="false">English · LTR</button>
+  </div>
+  <div class="seg" role="group" aria-label="Frame">
+    <button type="button" data-ctl="frame" data-val="phone" aria-pressed="true">Phone 390</button>
+    <button type="button" data-ctl="frame" data-val="desktop" aria-pressed="false">Desktop</button>
+  </div>
+  <a href="index.html">← All concepts</a>
+</div>
+
+<div class="frame phone">
+
+<!-- ================= HOME ================= -->
+<section data-screen="home">
+  <header class="top">
+    <button class="icon-btn menu-btn" type="button" aria-label="Menu"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    <span class="brand" data-en="Akademya Habraham">אקדמיה האברהם</span>
+    <nav class="nav" aria-label="Main">
+      <button type="button" aria-current="page" data-en="Home">בית</button>
+      <button type="button" data-en="Weekly Parsha">פרשת השבוע</button>
+      <button type="button" data-en="Holidays">חגים</button>
+      <button type="button" data-en="Halacha">הלכה</button>
+      <button type="button" data-en="My account">החשבון שלי</button>
+    </nav>
+    <label class="search"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input type="search" placeholder="חיפוש שיעור, פרשה או הלכה" data-en-placeholder="Search lessons, parsha or halacha"></label>
+    <button class="icon-btn search-btn" type="button" aria-label="Search"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button>
+    <button class="icon-btn" type="button" aria-label="Account"><span class="avatar" data-en="M">מ</span></button>
+  </header>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="poster art t0"></div>
+    <div class="hero-body">
+      <p class="kicker" data-en="This week · Parashat Bereshit">השבוע · פרשת בראשית</p>
+      <h1 class="hero-title" id="hero-title" data-en='In the beginning: what does "in the image of God" mean?'>בראשית ברא: מה פירוש "בצלם אלוקים"?</h1>
+      <p class="hero-meta"><span data-en="Rav Avraham">הרב אברהם</span><span>·</span><span class="num">42:15</span><span>·</span><span data-en="26 Tishrei 5787">כ"ו בתשרי תשפ"ז</span><span>·</span><span class="num" data-en="Oct 7, 2026">7.10.2026</span></p>
+      <div class="actions">
+        <button class="btn primary" type="button" data-go="player"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span data-en="Watch">צפייה</span></button>
+        <button class="btn ghost" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-en="Save">שמירה</span></button>
+      </div>
+    </div>
+  </section>
+
+  <div class="rows">
+    <section class="row" aria-labelledby="r1">
+      <div class="row-head"><h2 class="row-title" id="r1" data-en="Continue watching">המשך לצפות</h2><div class="arrows" data-arrows></div></div>
+      <div class="track" data-cards="1,2,3"></div>
+    </section>
+    <section class="row" aria-labelledby="r2">
+      <div class="row-head"><h2 class="row-title" id="r2" data-en="Weekly Parsha">פרשת השבוע</h2><div class="arrows" data-arrows></div></div>
+      <div class="track" data-cards="0,1,6"></div>
+    </section>
+    <section class="row" aria-labelledby="r3">
+      <div class="row-head"><h2 class="row-title" id="r3" data-en="Holidays">חגים</h2><div class="arrows" data-arrows></div></div>
+      <div class="track" data-cards="3,4,7,8"></div>
+    </section>
+    <section class="row" aria-labelledby="r4">
+      <div class="row-head"><h2 class="row-title" id="r4" data-en="Halacha">הלכה</h2><div class="arrows" data-arrows></div></div>
+      <div class="track" data-cards="2,5"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ================= PLAYER ================= -->
+<section data-screen="player" hidden>
+  <header class="top">
+    <button class="back" type="button" data-go="home"><svg class="mirror" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg><span data-en="Back">חזרה</span></button>
+    <span class="brand" data-en="Akademya Habraham">אקדמיה האברהם</span>
+    <button class="icon-btn" type="button" aria-label="Account"><span class="avatar" data-en="M">מ</span></button>
+  </header>
+
+  <div class="player-wrap">
+    <div class="player" role="region" aria-label="Video player">
+      <div class="art t0"></div>
+      <span class="resume"><span data-en="Resume from ">המשך מ־</span><span class="num">12:40</span></span>
+      <button class="big-play" type="button" aria-label="Play"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <span class="wm" aria-hidden="true">moti@example.com</span>
+      <div class="chrome">
+        <div class="scrub" role="slider" aria-label="Seek" aria-valuemin="0" aria-valuemax="2535" aria-valuenow="760" tabindex="0"><span class="scrub-fill"></span><span class="scrub-knob"></span></div>
+        <div class="ctrls">
+          <button class="icon-btn" type="button" aria-label="Play"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+          <button class="icon-btn" type="button" aria-label="Back 10 seconds"><svg class="mirror" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 18l-6-6 6-6M19 18l-6-6 6-6"/></svg></button>
+          <button class="icon-btn" type="button" aria-label="Forward 10 seconds"><svg class="mirror" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 6l6 6-6 6M5 6l6 6-6 6"/></svg></button>
+          <span class="time num">12:40 / 42:15</span>
+          <button class="icon-btn" type="button" aria-label="Subtitles"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 13h4M13 13h4"/></svg></button>
+          <button class="icon-btn num" type="button" aria-label="Playback speed">1×</button>
+          <button class="icon-btn" type="button" aria-label="Fullscreen"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson">
+    <div>
+      <p class="kicker" data-en="Parsha · Parashat Bereshit">פרשה · פרשת בראשית</p>
+      <h1 class="v-title" data-en='In the beginning: what does "in the image of God" mean?'>בראשית ברא: מה פירוש "בצלם אלוקים"?</h1>
+      <div class="teacher"><span class="avatar" data-en="RA">א</span><div><b data-en="Rav Avraham">הרב אברהם</b><small><span class="num">42:15</span> · <span data-en="26 Tishrei 5787">כ"ו בתשרי תשפ"ז</span> · <span class="num" data-en="Oct 7, 2026">7.10.2026</span></small></div></div>
+      <div class="chips" role="group" aria-label="Subtitles">
+        <button class="chip" type="button" aria-pressed="true">עברית</button>
+        <button class="chip" type="button" aria-pressed="false">English</button>
+        <button class="chip" type="button" aria-pressed="false">Русский</button>
+        <button class="chip" type="button" aria-pressed="false">Español</button>
+      </div>
+      <p class="desc" data-en="Rav Avraham opens Bereshit with one question: what does &quot;in the image of God&quot; mean for daily life? Through Rashi, the Rambam and the Maharal we build an answer that stays with us all year.">הרב אברהם פותח את ספר בראשית בשאלה אחת: מה המשמעות של "בצלם אלוקים" לחיי היומיום שלנו? דרך רש"י, הרמב"ם והמהר"ל נבנה תשובה שמלווה אותנו לכל השנה.</p>
+      <button class="attach" type="button"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4"/></svg><span data-en="Source sheet (PDF, 2 pages)">דף מקורות (PDF, 2 עמודים)</span></button>
+      <div class="v-actions">
+        <button class="btn primary" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span data-en="Resume">המשך צפייה</span></button>
+        <button class="btn ghost" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-en="Save">שמירה</span></button>
+        <button class="btn ghost" type="button"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg><span data-en="Mark as completed">סימון כהושלם</span></button>
+      </div>
+    </div>
+    <aside>
+      <h2 class="sub-h" data-en="Chapters">פרקים</h2>
+      <ul class="chapters">
+        <li><button type="button"><span data-en="Opening">פתיחה</span><span class="num">00:00</span></button></li>
+        <li><button type="button" aria-current="true"><span data-en="Rashi on the verse">רש"י על הפסוק</span><span class="num">08:10</span></button></li>
+        <li><button type="button"><span data-en="Rambam and Maharal">הרמב"ם והמהר"ל</span><span class="num">21:35</span></button></li>
+        <li><button type="button"><span data-en="Summary">סיכום</span><span class="num">38:50</span></button></li>
+      </ul>
+      <div class="subscribe">
+        <p data-en="A subscription opens every lesson.">המנוי פותח את כל השיעורים</p>
+        <button class="btn primary" type="button"><span data-en="Subscribe">הצטרפו למנוי</span></button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="rows">
+    <section class="row" aria-labelledby="r5">
+      <div class="row-head"><h2 class="row-title" id="r5" data-en="Up next">הבא בתור</h2><div class="arrows" data-arrows></div></div>
+      <div class="track" data-cards="6,4,5,7"></div>
+    </section>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  var L=[
+    {he:'בראשית ברא: מה פירוש "בצלם אלוקים"?',en:'In the beginning: what does &quot;in the image of God&quot; mean?',d:'42:15',c:'parsha',p:30,t:0},
+    {he:'פרשת נח: דור המבול ודור הפלגה',en:'Parashat Noach: the flood and the tower',d:'38:40',c:'parsha',p:60,t:1},
+    {he:'הלכות שבת: ל"ט מלאכות, חלק א',en:'Laws of Shabbat: the 39 melachot, part 1',d:'51:02',c:'halacha',p:20,t:2},
+    {he:'סוכות: ארבעת המינים',en:'Sukkot: the four species',d:'29:18',c:'holidays',p:100,t:3},
+    {he:'ראש השנה: תקיעת שופר',en:'Rosh Hashanah: the shofar',d:'44:05',c:'holidays',p:0,t:4},
+    {he:'הלכות ברכות: ברכות הנהנין',en:'Laws of blessings: blessings on food',d:'35:50',c:'halacha',p:0,t:5},
+    {he:'פרשת לך לך: מסעו של אברהם',en:'Parashat Lech Lecha: Avraham&#39;s journey',d:'40:12',c:'parsha',p:0,t:6},
+    {he:'חנוכה: נס פך השמן',en:'Chanukah: the miracle of the oil',d:'33:27',c:'holidays',p:0,t:7},
+    {he:'יום כיפור: תשובה',en:'Yom Kippur: teshuva',d:'47:00',c:'holidays',p:0,t:8}
+  ];
+  var CAT={parsha:['פרשה','Parsha'],halacha:['הלכה','Halacha'],holidays:['חגים','Holidays']};
+  var CHEV='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="PATH"/></svg>';
+
+  function card(i){
+    var l=L[i];
+    return '<article class="card"><button class="card-btn" type="button" data-go="player">'+
+      '<span class="thumb art t'+l.t+'"><span class="dur num">'+l.d+'</span>'+(l.p?'<span class="prog" style="width:'+l.p+'%"></span>':'')+'</span>'+
+      '<span class="card-title" data-en="'+l.en+'">'+l.he+'</span>'+
+      '<span class="meta"><span data-en="'+CAT[l.c][1]+'">'+CAT[l.c][0]+'</span> · <span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">'+l.d+'</span></span>'+
+      '</button></article>';
+  }
+  document.querySelectorAll('[data-cards]').forEach(function(t){t.innerHTML=t.dataset.cards.split(',').map(card).join('');});
+  document.querySelectorAll('[data-arrows]').forEach(function(a){
+    a.innerHTML='<button type="button" data-scroll="-1" aria-label="Previous">'+CHEV.replace('PATH','M15 6l-6 6 6 6').replace('<svg','<svg class="mirror"')+'</button>'+
+                '<button type="button" data-scroll="1" aria-label="Next">'+CHEV.replace('PATH','M9 6l6 6-6 6').replace('<svg','<svg class="mirror"')+'</button>';
+  });
+
+  var store={
+    get:function(k,d){try{return localStorage.getItem(k)||d;}catch(e){return d;}},
+    set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  };
+  var frame=document.querySelector('.frame');
+  var ops={
+    screen:function(v){document.querySelectorAll('[data-screen]').forEach(function(s){s.hidden=s.dataset.screen!==v;});window.scrollTo({top:0});},
+    dir:function(v){
+      var he=v==='rtl',root=document.documentElement;
+      root.dir=v;root.lang=he?'he':'en';
+      document.querySelectorAll('[data-en]').forEach(function(el){
+        if(!('he' in el.dataset))el.dataset.he=el.textContent;
+        el.textContent=he?el.dataset.he:el.dataset.en;
+      });
+      document.querySelectorAll('[data-en-placeholder]').forEach(function(el){
+        if(!('hePlaceholder' in el.dataset))el.dataset.hePlaceholder=el.placeholder;
+        el.placeholder=he?el.dataset.hePlaceholder:el.dataset.enPlaceholder;
+      });
+    },
+    frame:function(v){frame.classList.toggle('phone',v==='phone');}
+  };
+  function apply(k,v){
+    ops[k](v);store.set('ah-'+k,v);
+    document.querySelectorAll('[data-ctl="'+k+'"]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.val===v));});
+  }
+  apply('screen',store.get('ah-screen','home'));
+  apply('dir',store.get('ah-dir','rtl'));
+  apply('frame',store.get('ah-frame','phone'));
+
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-ctl]');
+    if(b){apply(b.dataset.ctl,b.dataset.val);return;}
+    b=e.target.closest('[data-go]');
+    if(b){apply('screen',b.dataset.go);return;}
+    b=e.target.closest('[data-scroll]');
+    if(b){
+      var t=b.closest('.row').querySelector('.track'),sign=document.documentElement.dir==='rtl'?-1:1;
+      t.scrollBy({left:sign*b.dataset.scroll*t.clientWidth*0.8,behavior:'smooth'});return;
+    }
+    b=e.target.closest('.chip');
+    if(b){b.parentNode.querySelectorAll('.chip').forEach(function(c){c.setAttribute('aria-pressed',String(c===b));});}
+  });
+})();
+</script>
+</body>
+</html>

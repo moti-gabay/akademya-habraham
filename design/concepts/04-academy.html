@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Concept 4 · Torah Academy — Akademya Habraham</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--chalk:#F7F8FA;--white:#FFFFFF;--text:#1E2433;--muted:#5C6478;--moss:#1E6B52;--tint:#DDF0E7;--amber:#E0A52A;--line:#E3E6EC;--ctl:44px;--r:12px;--t:.18s}
+*{box-sizing:border-box}
+html{background:var(--chalk)}
+body{margin:0;padding-top:var(--ctl);font:16px/1.5 Assistant,"Source Sans 3",system-ui,sans-serif;color:var(--text);background:var(--chalk)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:start}
+h1,h2,h3,p,ul{margin:0}
+ul{padding:0;list-style:none}
+section[hidden],.sprite{display:none}
+:focus-visible{outline:2px solid var(--moss);outline-offset:2px}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.num{font-variant-numeric:tabular-nums;unicode-bidi:isolate;direction:ltr}
+[dir=rtl] .mirror{transform:scaleX(-1)}
+@media (prefers-reduced-motion:reduce){*{transition:none !important}}
+
+/* ---- control bar: not part of the design ---- */
+.ctl{position:fixed;inset-inline:0;top:0;height:var(--ctl);z-index:50;display:flex;align-items:center;gap:12px;padding:0 12px;background:#2b2d33;color:#d7d9de;font:13px/1 system-ui,sans-serif;overflow-x:auto}
+.ctl a{color:#d7d9de;text-decoration:none;white-space:nowrap}
+.ctl .grp{display:flex;flex:none;border:1px solid #5a5d66;border-radius:6px;overflow:hidden}
+.ctl .grp button{padding:7px 10px;color:#d7d9de;white-space:nowrap}
+.ctl .grp button[aria-pressed=true]{background:#d7d9de;color:#2b2d33}
+.ctl .sp{flex:1}
+
+/* ---- frame ---- */
+.frame{container-type:inline-size;min-height:calc(100vh - var(--ctl));background:var(--chalk)}
+.frame.phone{max-width:390px;margin-inline:auto;border:1px solid #c6c9d1;border-radius:24px;overflow:clip}
+
+/* ---- shared ---- */
+.card{background:var(--white);border:1px solid var(--line);border-radius:var(--r)}
+.meta{font-size:13px;color:var(--muted)}
+h2{font-size:20px;font-weight:600;margin:28px 0 12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:10px;font-weight:600;transition:background var(--t),color var(--t)}
+.btn.fill{background:var(--moss);color:#fff}
+.btn.fill:hover{background:#185843}
+.btn.line{border:1px solid var(--moss);color:var(--moss)}
+.btn.line:hover{background:var(--tint)}
+.bar{height:6px;border-radius:3px;background:var(--tint);overflow:hidden}
+.bar span{display:block;height:100%;background:var(--moss);border-radius:3px}
+.ring{display:block;width:100%;height:100%}
+.ring circle{fill:none;stroke:var(--tint);stroke-width:3.4}
+.ring circle+circle{stroke:var(--moss);stroke-linecap:round;transform:rotate(-90deg);transform-origin:center}
+.ringwrap{position:relative;flex:none}
+.ringwrap b{position:absolute;inset:0;display:grid;place-items:center;font-weight:600;font-size:15px}
+.check{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--moss);color:#fff;flex:none}
+.check .ic{width:16px;height:16px;stroke-width:2.5}
+.thumb{position:relative;aspect-ratio:16/9;border-radius:8px;background-color:var(--moss);background-size:14px 14px,auto}
+.pa{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Ccircle cx='2' cy='2' r='1.2' fill='%23fff' fill-opacity='.22'/%3E%3C/svg%3E"),var(--g)}
+.pb{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M0 14L14 0' stroke='%23fff' stroke-opacity='.16'/%3E%3C/svg%3E"),var(--g)}
+.pc{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Cpath d='M14 0H0v14' fill='none' stroke='%23fff' stroke-opacity='.14'/%3E%3C/svg%3E"),var(--g)}
+.t1{--g:linear-gradient(135deg,#1E6B52,#2F8A6B 60%,#8FCBB0)}
+.t2{--g:linear-gradient(200deg,#1E2433,#2C4A4A 55%,#1E6B52)}
+.t3{--g:linear-gradient(150deg,#E0A52A,#EFC55E 55%,#DDF0E7)}
+.t4{--g:linear-gradient(120deg,#5C6478,#3A4A55 60%,#1E6B52)}
+.t5{--g:radial-gradient(circle at 70% 30%,#DDF0E7,#1E6B52 70%)}
+.t6{--g:linear-gradient(45deg,#8FCBB0,#1E6B52 55%,#1E2433)}
+
+/* ---- home ---- */
+.side{display:none;flex-direction:column;gap:4px;padding:24px 16px;background:var(--white);border-inline-end:1px solid var(--line);position:sticky;top:var(--ctl);height:calc(100vh - var(--ctl))}
+.brand{font-weight:700;font-size:18px;color:var(--moss);padding:4px 12px 20px}
+.nitem{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:10px;color:var(--muted);font-weight:600;transition:background var(--t),color var(--t)}
+.nitem:hover{background:var(--chalk);color:var(--text)}
+.nitem[aria-current]{background:var(--tint);color:var(--moss)}
+.streak{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:14px}
+.streak i{width:10px;height:10px;border-radius:50%;background:var(--amber);flex:none}
+.main{padding:20px 16px 96px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.top h1{font-size:28px;line-height:1.2;font-weight:700}
+.top .date{margin-top:4px}
+.avatar{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--tint);color:var(--moss);font-weight:700;flex:none}
+.hero{padding:20px;display:flex;flex-direction:column;gap:14px}
+.hero .lead{display:flex;align-items:center;gap:16px}
+.hero .ringwrap{width:72px;height:72px}
+.hero .kicker{font-size:13px;color:var(--moss);font-weight:600}
+.hero .ser{font-weight:600}
+.hero h3{font-size:17px;font-weight:600;line-height:1.35}
+.hero .btn{align-self:flex-start}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.series{overflow:hidden;display:flex;flex-direction:column;transition:border-color var(--t)}
+.series:hover{border-color:var(--moss)}
+.series .thumb{border-radius:0}
+.series .cb{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.series h3{font-size:16px;font-weight:600;line-height:1.3}
+.series .bar{margin-top:auto}
+.badge{position:absolute;top:8px;inset-inline-end:8px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;background:var(--amber);color:var(--text);font-size:12px;font-weight:600}
+.badge .ic{width:14px;height:14px;stroke-width:3}
+.lgrid{display:grid;gap:10px}
+.lesson{display:flex;align-items:center;gap:12px;padding:10px;width:100%;transition:border-color var(--t)}
+.lesson:hover{border-color:var(--moss)}
+.lesson .thumb{width:104px;flex:none}
+.lesson .lt{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.lesson .title{font-weight:600;line-height:1.3}
+.lesson .ringwrap{width:28px;height:28px}
+.tabbar{position:sticky;bottom:0;display:grid;grid-template-columns:repeat(6,1fr);background:var(--white);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.tabbar button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:48px;font-size:11px;color:var(--muted);border-radius:8px}
+.tabbar button[aria-current]{color:var(--moss)}
+
+/* ---- player ---- */
+.ptop{display:flex;align-items:center;gap:8px;padding:12px 16px;font-weight:600}
+.ptop .meta{font-weight:400}
+.iconbtn{display:grid;place-items:center;width:44px;height:44px;border-radius:10px;color:var(--text)}
+.iconbtn:hover{background:var(--tint);color:var(--moss)}
+.video{position:relative;aspect-ratio:16/9;background:#1E2433;color:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.video .poster{position:absolute;inset:0;border-radius:0;opacity:.9}
+.bigplay{position:relative;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#fff;color:var(--moss)}
+.bigplay .ic{width:28px;height:28px}
+.wm{position:absolute;inset-inline-start:12px;bottom:56px;font-size:12px;opacity:.08;pointer-events:none}
+.vctl{position:absolute;inset-inline:0;bottom:0;display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(30,36,51,.78);font-size:13px}
+.vctl .iconbtn{width:36px;height:36px;color:#fff}
+.vctl .iconbtn:hover{background:rgba(255,255,255,.14);color:#fff}
+.vctl .bar{flex:1;background:rgba(255,255,255,.3)}
+.vctl .num{min-width:40px;text-align:center}
+.sbar{position:sticky;top:var(--ctl);z-index:2;display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:0 16px;background:var(--white);border-bottom:1px solid var(--line);font-weight:600}
+.sbar .ic{margin-inline-start:auto;transition:transform var(--t)}
+.open .sbar .ic{transform:rotate(90deg)}
+.panel{display:none;background:var(--white);border-bottom:1px solid var(--line)}
+.open .panel{display:block}
+.ptabs{display:flex;border-bottom:1px solid var(--line);padding:0 8px}
+.ptabs button{min-height:44px;padding:0 12px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.ptabs button[aria-selected=true]{color:var(--moss);border-color:var(--moss)}
+.plist li{display:flex;align-items:center;gap:12px;min-height:44px;padding:4px 16px;border-inline-start:3px solid transparent}
+.plist li.cur{background:var(--tint);border-color:var(--moss);font-weight:600}
+.plist .n{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);font-size:13px;font-weight:600;flex:none}
+.plist .done .n{background:var(--moss);border-color:var(--moss);color:#fff}
+.plist .done .n .ic{width:14px;height:14px;stroke-width:2.5}
+.plist .cur .n{border-color:var(--moss);color:var(--moss);background:var(--white)}
+.plist .dur{margin-inline-start:auto;font-size:13px;color:var(--muted)}
+.notes{padding:16px}
+.notes textarea{width:100%;min-height:160px;padding:12px;border:1px solid var(--line);border-radius:8px;font:inherit;resize:vertical;background:var(--chalk)}
+.pbody{padding:16px 16px 48px;display:flex;flex-direction:column;gap:20px}
+.pbody h1{font-size:22px;line-height:1.3;font-weight:700}
+.pbody .meta{margin-top:4px}
+.acts{display:flex;flex-wrap:wrap;gap:10px}
+.chaps{display:flex;flex-direction:column;gap:4px}
+.chap{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:8px;width:100%;transition:background var(--t)}
+.chap:hover{background:var(--tint)}
+.chap[aria-current]{background:var(--tint);color:var(--moss);font-weight:600}
+.chap .num{font-size:13px;color:var(--muted);min-width:44px}
+.chap[aria-current] .num{color:var(--moss)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);font-size:14px;transition:background var(--t),color var(--t)}
+.chip[aria-pressed=true]{background:var(--tint);border-color:var(--moss);color:var(--moss);font-weight:600}
+.teacher{display:flex;align-items:center;gap:10px}
+.teacher .avatar{width:36px;height:36px;font-size:14px}
+.sub{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px}
+
+/* ---- desktop (container-driven) ---- */
+@container (min-width:900px){
+  .home{display:grid;grid-template-columns:240px minmax(0,1fr);align-items:start}
+  .side{display:flex}
+  .tabbar{display:none}
+  .main{max-width:1040px;padding:32px 40px 56px}
+  .top h1{font-size:36px}
+  .hero{flex-direction:row;align-items:center;padding:24px 28px}
+  .hero .lead{flex:1}
+  .hero .btn{align-self:center}
+  .sgrid{grid-template-columns:repeat(4,1fr);gap:16px}
+  .lgrid{grid-template-columns:1fr 1fr;gap:12px}
+  .player{display:grid;grid-template-columns:minmax(0,2fr) minmax(320px,1fr);column-gap:24px;align-items:start;max-width:1200px;margin-inline:auto;padding:8px 32px 48px}
+  .ptop{grid-column:1/-1;padding-inline:0}
+  .video{border-radius:var(--r)}
+  .sbar{display:none}
+  .panel{display:block;grid-column:2;grid-row:2/4;position:sticky;top:calc(var(--ctl) + 16px);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .plist li:first-child{margin-top:4px}
+  .pbody{grid-column:1;padding:20px 0 0}
+  .pbody h1{font-size:28px}
+}
+</style>
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-series" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l4-1L18 9l-3-3L5 16zM13 6l3 3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+  <symbol id="i-ring" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" opacity=".35"/><path d="M12 4a8 8 0 0 1 8 8"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 5l10 7-10 7z" fill="currentColor" stroke="none"/><path d="M19 5v14"/></symbol>
+  <symbol id="i-cc" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10.5 10a2.2 2.2 0 1 0 0 4M17.5 10a2.2 2.2 0 1 0 0 4"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+</svg>
+
+<div class="ctl" dir="ltr">
+  <a href="index.html">← All concepts</a>
+  <span class="grp"><button data-set="screen:home" aria-pressed="true">Home</button><button data-set="screen:player" aria-pressed="false">Player</button></span>
+  <span class="grp"><button data-set="dir:rtl" aria-pressed="true">עברית · RTL</button><button data-set="dir:ltr" aria-pressed="false">English · LTR</button></span>
+  <span class="grp"><button data-set="frame:phone" aria-pressed="true">Phone 390</button><button data-set="frame:desktop" aria-pressed="false">Desktop</button></span>
+  <span class="sp"></span>
+  <span>Concept 4 · Academy</span>
+</div>
+
+<div class="frame phone">
+
+<!-- ================= HOME ================= -->
+<section data-screen="home" class="home">
+  <aside class="side">
+    <div class="brand" data-en="Akademya Habraham">אקדמיה האברהם</div>
+    <nav aria-label="ראשי">
+      <button class="nitem" aria-current="page"><svg class="ic"><use href="#i-home"/></svg><span data-en="Home">בית</span></button>
+      <button class="nitem"><svg class="ic"><use href="#i-series"/></svg><span data-en="My series">הסדרות שלי</span></button>
+      <button class="nitem"><svg class="ic"><use href="#i-pen"/></svg><span data-en="Parsha">פרשה</span></button>
+      <button class="nitem"><svg class="ic"><use href="#i-star"/></svg><span data-en="Holidays">חגים</span></button>
+      <button class="nitem"><svg class="ic"><use href="#i-list"/></svg><span data-en="Halacha">הלכה</span></button>
+      <button class="nitem"><svg class="ic"><use href="#i-ring"/></svg><span data-en="Progress">התקדמות</span></button>
+    </nav>
+    <div class="streak"><i></i><span><span class="num">4</span> <span data-en="days in a row — nice">ימים ברצף, כל הכבוד</span></span></div>
+  </aside>
+
+  <main class="main">
+    <header class="top">
+      <div>
+        <h1 data-en="Good morning, Moshe">בוקר טוב, משה</h1>
+        <p class="date meta"><span data-en="26 Tishrei 5787">כ"ו בתשרי תשפ"ז</span> · <span class="num" data-en="Oct 7, 2026">7.10.2026</span></p>
+      </div>
+      <span class="avatar" data-en="M">מ</span>
+    </header>
+
+    <article class="card hero">
+      <div class="lead">
+        <div class="ringwrap" role="progressbar" aria-valuenow="58" aria-valuemin="0" aria-valuemax="100" aria-label="הלכות שבת">
+          <svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" stroke-dasharray="58 100"/></svg>
+          <b class="num">58%</b>
+        </div>
+        <div>
+          <p class="kicker" data-en="Continue learning">המשך ללמוד</p>
+          <p class="ser"><span data-en="Laws of Shabbat">הלכות שבת</span> · <span data-en="Lesson">שיעור</span> <span class="num">6</span> <span data-en="of">מתוך</span> <span class="num">12</span></p>
+          <h3><span data-en="Laws of Shabbat: the 39 melachot, part 1">הלכות שבת: ל"ט מלאכות, חלק א</span></h3>
+        </div>
+      </div>
+      <button class="btn fill" data-go="player"><svg class="ic"><use href="#i-play"/></svg><span><span data-en="Resume from ">המשך מ־</span><span class="num">12:40</span></span></button>
+    </article>
+
+    <h2 data-en="My series">הסדרות שלי</h2>
+    <div class="sgrid">
+      <article class="card series">
+        <div class="thumb t1 pa"></div>
+        <div class="cb"><h3 data-en="Laws of Shabbat">הלכות שבת</h3><p class="meta"><span class="num">5/12</span> <span data-en="lessons">שיעורים</span></p>
+          <div class="bar" role="progressbar" aria-valuenow="5" aria-valuemin="0" aria-valuemax="12"><span style="width:42%"></span></div></div>
+      </article>
+      <article class="card series">
+        <div class="thumb t2 pb"></div>
+        <div class="cb"><h3 data-en="Weekly Parsha 5787">פרשת השבוע תשפ"ז</h3><p class="meta"><span class="num">1/54</span> <span data-en="lessons">שיעורים</span></p>
+          <div class="bar" role="progressbar" aria-valuenow="1" aria-valuemin="0" aria-valuemax="54"><span style="width:2%"></span></div></div>
+      </article>
+      <article class="card series">
+        <div class="thumb t3 pc"><span class="badge"><svg class="ic"><use href="#i-check"/></svg><span data-en="Completed">הושלם</span></span></div>
+        <div class="cb"><h3 data-en="Laws of blessings">הלכות ברכות</h3><p class="meta"><span class="num">8/8</span> <span data-en="lessons">שיעורים</span></p>
+          <div class="bar" role="progressbar" aria-valuenow="8" aria-valuemin="0" aria-valuemax="8"><span style="width:100%"></span></div></div>
+      </article>
+      <article class="card series">
+        <div class="thumb t5 pa"></div>
+        <div class="cb"><h3 data-en="The holidays of Tishrei">מועדי תשרי</h3><p class="meta"><span class="num">4/6</span> <span data-en="lessons">שיעורים</span></p>
+          <div class="bar" role="progressbar" aria-valuenow="4" aria-valuemin="0" aria-valuemax="6"><span style="width:67%"></span></div></div>
+      </article>
+    </div>
+
+    <h2><span data-en="This week">השבוע</span> · <span data-en="Parashat Bereshit">פרשת בראשית</span></h2>
+    <div class="lgrid">
+      <button class="card lesson" data-go="player">
+        <span class="thumb t6 pb"></span>
+        <span class="lt"><span class="title" data-en='In the beginning: what does "in the image of God" mean?'>בראשית ברא: מה פירוש "בצלם אלוקים"?</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">42:15</span></span></span>
+        <span class="ringwrap" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" stroke-dasharray="30 100"/></svg></span>
+      </button>
+      <button class="card lesson" data-go="player">
+        <span class="thumb t4 pc"></span>
+        <span class="lt"><span class="title" data-en="Parashat Noach: the flood and the tower">פרשת נח: דור המבול ודור הפלגה</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">38:40</span></span></span>
+        <span class="ringwrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" stroke-dasharray="0 100"/></svg></span>
+      </button>
+      <button class="card lesson" data-go="player">
+        <span class="thumb t1 pc"></span>
+        <span class="lt"><span class="title" data-en="Parashat Lech Lecha: Avraham's journey">פרשת לך לך: מסעו של אברהם</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">40:12</span></span></span>
+        <span class="ringwrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" stroke-dasharray="0 100"/></svg></span>
+      </button>
+    </div>
+
+    <h2 data-en="Upcoming holidays">חגים קרובים</h2>
+    <div class="lgrid">
+      <button class="card lesson" data-go="player">
+        <span class="thumb t3 pa"></span>
+        <span class="lt"><span class="title" data-en="Chanukah: the miracle of the oil">חנוכה: נס פך השמן</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">33:27</span></span></span>
+        <span class="ringwrap" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><svg class="ring" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.9"/><circle cx="18" cy="18" r="15.9" stroke-dasharray="0 100"/></svg></span>
+      </button>
+      <button class="card lesson" data-go="player">
+        <span class="thumb t5 pb"></span>
+        <span class="lt"><span class="title" data-en="Sukkot: the four species">סוכות: ארבעת המינים</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">29:18</span></span></span>
+        <span class="check" role="img" aria-label="הושלם"><svg class="ic"><use href="#i-check"/></svg></span>
+      </button>
+      <button class="card lesson" data-go="player">
+        <span class="thumb t2 pa"></span>
+        <span class="lt"><span class="title" data-en="Rosh Hashanah: the shofar">ראש השנה: תקיעת שופר</span><span class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">44:05</span></span></span>
+        <span class="check" role="img" aria-label="הושלם"><svg class="ic"><use href="#i-check"/></svg></span>
+      </button>
+    </div>
+  </main>
+
+  <nav class="tabbar" aria-label="ראשי">
+    <button aria-current="page"><svg class="ic"><use href="#i-home"/></svg><span data-en="Home">בית</span></button>
+    <button><svg class="ic"><use href="#i-series"/></svg><span data-en="My series">הסדרות שלי</span></button>
+    <button><svg class="ic"><use href="#i-pen"/></svg><span data-en="Parsha">פרשה</span></button>
+    <button><svg class="ic"><use href="#i-star"/></svg><span data-en="Holidays">חגים</span></button>
+    <button><svg class="ic"><use href="#i-list"/></svg><span data-en="Halacha">הלכה</span></button>
+    <button><svg class="ic"><use href="#i-ring"/></svg><span data-en="Progress">התקדמות</span></button>
+  </nav>
+</section>
+
+<!-- ================= PLAYER ================= -->
+<section data-screen="player" class="player" hidden>
+  <div class="ptop">
+    <button class="iconbtn" data-go="home" aria-label="חזרה"><svg class="ic mirror"><use href="#i-back"/></svg></button>
+    <span data-en="Laws of Shabbat">הלכות שבת</span>
+    <span class="meta"><span data-en="lesson">שיעור</span> <span class="num">6/12</span></span>
+  </div>
+
+  <div class="video">
+    <div class="thumb t2 pb poster"></div>
+    <button class="bigplay" aria-label="נגן"><svg class="ic"><use href="#i-play"/></svg></button>
+    <span class="wm">moti@example.com</span>
+    <div class="vctl">
+      <button class="iconbtn" aria-label="נגן"><svg class="ic"><use href="#i-play"/></svg></button>
+      <span class="num">12:40</span>
+      <div class="bar" role="progressbar" aria-valuenow="760" aria-valuemin="0" aria-valuemax="3062" aria-label="מיקום"><span style="width:25%"></span></div>
+      <span class="num">51:02</span>
+      <button class="iconbtn" aria-label="כתוביות"><svg class="ic"><use href="#i-cc"/></svg></button>
+      <button class="iconbtn num" aria-label="מהירות">1×</button>
+      <button class="iconbtn" aria-label="מסך מלא"><svg class="ic"><use href="#i-full"/></svg></button>
+    </div>
+  </div>
+
+  <button class="sbar" aria-expanded="false" aria-controls="panel">
+    <span><span data-en="Series">סדרה</span> · <span data-en="lesson">שיעור</span> <span class="num">6/12</span></span>
+    <svg class="ic mirror"><use href="#i-chev"/></svg>
+  </button>
+
+  <aside class="panel" id="panel">
+    <div class="ptabs" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="tab-lessons" data-en="Lessons in this series">שיעורים בסדרה</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-notes" data-en="Notes">הערות</button>
+    </div>
+    <ul class="plist" id="tab-lessons" role="tabpanel">
+      <li class="done"><span class="n"><svg class="ic"><use href="#i-check"/></svg></span><span data-en="Lesson 1: Introduction">שיעור 1: מבוא</span><span class="num dur">22:10</span></li>
+      <li class="done"><span class="n"><svg class="ic"><use href="#i-check"/></svg></span><span data-en="Lesson 2: Borer">שיעור 2: מלאכת הבורר</span><span class="num dur">35:48</span></li>
+      <li class="done"><span class="n"><svg class="ic"><use href="#i-check"/></svg></span><span data-en="Lesson 3: Candle lighting">שיעור 3: הדלקת נרות</span><span class="num dur">28:05</span></li>
+      <li class="done"><span class="n"><svg class="ic"><use href="#i-check"/></svg></span><span data-en="Lesson 4: Kiddush and Havdalah">שיעור 4: קידוש והבדלה</span><span class="num dur">31:20</span></li>
+      <li class="done"><span class="n"><svg class="ic"><use href="#i-check"/></svg></span><span data-en="Lesson 5: Muktzeh">שיעור 5: מוקצה</span><span class="num dur">39:52</span></li>
+      <li class="cur" aria-current="true"><span class="n num">6</span><span data-en="Lesson 6: The 39 melachot, part 1">שיעור 6: ל"ט מלאכות, חלק א</span><span class="num dur">51:02</span></li>
+      <li><span class="n num">7</span><span data-en="Lesson 7: The 39 melachot, part 2">שיעור 7: ל"ט מלאכות, חלק ב</span><span class="num dur">47:30</span></li>
+      <li><span class="n num">8</span><span data-en="Lesson 8: Cooking on Shabbat">שיעור 8: בישול בשבת</span><span class="num dur">41:15</span></li>
+      <li><span class="n num">9</span><span data-en="Lesson 9: Carrying">שיעור 9: הוצאה מרשות לרשות</span><span class="num dur">36:40</span></li>
+      <li><span class="n num">10</span><span data-en="Lesson 10: Eruvin">שיעור 10: עירובין</span><span class="num dur">33:05</span></li>
+      <li><span class="n num">11</span><span data-en="Lesson 11: Asking a non-Jew">שיעור 11: אמירה לנכרי</span><span class="num dur">27:48</span></li>
+      <li><span class="n num">12</span><span data-en="Lesson 12: Series summary">שיעור 12: סיכום הסדרה</span><span class="num dur">24:30</span></li>
+    </ul>
+    <div class="notes" id="tab-notes" role="tabpanel" hidden>
+      <textarea placeholder="ההערות שלך לשיעור הזה נשמרות אוטומטית" data-en-placeholder="Your notes for this lesson save automatically" aria-label="הערות"></textarea>
+    </div>
+  </aside>
+
+  <div class="pbody">
+    <div>
+      <h1 data-en="Laws of Shabbat: the 39 melachot, part 1">הלכות שבת: ל"ט מלאכות, חלק א</h1>
+      <p class="meta"><span data-en="Laws of Shabbat">הלכות שבת</span> · <span data-en="Lesson">שיעור</span> <span class="num">6</span> <span data-en="of">מתוך</span> <span class="num">12</span> · <span class="num">51:02</span> · <span data-en="26 Tishrei 5787">כ"ו בתשרי תשפ"ז</span></p>
+    </div>
+    <div class="teacher"><span class="avatar" data-en="A">א</span><span><b data-en="Rav Avraham">הרב אברהם</b><br><span class="meta" data-en="Series teacher">מעביר הסדרה</span></span></div>
+    <div class="acts">
+      <button class="btn fill"><svg class="ic"><use href="#i-check"/></svg><span data-en="Mark as completed">סימון כהושלם</span></button>
+      <button class="btn line"><span data-en="Next lesson">השיעור הבא</span><svg class="ic mirror"><use href="#i-next"/></svg></button>
+    </div>
+    <div>
+      <p class="sub" data-en="Chapters">פרקים</p>
+      <div class="chaps">
+        <button class="chap"><span class="num">00:00</span><span data-en="Opening">פתיחה</span></button>
+        <button class="chap" aria-current="true"><span class="num">06:30</span><span data-en="The 39 melachot: overview">ל"ט מלאכות: סקירה</span></button>
+        <button class="chap"><span class="num">19:45</span><span data-en="Borer">מלאכת הבורר</span></button>
+        <button class="chap"><span class="num">46:10</span><span data-en="Summary">סיכום</span></button>
+      </div>
+    </div>
+    <div>
+      <p class="sub" data-en="Subtitles">כתוביות</p>
+      <div class="chips">
+        <button class="chip" aria-pressed="true">עברית</button>
+        <button class="chip" aria-pressed="false">English</button>
+        <button class="chip" aria-pressed="false">Русский</button>
+        <button class="chip" aria-pressed="false">Español</button>
+      </div>
+    </div>
+    <div>
+      <p class="sub" data-en="About this lesson">על השיעור</p>
+      <p data-en="In this lesson Rav Avraham surveys the 39 melachot and focuses on borer: what is permitted and what is not at the Shabbat table.">בשיעור זה הרב אברהם סוקר את ל"ט המלאכות ומתמקד במלאכת הבורר: מה מותר ומה אסור בשולחן השבת.</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var store = {
+    get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+  var state = {
+    screen: store.get('ah-screen') || 'home',
+    dir: store.get('ah-dir') || 'rtl',
+    frame: store.get('ah-frame') || 'phone'
+  };
+  var frame = $('.frame'), html = document.documentElement;
+
+  $$('[data-en]').forEach(function (el) { el.dataset.he = el.textContent; });
+  $$('[data-en-placeholder]').forEach(function (el) { el.dataset.hePlaceholder = el.placeholder; });
+
+  function apply() {
+    var en = state.dir === 'ltr';
+    $$('[data-screen]').forEach(function (s) { s.hidden = s.dataset.screen !== state.screen; });
+    html.dir = state.dir;
+    html.lang = en ? 'en' : 'he';
+    $$('[data-en]').forEach(function (el) { el.textContent = en ? el.dataset.en : el.dataset.he; });
+    $$('[data-en-placeholder]').forEach(function (el) { el.placeholder = en ? el.dataset.enPlaceholder : el.dataset.hePlaceholder; });
+    frame.classList.toggle('phone', state.frame === 'phone');
+    $$('.ctl [data-set]').forEach(function (b) {
+      var kv = b.dataset.set.split(':');
+      b.setAttribute('aria-pressed', String(state[kv[0]] === kv[1]));
+    });
+    Object.keys(state).forEach(function (k) { store.set('ah-' + k, state[k]); });
+  }
+
+  $('.ctl').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-set]');
+    if (!b) return;
+    var kv = b.dataset.set.split(':');
+    state[kv[0]] = kv[1];
+    apply();
+  });
+
+  $$('[data-go]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.screen = b.dataset.go;
+      apply();
+      window.scrollTo(0, 0);
+    });
+  });
+
+  var player = $('.player'), sbar = $('.sbar');
+  sbar.addEventListener('click', function () {
+    var open = player.classList.toggle('open');
+    sbar.setAttribute('aria-expanded', String(open));
+  });
+
+  $$('.ptabs [role=tab]').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      $$('.ptabs [role=tab]').forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        $('#' + t.getAttribute('aria-controls')).hidden = !on;
+      });
+    });
+  });
+
+  $$('.chips .chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      $$('.chips .chip').forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
+    });
+  });
+
+  apply();
+})();
+</script>
+</body>
+</html>

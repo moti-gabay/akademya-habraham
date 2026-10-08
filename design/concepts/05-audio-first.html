@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>אקדמיה האברהם — Concept 5: Mobile &amp; Audio-First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#FBF7F2;--ink:#22201E;--plum:#5A2D82;--tint:#EDE6F5;--saffron:#F2B134;--stone:#7A746D}
+*{box-sizing:border-box;margin:0}
+body{font-family:Rubik,system-ui,sans-serif;color:var(--ink);background:var(--paper);padding-block-start:44px;-webkit-font-smoothing:antialiased}
+body[data-frame=phone]{background:#E6E1DA}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--plum);outline-offset:2px}
+.mini :focus-visible,.seg :focus-visible{outline-color:var(--saffron)}
+.num{unicode-bidi:isolate;direction:ltr;font-variant-numeric:tabular-nums}
+[dir=rtl] .mirror{transform:scaleX(-1)}
+svg{width:20px;height:20px;flex:none}
+
+/* control bar — not part of the design */
+#ctl{position:fixed;inset-block-start:0;inset-inline:0;height:40px;z-index:10;display:flex;align-items:center;gap:6px;padding-inline:12px;background:#E8E8E8;color:#333;font:12px/1 system-ui,sans-serif;border-block-end:1px solid #CFCFCF}
+#ctl button,#ctl a{font:inherit;color:inherit;background:#fff;border:1px solid #BDBDBD;border-radius:4px;padding:5px 9px;text-decoration:none}
+#ctl button[aria-pressed=true]{background:#333;color:#fff;border-color:#333}
+#ctl .sep{width:1px;height:18px;background:#C4C4C4;margin-inline:6px}
+#ctl .sp{flex:1}
+
+/* frame */
+.frame{container:frame / inline-size;position:relative;background:var(--paper)}
+body[data-frame=phone] .frame{max-width:390px;height:min(844px,calc(100vh - 72px));margin-block:16px;margin-inline:auto;overflow-y:auto;border:2px solid #B9B3AB;border-radius:32px}
+section[data-screen]{display:flex;flex-direction:column;min-height:100%}
+section[hidden]{display:none}
+.cols{display:flex;flex-direction:column;gap:28px;padding-block-end:28px}
+.main,.aside{display:flex;flex-direction:column;gap:28px}
+
+/* home */
+.top{display:flex;align-items:center;gap:12px;padding:20px 20px 4px}
+.top .brand{flex:1}
+.brand b{font-weight:800;font-size:18px;display:block}
+.brand small{font-size:13px;color:var(--stone)}
+.iconbtn{width:44px;height:44px;border-radius:50%;border:0;background:var(--tint);color:var(--plum);display:grid;place-items:center;flex:none}
+.hero{padding:8px 20px 0}
+.kicker{font-size:13px;color:var(--stone);margin-block-end:10px}
+.hero .art{width:100%;height:auto;aspect-ratio:1;border-radius:16px;margin-block-end:16px}
+h1{font-size:30px;font-weight:800;line-height:1.15;letter-spacing:-.01em}
+.hero .meta{font-size:14px;margin-block:8px 16px}
+.hero .track{margin-block:16px 6px}
+.times{display:flex;justify-content:space-between;font-size:13px;color:var(--stone)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-inline:20px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:40px;padding-inline:16px;border:0;border-radius:20px;background:var(--tint);color:var(--plum);font-weight:600;font-size:14px}
+.chip[aria-pressed=true]{background:var(--plum);color:#fff}
+.search{display:flex;align-items:center;gap:10px;margin-inline:20px;height:48px;padding-inline:14px;border-radius:14px;background:#fff;color:var(--stone);border:1px solid #E9E2D9}
+.search input{flex:1;min-width:0;border:0;background:none;font:inherit;color:var(--ink)}
+.search input:focus{outline:0}
+.search:focus-within{border-color:var(--plum)}
+h2{font-size:18px;font-weight:600;padding-inline:20px;margin-block-end:12px}
+
+/* artwork */
+.art{position:relative;flex:none;width:56px;height:56px;border-radius:10px;overflow:hidden;background-image:var(--pat),var(--grad);background-size:auto,cover}
+.a1{--grad:radial-gradient(circle at 80% 15%,rgba(242,177,52,.85),transparent 40%),linear-gradient(135deg,#5A2D82,#22201E)}
+.a2{--grad:linear-gradient(160deg,#F2B134,#5A2D82 70%)}
+.a3{--grad:radial-gradient(circle at 30% 30%,#EDE6F5,#5A2D82 65%)}
+.a4{--grad:linear-gradient(200deg,#22201E,#5A2D82 55%,#F2B134)}
+.a5{--grad:conic-gradient(from 210deg,#5A2D82,#7A746D,#5A2D82)}
+.a6{--grad:linear-gradient(45deg,#7A746D,#F2B134)}
+.p1{--pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Ccircle cx='3' cy='3' r='1.3' fill='%23fff' fill-opacity='.35'/%3E%3C/svg%3E")}
+.p2{--pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M0 10L10 0' stroke='%23fff' stroke-opacity='.25'/%3E%3C/svg%3E")}
+.p3{--pat:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Ccircle cx='14' cy='14' r='9' fill='none' stroke='%23fff' stroke-opacity='.16' stroke-width='1.5'/%3E%3C/svg%3E")}
+.bar{position:absolute;inset-block-end:0;inset-inline-start:0;height:3px;width:var(--p);background:var(--saffron)}
+.track{position:relative;height:4px;border-radius:2px;background:var(--tint);overflow:hidden}
+.track .bar{height:100%}
+
+/* episode rows */
+.list{display:flex;flex-direction:column;gap:12px;padding-inline:20px}
+.row{display:flex;align-items:center;gap:12px}
+.row-body{flex:1;min-width:0}
+.row h3{font-size:16px;font-weight:600;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{font-size:13px;color:var(--stone);margin-block-start:2px;display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--saffron);flex:none}
+.row-play{position:relative;flex:none;width:40px;height:40px;border-radius:50%;border:0;background:var(--tint);color:var(--plum);display:grid;place-items:center}
+.row-play::after{content:"";position:absolute;inset:-2px}
+.row-play svg{width:18px;height:18px}
+.row-play.done{background:none;color:var(--stone)}
+
+/* segmented toggle */
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;height:56px;padding:4px;border-radius:16px;background:var(--tint)}
+.seg::before{content:"";position:absolute;inset-block:4px;inset-inline-start:4px;width:calc(50% - 4px);border-radius:12px;background:var(--plum);transition:inset-inline-start .25s cubic-bezier(.2,.8,.2,1)}
+.frame[data-mode=audio] .seg::before{inset-inline-start:50%}
+.seg button{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;background:none;border:0;border-radius:12px;font-weight:600;font-size:16px;color:var(--plum);transition:color .25s}
+.seg button[aria-checked=true]{color:#fff}
+
+/* mini-player */
+.mini{position:sticky;inset-block-end:0;z-index:2;margin-block-start:auto;display:flex;align-items:center;gap:12px;height:64px;padding-inline:12px;background:var(--plum);color:#fff}
+.mini .bar{inset-block:0 auto}
+.mini .art{width:44px;height:44px;border-radius:8px}
+.mini-body{flex:1;min-width:0;text-align:start;background:none;border:0;padding:0;color:inherit}
+.mini-body b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-body span{display:block;font-size:12px;color:var(--tint)}
+.mini .iconbtn{background:none;color:#fff}
+.mini .mini-play{background:#fff;color:var(--plum)}
+
+/* player */
+.ptop{display:flex;align-items:center;gap:8px;padding:12px 20px 0}
+.ptop .seg{flex:1}
+.media{padding-inline:20px}
+.video{position:relative;display:grid;place-items:center;width:100%;height:auto;aspect-ratio:16/9;border-radius:16px;overflow:hidden;color:#fff}
+.bigplay{width:64px;height:64px;border-radius:50%;border:0;background:#fff;color:var(--plum);display:grid;place-items:center}
+.bigplay svg{width:28px;height:28px}
+.vbar{position:absolute;inset-block-end:0;inset-inline:0;display:flex;align-items:center;gap:10px;padding:12px 14px;font-size:12px;background:linear-gradient(transparent,rgba(34,32,30,.6))}
+.vbar .track{flex:1;background:rgba(255,255,255,.3)}
+.wm{position:absolute;inset-block-end:44px;inset-inline-start:14px;font-size:11px;opacity:.08;direction:ltr}
+.cover{width:min(100%,320px);height:auto;aspect-ratio:1;border-radius:16px;margin-inline:auto}
+.wave{display:flex;align-items:center;gap:3px;height:72px;margin-block:20px 8px;border-radius:8px}
+.wave i{flex:1;height:var(--h);border-radius:2px;background:var(--plum);opacity:.4}
+.wave i.on{background:var(--saffron);opacity:1}
+.frame[data-mode=audio] .video,.frame[data-mode=audio] .subs,.frame[data-mode=video] .audio{display:none}
+.ptitle{padding-inline:20px}
+.ptitle h1{font-size:24px}
+.controls{display:flex;align-items:center;justify-content:center;gap:24px;padding-inline:20px}
+.skip{position:relative;width:56px;height:56px;border:0;border-radius:50%;background:none;color:var(--ink);display:grid;place-items:center}
+.skip svg{width:40px;height:40px}
+.skip.fwd svg{scale:-1 1}
+.skip .num{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:600;padding-block-start:2px}
+.play{width:72px;height:72px;border:0;border-radius:50%;background:var(--plum);color:#fff;display:grid;place-items:center}
+.play svg{width:32px;height:32px}
+.tools{display:flex;justify-content:center;gap:12px;padding-inline:20px}
+.pill{display:flex;align-items:center;gap:8px;height:44px;padding-inline:16px;border:0;border-radius:22px;background:var(--tint);color:var(--plum);font-weight:600;font-size:14px}
+.pill[aria-pressed=true]{background:var(--plum);color:#fff}
+.desc{padding-inline:20px;font-size:16px;line-height:1.6}
+.chapters{list-style:none;padding-inline:20px;display:flex;flex-direction:column;gap:4px}
+.chapters button{display:flex;justify-content:space-between;align-items:center;width:100%;min-height:44px;padding-inline:12px;border:0;border-radius:10px;background:none;text-align:start;font-size:15px}
+.chapters button:hover{background:var(--tint)}
+.chapters [aria-current]{color:var(--plum);font-weight:600;background:var(--tint)}
+.chapters .num{color:var(--stone);font-size:13px}
+.chapters [aria-current] .num{color:inherit}
+.sub{margin-inline:20px;padding:20px;border-radius:16px;background:var(--tint);display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.sub p{font-weight:600;font-size:16px}
+.btn{height:48px;padding-inline:24px;border:0;border-radius:14px;background:var(--plum);color:#fff;font-weight:600;font-size:16px}
+
+/* desktop: 480 px column + queue panel */
+@container frame (min-width: 900px){
+  .cols{display:grid;grid-template-columns:480px 320px;justify-content:center;gap:40px;align-items:start;padding:12px 24px 40px}
+  .aside{position:sticky;inset-block-start:56px}
+  .mini{max-width:840px;width:100%;margin-inline:auto;border-radius:16px 16px 0 0}
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important}
+}
+</style>
+</head>
+<body data-frame="phone">
+
+<div id="ctl" dir="ltr">
+  <button type="button" data-tab="home" aria-pressed="true">Home</button>
+  <button type="button" data-tab="player" aria-pressed="false">Player</button>
+  <span class="sep"></span>
+  <button type="button" id="dirBtn">עברית · RTL</button>
+  <button type="button" id="frameBtn">Phone 390</button>
+  <span class="sp"></span>
+  <a href="index.html">← All concepts</a>
+</div>
+
+<div class="frame" data-mode="audio">
+
+<!-- ============ HOME ============ -->
+<section data-screen="home">
+  <div class="cols">
+    <div class="main">
+      <header class="top">
+        <div class="brand">
+          <b data-en="Akademya Habraham">אקדמיה האברהם</b>
+          <small><span data-en="26 Tishrei 5787">כ"ו בתשרי תשפ"ז</span> · <span class="num" data-en="Oct 7, 2026">7.10.2026</span></small>
+        </div>
+        <button type="button" class="iconbtn" aria-label="חשבון" data-en-label="Account">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20.5a8 8 0 0 1 16 0"/></svg>
+        </button>
+      </header>
+
+      <div class="hero">
+        <p class="kicker" data-en="Pick up where you left off">ממשיכים מאיפה שעצרת</p>
+        <div class="art a1 p3" aria-hidden="true"></div>
+        <h1 data-en="In the beginning: what does &quot;in the image of God&quot; mean?">בראשית ברא: מה פירוש "בצלם אלוקים"?</h1>
+        <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">42:15</span></p>
+        <div class="seg" role="radiogroup" aria-label="מצב נגינה" data-en-label="Playback mode" data-go="player">
+          <button type="button" role="radio" aria-checked="false" data-mode="video"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span data-en="Video">וידאו</span></button>
+          <button type="button" role="radio" aria-checked="true" data-mode="audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3v10.3A4 4 0 1 0 15 17V7h4V3z"/></svg><span data-en="Audio">אודיו</span></button>
+        </div>
+        <div class="track"><span class="bar" style="--p:30%"></span></div>
+        <p class="times"><span class="num">12:40</span><span class="num">42:15</span></p>
+      </div>
+
+      <div class="chips">
+        <button type="button" class="chip" aria-pressed="true" data-en="All">הכול</button>
+        <button type="button" class="chip" aria-pressed="false" data-en="Parsha">פרשה</button>
+        <button type="button" class="chip" aria-pressed="false" data-en="Holidays">חגים</button>
+        <button type="button" class="chip" aria-pressed="false" data-en="Halacha">הלכה</button>
+      </div>
+
+      <label class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>
+        <input type="search" placeholder="חיפוש שיעור, פרשה או הלכה" data-en-placeholder="Search lessons, parsha or halacha">
+      </label>
+
+      <div>
+        <h2 data-en="New this week">חדש השבוע</h2>
+        <div class="list">
+          <div class="row">
+            <div class="art a2 p1"></div>
+            <div class="row-body"><h3 data-en="Parashat Noach: the flood and the tower">פרשת נח: דור המבול ודור הפלגה</h3>
+              <p class="meta"><span class="dot"></span><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">38:40</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a4 p2"></div>
+            <div class="row-body"><h3 data-en="Rosh Hashanah: the shofar">ראש השנה: תקיעת שופר</h3>
+              <p class="meta"><span class="dot"></span><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">44:05</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a3 p3"></div>
+            <div class="row-body"><h3 data-en="Sukkot: the four species">סוכות: ארבעת המינים</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">29:18</span></p></div>
+            <button type="button" class="row-play done" aria-label="הושלם, נגן שוב" data-en-label="Finished, play again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a6 p1"></div>
+            <div class="row-body"><h3 data-en="Chanukah: the miracle of the oil">חנוכה: נס פך השמן</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">33:27</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 data-en="Continue listening">המשך להאזין</h2>
+        <div class="list">
+          <div class="row">
+            <div class="art a5 p2"><span class="bar" style="--p:20%"></span></div>
+            <div class="row-body"><h3 data-en="Laws of Shabbat: the 39 melachot, part 1">הלכות שבת: ל"ט מלאכות, חלק א</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">51:02</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a4 p3"><span class="bar" style="--p:55%"></span></div>
+            <div class="row-body"><h3 data-en="Laws of blessings: blessings on food">הלכות ברכות: ברכות הנהנין</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">35:50</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="aside">
+      <div>
+        <h2 data-en="Up next">הבא בתור</h2>
+        <div class="list">
+          <div class="row">
+            <div class="art a2 p3"></div>
+            <div class="row-body"><h3 data-en="Parashat Lech Lecha: Avraham's journey">פרשת לך לך: מסעו של אברהם</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">40:12</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a3 p1"></div>
+            <div class="row-body"><h3 data-en="Yom Kippur: teshuva">יום כיפור: תשובה</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">47:00</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="mini">
+    <span class="bar" style="--p:30%"></span>
+    <div class="art a1 p3" aria-hidden="true"></div>
+    <button type="button" class="mini-body" data-go="player">
+      <b data-en="In the beginning: what does &quot;in the image of God&quot; mean?">בראשית ברא: מה פירוש "בצלם אלוקים"?</b>
+      <span data-en="Rav Avraham">הרב אברהם</span>
+    </button>
+    <button type="button" class="iconbtn" aria-label="הבא" data-en-label="Next"><svg viewBox="0 0 24 24" fill="currentColor" class="mirror" aria-hidden="true"><path d="M5 5l10 7-10 7z"/><path d="M17 5h2v14h-2z"/></svg></button>
+    <button type="button" class="iconbtn mini-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+  </div>
+</section>
+
+<!-- ============ PLAYER ============ -->
+<section data-screen="player" hidden>
+  <div class="cols">
+    <div class="main">
+      <div class="ptop">
+        <button type="button" class="iconbtn" data-go="home" aria-label="חזרה" data-en-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="mirror" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <div class="seg" role="radiogroup" aria-label="מצב נגינה" data-en-label="Playback mode">
+          <button type="button" role="radio" aria-checked="false" data-mode="video"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg><span data-en="Video">וידאו</span></button>
+          <button type="button" role="radio" aria-checked="true" data-mode="audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 3v10.3A4 4 0 1 0 15 17V7h4V3z"/></svg><span data-en="Audio">אודיו</span></button>
+        </div>
+      </div>
+
+      <div class="media">
+        <div class="video art a1 p3">
+          <button type="button" class="bigplay" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          <span class="wm">moti@example.com</span>
+          <div class="vbar"><span class="num">12:40</span><div class="track"><span class="bar" style="--p:30%"></span></div><span class="num">42:15</span></div>
+        </div>
+        <div class="audio">
+          <div class="art a1 p3 cover" aria-hidden="true"></div>
+          <div class="wave" id="wave" role="slider" tabindex="0" aria-label="מיקום בשיעור" data-en-label="Position" aria-valuemin="0" aria-valuemax="2535" aria-valuenow="760" aria-valuetext="12:40"></div>
+          <p class="times"><span class="num">12:40</span><span class="num">-29:35</span></p>
+        </div>
+      </div>
+
+      <div class="ptitle">
+        <h1 data-en="In the beginning: what does &quot;in the image of God&quot; mean?">בראשית ברא: מה פירוש "בצלם אלוקים"?</h1>
+        <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span data-en="Parashat Bereshit">פרשת בראשית</span> · <span class="num">42:15</span></p>
+      </div>
+
+      <div class="controls">
+        <button type="button" class="skip" aria-label="15 שניות אחורה" data-en-label="Back 15 seconds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mirror" aria-hidden="true"><path d="M4.5 9.3A8 8 0 1 1 4.5 14.7M4.5 9.3V4.8M4.5 9.3H9"/></svg><span class="num">15</span></button>
+        <button type="button" class="play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+        <button type="button" class="skip fwd" aria-label="30 שניות קדימה" data-en-label="Forward 30 seconds"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mirror" aria-hidden="true"><path d="M4.5 9.3A8 8 0 1 1 4.5 14.7M4.5 9.3V4.8M4.5 9.3H9"/></svg><span class="num">30</span></button>
+      </div>
+      <div class="tools">
+        <button type="button" class="pill" id="speed" aria-label="מהירות" data-en-label="Speed"><span class="num">1×</span></button>
+        <button type="button" class="pill" id="sleep" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><span data-en="Sleep timer">טיימר שינה</span></button>
+      </div>
+
+      <div class="chips subs" role="group" aria-label="כתוביות" data-en-label="Subtitles">
+        <button type="button" class="chip" aria-pressed="true">עברית</button>
+        <button type="button" class="chip" aria-pressed="false">English</button>
+        <button type="button" class="chip" aria-pressed="false">Русский</button>
+        <button type="button" class="chip" aria-pressed="false">Español</button>
+      </div>
+
+      <p class="desc" data-en="Rav Avraham opens Bereshit with one question: what does &quot;in the image of God&quot; mean for daily life? Through Rashi, the Rambam and the Maharal we build an answer that stays with us all year.">הרב אברהם פותח את ספר בראשית בשאלה אחת: מה המשמעות של "בצלם אלוקים" לחיי היומיום שלנו? דרך רש"י, הרמב"ם והמהר"ל נבנה תשובה שמלווה אותנו לכל השנה.</p>
+
+      <div>
+        <h2 data-en="Chapters">פרקים</h2>
+        <ol class="chapters">
+          <li><button type="button"><span data-en="Opening">פתיחה</span><span class="num">00:00</span></button></li>
+          <li><button type="button" aria-current="true"><span data-en="Rashi on the verse">רש"י על הפסוק</span><span class="num">08:10</span></button></li>
+          <li><button type="button"><span data-en="Rambam and Maharal">הרמב"ם והמהר"ל</span><span class="num">21:35</span></button></li>
+          <li><button type="button"><span data-en="Summary">סיכום</span><span class="num">38:50</span></button></li>
+        </ol>
+      </div>
+
+      <div class="sub">
+        <p data-en="A subscription opens every lesson">המנוי פותח את כל השיעורים</p>
+        <button type="button" class="btn" data-en="Subscribe">הצטרפו למנוי</button>
+      </div>
+    </div>
+
+    <aside class="aside">
+      <div>
+        <h2 data-en="Up next">הבא בתור</h2>
+        <div class="list">
+          <div class="row">
+            <div class="art a2 p1"></div>
+            <div class="row-body"><h3 data-en="Parashat Noach: the flood and the tower">פרשת נח: דור המבול ודור הפלגה</h3>
+              <p class="meta"><span class="dot"></span><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">38:40</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a2 p3"></div>
+            <div class="row-body"><h3 data-en="Parashat Lech Lecha: Avraham's journey">פרשת לך לך: מסעו של אברהם</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">40:12</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+          <div class="row">
+            <div class="art a3 p1"></div>
+            <div class="row-body"><h3 data-en="Yom Kippur: teshuva">יום כיפור: תשובה</h3>
+              <p class="meta"><span data-en="Rav Avraham">הרב אברהם</span> · <span class="num">47:00</span></p></div>
+            <button type="button" class="row-play" aria-label="נגן" data-en-label="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+</div>
+
+<script>
+(() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+  };
+  const frame = $('.frame');
+
+  function setScreen(s) {
+    $$('[data-screen]').forEach(el => { el.hidden = el.dataset.screen !== s; });
+    $$('#ctl [data-tab]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === s));
+    frame.scrollTop = 0;
+    store.set('ah-screen', s);
+  }
+
+  function setDir(d) {
+    const he = d === 'rtl';
+    document.documentElement.dir = d;
+    document.documentElement.lang = he ? 'he' : 'en';
+    $$('[data-en]').forEach(el => {
+      if (el.dataset.he === undefined) el.dataset.he = el.textContent;
+      el.textContent = he ? el.dataset.he : el.dataset.en;
+    });
+    $$('[data-en-placeholder]').forEach(el => {
+      if (el.dataset.hePlaceholder === undefined) el.dataset.hePlaceholder = el.placeholder;
+      el.placeholder = he ? el.dataset.hePlaceholder : el.dataset.enPlaceholder;
+    });
+    $$('[data-en-label]').forEach(el => {
+      if (el.dataset.heLabel === undefined) el.dataset.heLabel = el.getAttribute('aria-label');
+      el.setAttribute('aria-label', he ? el.dataset.heLabel : el.dataset.enLabel);
+    });
+    $('#dirBtn').textContent = he ? 'עברית · RTL' : 'English · LTR';
+    store.set('ah-dir', d);
+  }
+
+  function setFrame(f) {
+    document.body.dataset.frame = f;
+    $('#frameBtn').textContent = f === 'phone' ? 'Phone 390' : 'Desktop';
+    store.set('ah-frame', f);
+  }
+
+  function setMode(m) {
+    frame.dataset.mode = m;
+    $$('.seg [role=radio]').forEach(b => b.setAttribute('aria-checked', b.dataset.mode === m));
+  }
+
+  // control bar
+  $$('#ctl [data-tab]').forEach(b => b.addEventListener('click', () => setScreen(b.dataset.tab)));
+  $('#dirBtn').addEventListener('click', () => setDir(document.documentElement.dir === 'rtl' ? 'ltr' : 'rtl'));
+  $('#frameBtn').addEventListener('click', () => setFrame(document.body.dataset.frame === 'phone' ? 'desktop' : 'phone'));
+
+  // in-design navigation
+  $$('.frame [data-go]:not(.seg)').forEach(b => b.addEventListener('click', () => setScreen(b.dataset.go)));
+  $$('.seg').forEach(seg => seg.addEventListener('click', e => {
+    const b = e.target.closest('[role=radio]');
+    if (!b) return;
+    setMode(b.dataset.mode);
+    if (seg.dataset.go) setScreen(seg.dataset.go);
+  }));
+  $$('.chips').forEach(g => g.addEventListener('click', e => {
+    const b = e.target.closest('.chip');
+    if (b) $$('.chip', g).forEach(c => c.setAttribute('aria-pressed', c === b));
+  }));
+
+  // player controls
+  const speeds = ['1×', '1.25×', '1.5×', '2×'];
+  let speed = 0;
+  $('#speed').addEventListener('click', e => {
+    speed = (speed + 1) % speeds.length;
+    $('.num', e.currentTarget).textContent = speeds[speed];
+  });
+  $('#sleep').addEventListener('click', e => {
+    const b = e.currentTarget;
+    b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true');
+  });
+
+  // waveform: 40 bars, first 30 % played
+  const wave = $('#wave');
+  wave.innerHTML = Array.from({ length: 40 }, (_, i) => {
+    const h = 28 + 68 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.45));
+    return `<i class="${i < 12 ? 'on' : ''}" style="--h:${h.toFixed(0)}%"></i>`;
+  }).join('');
+
+  // restore persisted state
+  setDir(store.get('ah-dir') === 'ltr' ? 'ltr' : 'rtl');
+  setFrame(store.get('ah-frame') === 'desktop' ? 'desktop' : 'phone');
+  setScreen(store.get('ah-screen') === 'player' ? 'player' : 'home');
+})();
+</script>
+</body>
+</html>
