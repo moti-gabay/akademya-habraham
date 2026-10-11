@@ -1,0 +1,87 @@
+{
+  "brand": "Akademya Habraham",
+  "common": {
+    "skipToContent": "Skip to content",
+    "back": "Back",
+    "comingSoon": "This page is still being built. It will be here soon."
+  },
+  "nav": {
+    "label": "Main navigation",
+    "home": "Home",
+    "path": "My path",
+    "search": "Search",
+    "holidays": "Holidays",
+    "glossary": "Glossary",
+    "help": "Help"
+  },
+  "prefs": {
+    "welcome": "Welcome",
+    "chooseLanguage": "Choose language",
+    "language": "Language",
+    "textSize": "Text size",
+    "sizes": { "s": "Small", "m": "Normal", "l": "Large" },
+    "continue": "Continue",
+    "changeAnytime": "You can change this at any time",
+    "account": "{name}'s account"
+  },
+  "home": {
+    "greeting": "Hello, {name}",
+    "subtitle": "Good to see you again. Here is your next lesson.",
+    "stepChip": "Step {n} · {step}",
+    "stepChipLesson": "Step {n} · {step} · Lesson {lesson} of {total}",
+    "lessonMeta": "Lesson {lesson} of {total} · You stopped at <tc></tc>",
+    "teacherMeta": "{teacher} · You stopped at <tc></tc>",
+    "progress": "Lesson progress",
+    "continueWatching": "Continue watching",
+    "myPath": "My path",
+    "seeFullPath": "See full path",
+    "stepNumber": "Step {n}",
+    "status": {
+      "completed": "Completed",
+      "inProgress": "In progress · {done} of {total} lessons",
+      "inProgressShort": "{done} of {total} lessons",
+      "upNext": "Up next"
+    },
+    "nextHoliday": "Next holiday · {date}",
+    "holidayMeta": "{description} · {minutes} minutes",
+    "holidayCta": "Watch the {holiday} lesson",
+    "glossaryTitle": "Glossary",
+    "allTerms": "All terms",
+    "helpTitle": "Need help?",
+    "helpText": "Having trouble with the site or a lesson? We are here.",
+    "talkToUs": "Talk to us"
+  },
+  "term": {
+    "explain": "Explain: {term}",
+    "close": "Close"
+  },
+  "player": {
+    "meta": "Step {n} · {step} · Lesson {lesson}",
+    "video": "Lesson video",
+    "play": "Play",
+    "pause": "Pause",
+    "back10": "10 seconds back",
+    "forward10": "10 seconds forward",
+    "timeline": "Position in the lesson",
+    "timelineValue": "{current} of {total}",
+    "speed": "Speaking speed",
+    "speeds": { "slow": "Slow", "normal": "Normal", "fast": "Fast" },
+    "subtitles": "Subtitles",
+    "subtitlesOff": "No subtitles",
+    "words": "Words from the lesson",
+    "error": "We could not load the video. Please try again in a moment."
+  },
+  "pages": {
+    "path": { "title": "My path", "intro": "The five steps of your path, in order." },
+    "search": { "title": "Search", "intro": "Here you will be able to find a lesson by topic or word." },
+    "holidays": { "title": "Holidays", "intro": "Lessons for each holiday in the calendar." },
+    "glossary": { "title": "Glossary", "intro": "Words that come up in the lessons, explained briefly." },
+    "help": {
+      "title": "Help",
+      "intro": "Having trouble with the site or a lesson? We are here.",
+      "phone": "Phone",
+      "whatsapp": "WhatsApp",
+      "noContacts": "Contact details will appear here soon."
+    }
+  }
+}

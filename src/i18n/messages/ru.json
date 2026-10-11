@@ -1,0 +1,88 @@
+{
+  "_review": "Initial machine draft. Needs review by a native speaker.",
+  "brand": "Академия Авраама",
+  "common": {
+    "skipToContent": "Перейти к содержанию",
+    "back": "Назад",
+    "comingSoon": "Эта страница ещё в работе. Скоро она появится."
+  },
+  "nav": {
+    "label": "Главное меню",
+    "home": "Главная",
+    "path": "Мой путь",
+    "search": "Поиск",
+    "holidays": "Праздники",
+    "glossary": "Словарь",
+    "help": "Помощь"
+  },
+  "prefs": {
+    "welcome": "Добро пожаловать",
+    "chooseLanguage": "Выберите язык",
+    "language": "Язык",
+    "textSize": "Размер текста",
+    "sizes": { "s": "Мелкий", "m": "Обычный", "l": "Крупный" },
+    "continue": "Продолжить",
+    "changeAnytime": "Это можно изменить в любой момент",
+    "account": "Аккаунт: {name}"
+  },
+  "home": {
+    "greeting": "Здравствуйте, {name}",
+    "subtitle": "Рады видеть вас снова. Вот ваш следующий урок.",
+    "stepChip": "Этап {n} · {step}",
+    "stepChipLesson": "Этап {n} · {step} · Урок {lesson} из {total}",
+    "lessonMeta": "Урок {lesson} из {total} · Вы остановились на <tc></tc>",
+    "teacherMeta": "{teacher} · Вы остановились на <tc></tc>",
+    "progress": "Прогресс урока",
+    "continueWatching": "Продолжить просмотр",
+    "myPath": "Мой путь",
+    "seeFullPath": "Весь путь",
+    "stepNumber": "Этап {n}",
+    "status": {
+      "completed": "Пройдено",
+      "inProgress": "В процессе · {done} из {total} уроков",
+      "inProgressShort": "{done} из {total} уроков",
+      "upNext": "Далее"
+    },
+    "nextHoliday": "Ближайший праздник · {date}",
+    "holidayMeta": "{description} · {minutes} минуты",
+    "holidayCta": "К уроку: {holiday}",
+    "glossaryTitle": "Словарь",
+    "allTerms": "Все слова",
+    "helpTitle": "Нужна помощь?",
+    "helpText": "Трудности с сайтом или уроком? Мы рядом.",
+    "talkToUs": "Связаться с нами"
+  },
+  "term": {
+    "explain": "Объяснение: {term}",
+    "close": "Закрыть"
+  },
+  "player": {
+    "meta": "Этап {n} · {step} · Урок {lesson}",
+    "video": "Видео урока",
+    "play": "Смотреть",
+    "pause": "Пауза",
+    "back10": "10 секунд назад",
+    "forward10": "10 секунд вперёд",
+    "timeline": "Место в уроке",
+    "timelineValue": "{current} из {total}",
+    "speed": "Скорость речи",
+    "speeds": { "slow": "Медленно", "normal": "Обычно", "fast": "Быстро" },
+    "subtitles": "Субтитры",
+    "subtitlesOff": "Без субтитров",
+    "words": "Слова из урока",
+    "error": "Не удалось загрузить видео. Попробуйте ещё раз чуть позже."
+  },
+  "pages": {
+    "path": { "title": "Мой путь", "intro": "Пять этапов вашего пути по порядку." },
+    "search": { "title": "Поиск", "intro": "Здесь можно будет найти урок по теме или слову." },
+    "holidays": { "title": "Праздники", "intro": "Уроки к каждому празднику года." },
+    "glossary": { "title": "Словарь", "intro": "Слова, которые часто звучат на уроках, с кратким объяснением." },
+    "help": {
+      "title": "Помощь",
+      "intro": "Трудности с сайтом или уроком? Мы рядом.",
+      "phone": "Телефон",
+      "whatsapp": "WhatsApp",
+      "noContacts": "Контакты скоро появятся здесь."
+    }
+  }
+}
