@@ -21,8 +21,8 @@ export async function Header({ className = "" }: { className?: string }) {
       >
         {t("common.skipToContent")}
       </a>
-      <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-2 lg:px-12 lg:py-3">
-        <Link href="/" className="tap inline-flex items-center text-lg font-semibold text-green lg:text-xl">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2 lg:px-12 lg:py-3">
+        <Link href="/" className="tap inline-flex items-center text-lg leading-tight font-semibold text-green lg:me-3 lg:text-xl">
           {t("brand")}
         </Link>
         <TopNav />

@@ -88,6 +88,18 @@ Catalog (localized; fallback chain: requested locale → `he`)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)
 
+Learning path and glossary (**proposed 2026-10-11, not migrated**; the final sketch needs both, see `src/server/repos/types.ts` for the shapes the UI already consumes from mock repos)
+- `tracks` — id, code unique, sort_order, status enum(draft|published). One track at launch (the conversion path); the table keeps a second track possible without a schema change.
+- `track_translations` — pk(track_id, locale), name, slug. Unique (locale, slug).
+- `track_steps` — id, track_id, sort_order. Unique (track_id, sort_order).
+- `track_step_translations` — pk(step_id, locale), name, slug.
+- `track_step_lessons` — pk(step_id, lesson_id), sort_order. A lesson keeps its `category_id`, so the path and the holiday/parsha/halacha catalog stay independent and one lesson can sit in both.
+- `glossary_terms` — id, code unique, sort_order
+- `glossary_term_translations` — pk(term_id, locale), term, short_definition, slug. Unique (locale, slug).
+- `lesson_glossary_terms` — pk(lesson_id, term_id), sort_order. Drives "Words from the lesson"; a term is underlined in a lesson title when its translated `term` appears there literally.
+- No new progress table. Step status is derived: completed = every lesson of the step has `user_lesson_progress.completed_at`; in progress = some do; "up next" = the first step after the current one. "Continue watching" = the latest `user_lesson_progress.updated_at` without `completed_at`.
+- Same fallback chain as the catalog (requested locale → `he`); `he` rows are required.
+
 Telemetry
 - `playback_sessions` — id, user_id, lesson_id, started_at, last_heartbeat_at, last_position_sec, watched_sec, max_position_sec, completed, device, user_agent, ip_hash. Index (user_id, last_heartbeat_at).
 - `user_lesson_progress` — pk(user_id, lesson_id), last_position_sec, watched_pct, completed_at, updated_at
@@ -170,9 +182,9 @@ interface BillingProvider {
 
 ## 3. Milestones
 
-Repo layout (single Next.js app):
+Repo layout (single Next.js app; the `app` directory lives under `src/`):
 ```
-app/[locale]/(public|app|admin)/...    app/api/...    src/server/...    src/i18n/messages/{he,en,ru,es}.json
+src/app/[locale]/(public|app|admin)/...    src/app/api/...    src/server/...    src/i18n/messages/{he,en,ru,es}.json
 drizzle/ (schema + migrations)    .github/workflows/ci.yml    vercel.json (crons, headers)    design/ (concepts)
 ```
 

@@ -23,6 +23,14 @@ export async function PathSteps({ steps }: { steps: PathStep[] }) {
           {t("seeFullPath")}
         </Link>
       </div>
+      <PathStepList steps={steps} />
+    </section>
+  );
+}
+
+export async function PathStepList({ steps }: { steps: PathStep[] }) {
+  const t = await getTranslations("home");
+  return (
       <ol className="divide-y divide-line rounded-card border border-line bg-card px-4 lg:grid lg:grid-cols-5 lg:gap-3 lg:divide-y-0 lg:border-0 lg:bg-transparent lg:px-0">
         {steps.map((step) => {
           const current = step.status === "in_progress";
@@ -53,6 +61,5 @@ export async function PathSteps({ steps }: { steps: PathStep[] }) {
           );
         })}
       </ol>
-    </section>
   );
 }
