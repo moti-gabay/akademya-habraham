@@ -30,11 +30,12 @@ export default async function WelcomePage() {
           <BookOpen aria-hidden className="size-7" />
         </span>
         <h1 className="mt-3 text-2xl font-semibold text-green">{t("brand")}</h1>
-        <p className="mx-auto mt-2 flex max-w-xs flex-wrap justify-center gap-x-2 text-sm text-muted">
-          {greetings.map((greeting, index) => (
-            <span key={greeting.locale} lang={greeting.locale}>
-              {greeting.text}
-              {index < greetings.length - 1 && <span aria-hidden> ·</span>}
+        <p className="mt-2 text-sm text-muted">
+          {[greetings.slice(0, 2), greetings.slice(2)].map((pair) => (
+            <span key={pair[0].locale} className="block">
+              <bdi lang={pair[0].locale}>{pair[0].text}</bdi>
+              <span aria-hidden> · </span>
+              <bdi lang={pair[1].locale}>{pair[1].text}</bdi>
             </span>
           ))}
         </p>

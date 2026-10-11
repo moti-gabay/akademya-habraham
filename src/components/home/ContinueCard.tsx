@@ -32,7 +32,7 @@ export async function ContinueCard({ item, terms }: { item: ContinueWatching; te
       </Link>
       <div className="flex flex-col gap-3 lg:w-1/2">
         <p className={`${chip} hidden lg:block`}>{t("stepChipLesson", step)}</p>
-        <h2 className="text-xl leading-snug font-medium text-balance lg:text-2xl">
+        <h2 className="text-xl leading-snug font-medium lg:text-2xl">
           <TitleWithTerms title={lesson.title} terms={terms} />
         </h2>
         <p className="text-sm text-muted lg:hidden">{t.rich("lessonMeta", { ...step, tc })}</p>
