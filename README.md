@@ -20,7 +20,7 @@ Optional: copy `.env.example` to `.env.local`. `NEXT_PUBLIC_HELP_PHONE` and `NEX
 pnpm lint             # ESLint + check that only logical Tailwind classes are used
 pnpm typecheck
 pnpm build
-pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, screenshots
+pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, screenshots (screenshots compare locally only, not in CI)
 pnpm test:e2e --update-snapshots   # after an intended visual change
 ```
 
