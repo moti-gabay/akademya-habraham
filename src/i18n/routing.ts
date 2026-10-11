@@ -1,13 +1,14 @@
 import { defineRouting } from "next-intl/routing";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/server/i18n/locales";
 
 export const routing = defineRouting({
-  locales: ["he", "en", "ru", "es"],
-  defaultLocale: "he",
+  locales: LOCALES,
+  defaultLocale: DEFAULT_LOCALE,
   localePrefix: "always",
   localeCookie: { maxAge: 60 * 60 * 24 * 365 },
 });
 
-export type Locale = (typeof routing.locales)[number];
+export type { Locale };
 
 export const localeNames: Record<Locale, string> = {
   he: "עברית",

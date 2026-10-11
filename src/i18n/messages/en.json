@@ -19,10 +19,15 @@
     "chooseLanguage": "Choose language",
     "language": "Language",
     "textSize": "Text size",
-    "sizes": { "s": "Small", "m": "Normal", "l": "Large" },
+    "sizes": {
+      "s": "Small",
+      "m": "Normal",
+      "l": "Large"
+    },
     "continue": "Continue",
     "changeAnytime": "You can change this at any time",
-    "account": "{name}'s account"
+    "account": "{name}'s account",
+    "sizeLetter": "A"
   },
   "home": {
     "greeting": "Hello, {name}",
@@ -65,17 +70,33 @@
     "timeline": "Position in the lesson",
     "timelineValue": "{current} of {total}",
     "speed": "Speaking speed",
-    "speeds": { "slow": "Slow", "normal": "Normal", "fast": "Fast" },
+    "speeds": {
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
     "subtitles": "Subtitles",
     "subtitlesOff": "No subtitles",
     "words": "Words from the lesson",
     "error": "We could not load the video. Please try again in a moment."
   },
   "pages": {
-    "path": { "title": "My path", "intro": "The five steps of your path, in order." },
-    "search": { "title": "Search", "intro": "Here you will be able to find a lesson by topic or word." },
-    "holidays": { "title": "Holidays", "intro": "Lessons for each holiday in the calendar." },
-    "glossary": { "title": "Glossary", "intro": "Words that come up in the lessons, explained briefly." },
+    "path": {
+      "title": "My path",
+      "intro": "The five steps of your path, in order."
+    },
+    "search": {
+      "title": "Search",
+      "intro": "Here you will be able to find a lesson by topic or word."
+    },
+    "holidays": {
+      "title": "Holidays",
+      "intro": "Lessons for each holiday in the calendar."
+    },
+    "glossary": {
+      "title": "Glossary",
+      "intro": "Words that come up in the lessons, explained briefly."
+    },
     "help": {
       "title": "Help",
       "intro": "Having trouble with the site or a lesson? We are here.",

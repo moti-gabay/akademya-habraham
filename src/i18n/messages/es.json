@@ -20,10 +20,15 @@
     "chooseLanguage": "Elija el idioma",
     "language": "Idioma",
     "textSize": "Tamaño del texto",
-    "sizes": { "s": "Pequeño", "m": "Normal", "l": "Grande" },
+    "sizes": {
+      "s": "Pequeño",
+      "m": "Normal",
+      "l": "Grande"
+    },
     "continue": "Continuar",
     "changeAnytime": "Puede cambiar esto en cualquier momento",
-    "account": "Cuenta de {name}"
+    "account": "Cuenta de {name}",
+    "sizeLetter": "A"
   },
   "home": {
     "greeting": "Hola, {name}",
@@ -66,17 +71,33 @@
     "timeline": "Posición en la clase",
     "timelineValue": "{current} de {total}",
     "speed": "Velocidad del habla",
-    "speeds": { "slow": "Lenta", "normal": "Normal", "fast": "Rápida" },
+    "speeds": {
+      "slow": "Lenta",
+      "normal": "Normal",
+      "fast": "Rápida"
+    },
     "subtitles": "Subtítulos",
     "subtitlesOff": "Sin subtítulos",
     "words": "Palabras de la clase",
     "error": "No pudimos cargar el video. Inténtelo de nuevo en un momento."
   },
   "pages": {
-    "path": { "title": "Mi camino", "intro": "Las cinco etapas de su camino, en orden." },
-    "search": { "title": "Buscar", "intro": "Aquí podrá buscar una clase por tema o palabra." },
-    "holidays": { "title": "Fiestas", "intro": "Clases para cada fiesta del calendario." },
-    "glossary": { "title": "Glosario", "intro": "Palabras que aparecen en las clases, explicadas brevemente." },
+    "path": {
+      "title": "Mi camino",
+      "intro": "Las cinco etapas de su camino, en orden."
+    },
+    "search": {
+      "title": "Buscar",
+      "intro": "Aquí podrá buscar una clase por tema o palabra."
+    },
+    "holidays": {
+      "title": "Fiestas",
+      "intro": "Clases para cada fiesta del calendario."
+    },
+    "glossary": {
+      "title": "Glosario",
+      "intro": "Palabras que aparecen en las clases, explicadas brevemente."
+    },
     "help": {
       "title": "Ayuda",
       "intro": "¿Tiene dificultades con el sitio o con una clase? Estamos aquí.",

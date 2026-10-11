@@ -8,3 +8,9 @@ export const PREFS_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const parseTextSize = (value: string | undefined): TextSize =>
   TEXT_SIZES.includes(value as TextSize) ? (value as TextSize) : DEFAULT_TEXT_SIZE;
+
+// Client only. Applies the size at once and stores it for the next server render.
+export function saveTextSize(size: TextSize) {
+  document.documentElement.dataset.textSize = size;
+  document.cookie = `${TEXT_SIZE_COOKIE}=${size}; path=/; max-age=${PREFS_MAX_AGE}; samesite=lax`;
+}
