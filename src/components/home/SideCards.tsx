@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { TermList } from "@/components/TermList";
 import { card, outlineBtn, primaryBtn } from "@/components/ui";
 import { Link } from "@/i18n/navigation";
 import { getHelpContacts } from "@/lib/help";
@@ -25,14 +26,7 @@ export async function GlossaryPreview({ terms, className = "" }: { terms: Glossa
   return (
     <section className={`${card} p-4 ${className}`}>
       <h2 className="text-lg font-medium">{t("glossaryTitle")}</h2>
-      <dl className="divide-y divide-line">
-        {terms.map((term) => (
-          <div key={term.id} className="py-3">
-            <dt className="font-medium">{term.term}</dt>
-            <dd className="mt-0.5 text-sm text-muted">{term.definition}</dd>
-          </div>
-        ))}
-      </dl>
+      <TermList terms={terms} />
       <Link href="/glossary" className="tap inline-flex items-center font-medium text-green">
         {t("allTerms")}
       </Link>
