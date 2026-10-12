@@ -69,6 +69,18 @@ CREATE TABLE "lessons" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "teacher_translations" (
+	"teacher_id" uuid NOT NULL,
+	"locale" "locale" NOT NULL,
+	"name" text NOT NULL,
+	CONSTRAINT "teacher_translations_teacher_id_locale_pk" PRIMARY KEY("teacher_id","locale")
+);
+--> statement-breakpoint
+CREATE TABLE "teachers" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "track_step_lessons" (
 	"step_id" uuid NOT NULL,
 	"lesson_id" uuid NOT NULL,
@@ -115,6 +127,8 @@ ALTER TABLE "lesson_glossary_terms" ADD CONSTRAINT "lesson_glossary_terms_lesson
 ALTER TABLE "lesson_glossary_terms" ADD CONSTRAINT "lesson_glossary_terms_term_id_glossary_terms_id_fk" FOREIGN KEY ("term_id") REFERENCES "public"."glossary_terms"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lesson_translations" ADD CONSTRAINT "lesson_translations_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "lessons" ADD CONSTRAINT "lessons_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "lessons" ADD CONSTRAINT "lessons_teacher_id_teachers_id_fk" FOREIGN KEY ("teacher_id") REFERENCES "public"."teachers"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "teacher_translations" ADD CONSTRAINT "teacher_translations_teacher_id_teachers_id_fk" FOREIGN KEY ("teacher_id") REFERENCES "public"."teachers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "track_step_lessons" ADD CONSTRAINT "track_step_lessons_step_id_track_steps_id_fk" FOREIGN KEY ("step_id") REFERENCES "public"."track_steps"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "track_step_lessons" ADD CONSTRAINT "track_step_lessons_lesson_id_lessons_id_fk" FOREIGN KEY ("lesson_id") REFERENCES "public"."lessons"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "track_step_translations" ADD CONSTRAINT "track_step_translations_step_id_track_steps_id_fk" FOREIGN KEY ("step_id") REFERENCES "public"."track_steps"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

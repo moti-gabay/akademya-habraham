@@ -35,12 +35,27 @@ export const categoryTranslations = pgTable(
   (t) => [primaryKey({ columns: [t.categoryId, t.locale] }), unique().on(t.locale, t.slug)],
 );
 
+export const teachers = pgTable("teachers", {
+  id: id(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const teacherTranslations = pgTable(
+  "teacher_translations",
+  {
+    teacherId: uuid("teacher_id").notNull().references(() => teachers.id, { onDelete: "cascade" }),
+    locale: locale(),
+    name: text().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.teacherId, t.locale] })],
+);
+
 export const lessons = pgTable("lessons", {
   id: id(),
   // Nullable: a lesson on the learning path need not belong to a holiday/parsha/halacha category.
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
-  // No foreign keys yet: `users` arrives in Milestone 2 and the teacher model is still open.
-  teacherId: uuid("teacher_id"),
+  teacherId: uuid("teacher_id").references(() => teachers.id, { onDelete: "set null" }),
+  // No foreign key yet: `users` arrives in Milestone 2.
   createdBy: uuid("created_by"),
   durationSec: integer("duration_sec"),
   access: lessonAccessEnum().notNull().default("subscriber"),

@@ -82,13 +82,15 @@ Billing
 Catalog (localized; fallback chain: requested locale → `he`)
 - `categories` — id, kind enum(holiday|parsha|halacha), parent_id, sort_order, hebcal_code
 - `category_translations` — pk(category_id, locale), name, slug. Unique (locale, slug).
+- `teachers` — id, created_at (added 2026-10-12)
+- `teacher_translations` — pk(teacher_id, locale), name
 - `lessons` — id, category_id, teacher_id, duration_sec, access enum(free|subscriber), status enum(draft|processing|published|archived), published_at, thumbnail_key, parsha_code, holiday_code, created_by
 - `lesson_translations` — pk(lesson_id, locale), title, description, slug, search_vector tsvector GENERATED (`english`/`russian`/`spanish` for en/ru/es, `simple` for he) + GIN; `pg_trgm` GIN on title. Unique (locale, slug).
 - `lesson_subtitles` — pk(lesson_id, locale), r2_key, bunny_synced_at, source enum(manual|auto)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)
 
-Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `src/server/db/schema.ts`, migration `drizzle/0000_funny_ronan.sql`, together with the four catalog tables they reference: `categories`, `category_translations`, `lessons`, `lesson_translations`. Not yet applied to Neon. In that migration `lessons.category_id` is nullable, since a path lesson need not belong to a holiday/parsha/halacha category; `lessons.teacher_id` and `created_by` have no foreign key until `users` exists and the teacher model is decided; search columns on `lesson_translations` come with search in Milestone 3.)
+Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `src/server/db/schema.ts`, migration `drizzle/0000_init.sql`, together with the catalog tables they reference: `categories`, `category_translations`, `teachers`, `teacher_translations`, `lessons`, `lesson_translations`. Not yet applied to Neon. In that migration `lessons.category_id` is nullable, since a path lesson need not belong to a holiday/parsha/halacha category; `lessons.created_by` has no foreign key until `users` exists; search columns on `lesson_translations` come with search in Milestone 3.)
 - `tracks` — id, code unique, sort_order, status enum(draft|published). One track at launch (the conversion path); the table keeps a second track possible without a schema change.
 - `track_translations` — pk(track_id, locale), name, slug. Unique (locale, slug).
 - `track_steps` — id, track_id, sort_order. Unique (track_id, sort_order).
