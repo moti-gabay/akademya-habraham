@@ -2,6 +2,7 @@ import {
   customType,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   primaryKey,
@@ -23,6 +24,7 @@ export const lessonStatusEnum = pgEnum("lesson_status", ["draft", "processing", 
 export const trackStatusEnum = pgEnum("track_status", ["draft", "published"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "editor", "admin"]);
 export const userStatusEnum = pgEnum("user_status", ["active", "blocked", "deleted"]);
+export const webhookProviderEnum = pgEnum("webhook_provider", ["clerk", "psp", "bunny"]);
 
 // Case-insensitive text. The extension is enabled at the top of migration 0001.
 const citext = customType<{ data: string }>({ dataType: () => "citext" });
@@ -44,6 +46,8 @@ export const users = pgTable("users", {
   phoneEnc: text("phone_enc"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+  // Clerk's own updated_at for the user; an older webhook event than this is ignored.
+  clerkUpdatedAt: timestamp("clerk_updated_at", { withTimezone: true }),
 });
 
 // Catalog
@@ -206,4 +210,37 @@ export const userLessonProgress = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.lessonId] })],
+);
+
+// Ops
+
+// One row per delivered webhook. The unique key makes redelivery a no-op.
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: id(),
+    provider: webhookProviderEnum().notNull(),
+    eventId: text("event_id").notNull(),
+    type: text().notNull(),
+    payload: jsonb().notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    processedAt: timestamp("processed_at", { withTimezone: true }),
+    error: text(),
+  },
+  (t) => [unique().on(t.provider, t.eventId)],
+);
+
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    id: id(),
+    actorId: uuid("actor_id").references(() => users.id, { onDelete: "set null" }),
+    action: text().notNull(),
+    targetType: text("target_type").notNull(),
+    targetId: text("target_id").notNull(),
+    diff: jsonb(),
+    ip: text(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.targetType, t.targetId), index().on(t.createdAt)],
 );
