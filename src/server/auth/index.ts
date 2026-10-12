@@ -1,6 +1,6 @@
-import { MOCK_USER_ID } from "../mock/data";
+import { SAMPLE_USER_ID } from "../mock/data";
 
-// Milestone 2 replaces this with verifyRequest(): Clerk claims → { userId, role, locale }.
+// Always the sample user (mock data or a seeded database). Milestone 2 replaces this with verifyRequest(): Clerk claims → { userId, role, locale }.
 export async function getCurrentUserId(): Promise<string> {
-  return MOCK_USER_ID;
+  return SAMPLE_USER_ID;
 }

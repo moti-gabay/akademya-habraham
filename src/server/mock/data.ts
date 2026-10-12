@@ -1,13 +1,26 @@
-import type { Locale, Localized } from "../i18n/locales";
+import type { Localized } from "../i18n/locales";
+import { SAMPLE_HLS, sampleSubtitles } from "../media/sample";
 import type { StepStatus } from "../repos/types";
 
-// Sample content that matches design/final-sketch.pdf.
-// ru/es strings are initial drafts and need review, like the UI messages.
+// Sample content that matches design/final-sketch.pdf. It feeds both the mock repos
+// and the database seed (src/server/db/seed.ts), so the two cannot drift.
+// Everything here is fictional. ru/es strings are initial drafts and need review.
 
-export const MOCK_USER_ID = "mock-user";
+// Fixed id of the sample user, the same in mock mode and in a seeded database.
+export const SAMPLE_USER_ID = "5a3b1c2d-0000-4000-8000-000000000001";
 
-export const users: Record<string, { name: Localized }> = {
-  [MOCK_USER_ID]: { name: { he: "משה", en: "Moshe", ru: "Моше", es: "Moshé" } },
+export const users: Record<string, { name: Localized; email: string }> = {
+  [SAMPLE_USER_ID]: { name: { he: "משה", en: "Moshe", ru: "Моше", es: "Moshé" }, email: "moshe@example.com" },
+};
+
+export const track = {
+  code: "learning-path",
+  name: { he: "מסלול הלימוד", en: "Learning path", ru: "Путь обучения", es: "Camino de estudio" } as Localized,
+};
+
+export const teacher = {
+  id: "rav-avraham",
+  name: { he: "הרב אברהם", en: "Rav Avraham", ru: "Рав Авраам", es: "Rav Abraham" } as Localized,
 };
 
 export const steps: { id: string; name: Localized; status: StepStatus; lessonsDone: number; lessonsTotal: number }[] = [
@@ -48,13 +61,6 @@ export const steps: { id: string; name: Localized; status: StepStatus; lessonsDo
   },
 ];
 
-// Public test stream (Big Buck Bunny, 10:34). Replaced by signed Bunny URLs in Milestone 4.
-const SAMPLE_HLS = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
-const sampleSubtitles = (["he", "en", "ru", "es"] as Locale[]).map((locale) => ({
-  locale,
-  url: `/samples/lesson-${locale}.vtt`,
-}));
-
 export const lessons: Record<
   string,
   {
@@ -64,7 +70,7 @@ export const lessons: Record<
     stepId: string | null;
     lessonNumber: number;
     videoUrl: string;
-    subtitles: { locale: Locale; url: string }[];
+    subtitles: typeof sampleSubtitles;
     termIds: string[];
   }
 > = {
@@ -75,7 +81,7 @@ export const lessons: Record<
       ru: "Законы Шаббата: 39 мелахот, часть 1",
       es: "Leyes de Shabat: las 39 melajot, parte 1",
     },
-    teacher: { he: "הרב אברהם", en: "Rav Avraham", ru: "Рав Авраам", es: "Rav Abraham" },
+    teacher: teacher.name,
     durationSec: 42 * 60 + 15,
     stepId: "shabbat",
     lessonNumber: 6,
@@ -90,7 +96,7 @@ export const lessons: Record<
       ru: "Ханука: чудо с маслом",
       es: "Janucá: el milagro del aceite",
     },
-    teacher: { he: "הרב אברהם", en: "Rav Avraham", ru: "Рав Авраам", es: "Rav Abraham" },
+    teacher: teacher.name,
     durationSec: 33 * 60,
     stepId: "holidays",
     lessonNumber: 1,
@@ -145,6 +151,8 @@ export const glossary: { id: string; term: Localized; definition: Localized }[] 
 
 export const nextHoliday = {
   id: "hanukkah",
+  // Holiday name as @hebcal/core spells it (Event.basename()).
+  hebcalCode: "Chanukah",
   name: { he: "חנוכה", en: "Hanukkah", ru: "Ханука", es: "Janucá" } as Localized,
   hebrewDate: { he: "כ״ה בכסלו", en: "25 Kislev", ru: "25 кислева", es: "25 de kislev" } as Localized,
   description: {
@@ -157,5 +165,5 @@ export const nextHoliday = {
 };
 
 export const initialProgress: [userId: string, lessonId: string, positionSec: number][] = [
-  [MOCK_USER_ID, "shabbat-6", 12 * 60 + 40],
+  [SAMPLE_USER_ID, "shabbat-6", 12 * 60 + 40],
 ];
