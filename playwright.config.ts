@@ -20,6 +20,8 @@ export default defineConfig({
   webServer: {
     command: `pnpm build && pnpm start -p ${PORT}`,
     url: `http://localhost:${PORT}/api/healthz`,
+    // e2e always runs on mock data, even when a local .env selects the database.
+    env: { DATA_SOURCE: "mock" },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

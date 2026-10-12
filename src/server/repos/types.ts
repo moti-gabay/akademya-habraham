@@ -60,5 +60,6 @@ export interface GlossaryRepo {
   forLesson(lessonId: string, locale: Locale): Promise<GlossaryTerm[]>;
 }
 export interface HolidayRepo {
-  getNext(locale: Locale): Promise<Holiday | null>;
+  // `now` exists so tests can pin the date.
+  getNext(locale: Locale, now?: Date): Promise<Holiday | null>;
 }
