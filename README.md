@@ -5,7 +5,7 @@ Recorded Torah lessons for people studying toward conversion. Hebrew first (RTL)
 - Architecture and decisions: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Visual source of truth: [`design/final-sketch.pdf`](design/final-sketch.pdf) (page renders in `design/reference/`)
 
-Current state: the UI from the sketch (language selection, home, lesson player) runs on mock data. No keys are needed. Database, auth, video hosting and billing are later milestones.
+Current state: the UI from the sketch (language selection, home, lesson player) runs on mock data by default, or on Postgres with `DATA_SOURCE=db`. No keys are needed for mock mode. Auth, video hosting and billing are later milestones.
 
 ## Run
 
@@ -24,12 +24,19 @@ pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, s
 pnpm test:e2e --update-snapshots   # after an intended visual change
 ```
 
-Database (not needed for the mock stage):
+Database (optional; the app defaults to mock data):
 
 ```bash
 pnpm db:generate      # after editing src/server/db/schema.ts: writes a migration into drizzle/
 pnpm db:migrate       # applies migrations to DATABASE_URL_UNPOOLED (Neon; the driver does not reach a local Postgres)
+pnpm db:seed          # upserts the fictional sample content into DATABASE_URL; refuses when NODE_ENV=production
+pnpm test:db          # migrations + seed + Drizzle repos on an in-process Postgres (PGlite), no database needed
+DATA_SOURCE=db pnpm dev   # run the app on the database instead of mock data
 ```
+
+The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` there and never commit them.
+
+**The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Keep Vercel on `DATA_SOURCE=mock` (or unset) until Clerk auth lands in Milestone 2: the progress endpoint is unauthenticated and every visitor is the sample user, so anyone could write that user's progress.
 
 First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
 
@@ -46,9 +53,9 @@ src/i18n/                    next-intl routing, navigation, messages/{he,en,ru,e
 src/lib/                     text size preference, time formatting, help contacts
 src/server/                  domain layer, no imports from next/*
   repos/types.ts             repo interfaces + view models
-  repos/index.ts             the one place that chooses mock or real repos
-  mock/                      sample content and in-memory mock repos
-  db/                        Drizzle client and schema; migrations are generated into drizzle/
+  repos/index.ts             the one place that chooses mock or database repos (DATA_SOURCE)
+  mock/                      sample content (also the seed's source) and in-memory mock repos
+  db/                        Drizzle client, schema, repos, seed and their tests; migrations are generated into drizzle/
 src/proxy.ts                 locale routing, first-visit redirect, Clerk when keys exist
 tests/                       Playwright specs and screenshot baselines
 design/                      sketch, reference renders, earlier concepts
@@ -71,19 +78,20 @@ design/                      sketch, reference renders, earlier concepts
 
 `ru.json` and `es.json`, and the ru/es sample content in `src/server/mock/data.ts`, are machine drafts and need review by native speakers.
 
-## Add a lesson (mock stage)
+## Add a sample lesson
 
-Edit `src/server/mock/data.ts`:
+Edit `src/server/mock/data.ts` (the mock repos and `pnpm db:seed` both read it):
 
 1. Add an entry to `lessons` with a new id: title and teacher per locale (`he` is required), `durationSec`, `stepId`, `lessonNumber`, `videoUrl` (HLS) and `subtitles` (VTT files in `public/samples/`).
 2. List glossary term ids in `termIds`. They appear under "Words from the lesson", and a term is underlined in the title when its name appears there literally. New terms go in `glossary` in the same file.
-3. Open `/he/lessons/<id>`.
+3. Open `/he/lessons/<id>` in mock mode. On the database, run `pnpm db:seed` again; lesson ids there are UUIDs, so follow the link from the home page.
 
-When the catalog moves to the database (Milestone 3), lessons are added in the admin screens and `src/server/repos/index.ts` switches to the Drizzle repos.
+Real lessons are added in the admin screens from Milestone 3 on.
 
-## Known limits of the mock stage
+## Known limits
 
 - The sample video is a public test stream (10:34 long), while the sample lesson says 42:15 with a stop point at 12:40. The player shows the real stream length and starts from the beginning when the stop point is past the end.
 - Subtitles are loaded with `<track>`. On iOS they must come from the HLS manifest, which arrives with Bunny Stream in Milestone 4.
-- Progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
+- In mock mode progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
+- On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
 - The signed-in user is always the sample user "Moshe".

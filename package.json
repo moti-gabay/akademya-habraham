@@ -2,6 +2,7 @@
   "name": "akademya-habraham",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.33.0",
   "scripts": {
     "dev": "next dev",
@@ -11,10 +12,13 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "db:seed": "tsx scripts/seed.ts",
+    "test:db": "tsx --test src/server/db/*.test.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.14",
+    "@hebcal/core": "^6.14.2",
     "@neondatabase/serverless": "^1.2.0",
     "@radix-ui/react-popover": "^1.2.0",
     "drizzle-orm": "^0.45.4",
@@ -28,6 +32,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@electric-sql/pglite": "^0.5.9",
     "@playwright/test": "^1.64.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.5",
@@ -37,6 +42,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.4.0",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^6.0.3"
   }
 }

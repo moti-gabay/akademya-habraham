@@ -11,6 +11,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^7.9.14
         version: 7.9.14(next@16.4.0(@babel/core@7.29.7)(@playwright/test@1.64.0)(@types/node@26.6.5)(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@hebcal/core':
+        specifier: ^6.14.2
+        version: 6.14.2
       '@neondatabase/serverless':
         specifier: ^1.2.0
         version: 1.2.0
@@ -19,7 +22,7 @@ importers:
         version: 1.2.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       drizzle-orm:
         specifier: ^0.45.4
-        version: 0.45.4(@neondatabase/serverless@1.2.0)
+        version: 0.45.4(@electric-sql/pglite@0.5.9)(@neondatabase/serverless@1.2.0)
       hls.js:
         specifier: ^1.7.3
         version: 1.7.3
@@ -45,6 +48,9 @@ importers:
       '@axe-core/playwright':
         specifier: ^4.13.0
         version: 4.13.0(playwright-core@1.64.0)
+      '@electric-sql/pglite':
+        specifier: ^0.5.9
+        version: 0.5.9
       '@playwright/test':
         specifier: ^1.64.0
         version: 1.64.0
@@ -72,6 +78,9 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
+      tsx:
+        specifier: ^4.23.15
+        version: 4.23.15
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -187,6 +196,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@electric-sql/pglite@0.5.9':
+    resolution: {integrity: sha512-GoQTRMZ/o4J3sMW4mLDtDFGNOm1xy5oH+iHDALWll3uERY6OF4BSnL1t7FZH2Mlw+RPceDBlFJgSaecO73c4EA==}
 
   '@eloqnt/config@0.1.1':
     resolution: {integrity: sha512-YRDigSaiJEzKDfzTth5kG+L/PKfB3mo8h7yNzpXExPfvQmcD05WoZT57PdhJE0jI+Vva6eb0OCU8hnHHgdME3g==}
@@ -737,6 +749,17 @@ packages:
 
   '@formatjs/intl-localematcher@0.8.14':
     resolution: {integrity: sha512-8O7V38QmbB11+ryJ3KM/znrzXtiqgpXzqNoqDsndHZZ5/zDKTTL+cf5F0mzXkQEwhx8IlWnqYvEovf2S5EwLTw==}
+
+  '@hebcal/core@6.14.2':
+    resolution: {integrity: sha512-tjaKqbmOaEju7Jdtw019AgW9k0XidmjVzrvrUKbO5TvvsztOaYxerfl3DLIOEnNBektjIpb2+iueUugCQcTGyA==}
+    engines: {node: '>= 18'}
+
+  '@hebcal/hdate@0.23.1':
+    resolution: {integrity: sha512-lpvYpDc1Oe23XPClptNH6XEe2NA8Tb8iaUJ9/5Er1k04H9iHYB5YQnWsAg83R8l5SPOEUQnybeYizvSRSbBKCg==}
+
+  '@hebcal/noaa@0.12.4':
+    resolution: {integrity: sha512-M7bkeWUP54+h34OMlkyuu0ZuUV9URnEbG9dxakeA1totMhvIvHrVEVzKznmpykMbKkystC4C3BDg1fG7Qfl2pA==}
+    engines: {node: '>=18'}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2887,6 +2910,10 @@ packages:
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
 
+  quick-lru@7.3.0:
+    resolution: {integrity: sha512-k9lSsjl36EJdK7I06v7APZCbyGT2vMTsYSRX1Q2nbYmnkBqgUhRkAuzH08Ciotteu/PLJmIF2+tti7o3C/ts2g==}
+    engines: {node: '>=18'}
+
   react-dom@19.3.0:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
@@ -3107,6 +3134,15 @@ packages:
   tapable@2.3.3:
     resolution: {integrity: sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==}
     engines: {node: '>=6'}
+
+  temporal-polyfill@1.0.5:
+    resolution: {integrity: sha512-+H/mmY74i6wXCMcjIhGuSnODcyZnc4eois2myhOyX0UqRAKNXQY5m9iB1en5jQ/n4SXtjLXo1ElBI5bmn8tZwQ==}
+
+  temporal-spec@1.0.1:
+    resolution: {integrity: sha512-wxVoanmDeavXie1vu2JaQ3WIc3JZnWAOYFBsJyATaVsXsycKYUflGsyBmrRSnoCpZJpwPyr38VpgSUlQ8CbFxg==}
+
+  temporal-utils@1.0.3:
+    resolution: {integrity: sha512-9jbTSX3HvkOWvDpNpFzwX/d1mkCrgQgwLmVTOEiuocZGKHsrQJtttGZFmybJ2zYP5zCSZuU5ZyeS8+eOEPABiQ==}
 
   tinyglobby@0.2.17:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
@@ -3401,6 +3437,8 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@electric-sql/pglite@0.5.9': {}
 
   '@eloqnt/config@0.1.1': {}
 
@@ -3751,6 +3789,19 @@ snapshots:
   '@formatjs/intl-localematcher@0.8.14':
     dependencies:
       '@formatjs/fast-memoize': 3.1.7
+
+  '@hebcal/core@6.14.2':
+    dependencies:
+      '@hebcal/hdate': 0.23.1
+      '@hebcal/noaa': 0.12.4
+      quick-lru: 7.3.0
+      temporal-polyfill: 1.0.5
+
+  '@hebcal/hdate@0.23.1': {}
+
+  '@hebcal/noaa@0.12.4':
+    dependencies:
+      temporal-polyfill: 1.0.5
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -4759,8 +4810,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.4(@neondatabase/serverless@1.2.0):
+  drizzle-orm@0.45.4(@electric-sql/pglite@0.5.9)(@neondatabase/serverless@1.2.0):
     optionalDependencies:
+      '@electric-sql/pglite': 0.5.9
       '@neondatabase/serverless': 1.2.0
 
   dunder-proto@1.0.1:
@@ -5808,6 +5860,8 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
+  quick-lru@7.3.0: {}
+
   react-dom@19.3.0(react@19.3.0):
     dependencies:
       react: 19.3.0
@@ -6092,6 +6146,15 @@ snapshots:
   tailwindcss@4.3.3: {}
 
   tapable@2.3.3: {}
+
+  temporal-polyfill@1.0.5:
+    dependencies:
+      temporal-spec: 1.0.1
+      temporal-utils: 1.0.3
+
+  temporal-spec@1.0.1: {}
+
+  temporal-utils@1.0.3: {}
 
   tinyglobby@0.2.17:
     dependencies:

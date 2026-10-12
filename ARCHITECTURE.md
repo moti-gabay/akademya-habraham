@@ -62,6 +62,8 @@ src/server/            # NO imports from next/* — portable to a standalone ser
 app/api/...            # thin handlers: parse (zod) → call service → respond
 ```
 - Statelessness: no module-level mutable state, no filesystem, config from env only.
+- Data source (added 2026-10-12): `src/server/repos/index.ts` is the single switch. The Drizzle repos (`src/server/db/repos.ts`) are used only when `DATA_SOURCE=db`; anything else, including a `DATABASE_URL` with no flag, selects the mock repos. **Public deployments stay on mock until Clerk auth lands in Milestone 2**: `POST /api/telemetry/heartbeat` is unauthenticated and the current user is always the seeded sample user, so with a database anyone could write that user's progress.
+- Seed: `pnpm db:seed` upserts fictional sample content (`src/server/db/seed.ts`, same data as the mock repos) and refuses to run when `NODE_ENV=production`.
 - DB: Drizzle over Neon pooled string (transaction-mode PgBouncer), `pg` Pool size 1–2 per invocation, or `@neondatabase/serverless` HTTP driver for single-shot queries. Migrations run in CI, never at runtime.
 - CSRF: middleware rejects mutating `/api/*` requests unless `Sec-Fetch-Site: same-origin` or `Origin` matches. Webhook routes are exempt and signature-verified.
 - Rate limiting: `@upstash/ratelimit` sliding window per IP and per user; tight buckets on `/api/play`, `/api/billing/*`, `/api/telemetry/*`. Vercel managed WAF rules on top.
@@ -70,7 +72,7 @@ app/api/...            # thin handlers: parse (zod) → call service → respond
 - No request body > 4.5 MB passes through handlers; all media and asset uploads go browser → Bunny/R2 directly.
 
 ### 1.3 Database schema (Neon Postgres 16)
-Identity
+Identity (migrated 2026-10-12 in `drizzle/0001_users_progress.sql`, which also enables the `citext` extension)
 - `users` — id uuid, clerk_user_id unique, email citext, name, role enum(user|editor|admin), status enum(active|blocked|deleted), locale enum(he|en|ru|es), phone_enc, created_at, last_seen_at. Synced by Clerk webhooks.
 
 Billing
@@ -80,7 +82,7 @@ Billing
 - `webhook_events` — id, provider enum(clerk|psp|bunny), event_id, type, payload jsonb, received_at, processed_at, error. Unique (provider, event_id).
 
 Catalog (localized; fallback chain: requested locale → `he`)
-- `categories` — id, kind enum(holiday|parsha|halacha), parent_id, sort_order, hebcal_code
+- `categories` — id, kind enum(holiday|parsha|halacha), parent_id, sort_order, hebcal_code (the holiday name as `@hebcal/core` spells it, e.g. `Chanukah`; "next holiday" is the next calendar event whose code has a published lesson, and that lesson's description is the card text)
 - `category_translations` — pk(category_id, locale), name, slug. Unique (locale, slug).
 - `teachers` — id, created_at (added 2026-10-12)
 - `teacher_translations` — pk(teacher_id, locale), name
@@ -90,7 +92,7 @@ Catalog (localized; fallback chain: requested locale → `he`)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)
 
-Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `src/server/db/schema.ts`, migration `drizzle/0000_init.sql`, together with the catalog tables they reference: `categories`, `category_translations`, `teachers`, `teacher_translations`, `lessons`, `lesson_translations`. Not yet applied to Neon. In that migration `lessons.category_id` is nullable, since a path lesson need not belong to a holiday/parsha/halacha category; `lessons.created_by` has no foreign key until `users` exists; search columns on `lesson_translations` come with search in Milestone 3.)
+Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `src/server/db/schema.ts`, migration `drizzle/0000_init.sql`, together with the catalog tables they reference: `categories`, `category_translations`, `teachers`, `teacher_translations`, `lessons`, `lesson_translations`. Not yet applied to Neon. In that migration `lessons.category_id` is nullable, since a path lesson need not belong to a holiday/parsha/halacha category; `lessons.created_by` references `users` since migration 0001; search columns on `lesson_translations` come with search in Milestone 3.)
 - `tracks` — id, code unique, sort_order, status enum(draft|published). One track at launch (the conversion path); the table keeps a second track possible without a schema change.
 - `track_translations` — pk(track_id, locale), name, slug. Unique (locale, slug).
 - `track_steps` — id, track_id, sort_order. Unique (track_id, sort_order).
@@ -104,7 +106,7 @@ Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `sr
 
 Telemetry
 - `playback_sessions` — id, user_id, lesson_id, started_at, last_heartbeat_at, last_position_sec, watched_sec, max_position_sec, completed, device, user_agent, ip_hash. Index (user_id, last_heartbeat_at).
-- `user_lesson_progress` — pk(user_id, lesson_id), last_position_sec, watched_pct, completed_at, updated_at
+- `user_lesson_progress` — pk(user_id, lesson_id), last_position_sec, watched_pct, completed_at, updated_at (migrated 2026-10-12; `completed_at` is set once at ≥ 95% watched and never cleared, `watched_pct` never decreases)
 - `daily_lesson_stats`, `daily_platform_stats` — daily rollups
 
 Ops
