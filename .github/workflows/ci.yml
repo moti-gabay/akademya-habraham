@@ -17,6 +17,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      # Fails when schema.ts changed without a generated migration.
+      - run: pnpm db:generate && test -z "$(git status --porcelain drizzle)"
       - run: pnpm exec playwright install --with-deps chromium
       # Builds and starts the app itself. Needs network for the sample HLS stream.
       - run: pnpm test:e2e

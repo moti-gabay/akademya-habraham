@@ -88,7 +88,7 @@ Catalog (localized; fallback chain: requested locale → `he`)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)
 
-Learning path and glossary (**proposed 2026-10-11, not migrated**; the final sketch needs both, see `src/server/repos/types.ts` for the shapes the UI already consumes from mock repos)
+Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `src/server/db/schema.ts`, migration `drizzle/0000_funny_ronan.sql`, together with the four catalog tables they reference: `categories`, `category_translations`, `lessons`, `lesson_translations`. Not yet applied to Neon. In that migration `lessons.category_id` is nullable, since a path lesson need not belong to a holiday/parsha/halacha category; `lessons.teacher_id` and `created_by` have no foreign key until `users` exists and the teacher model is decided; search columns on `lesson_translations` come with search in Milestone 3.)
 - `tracks` — id, code unique, sort_order, status enum(draft|published). One track at launch (the conversion path); the table keeps a second track possible without a schema change.
 - `track_translations` — pk(track_id, locale), name, slug. Unique (locale, slug).
 - `track_steps` — id, track_id, sort_order. Unique (track_id, sort_order).
