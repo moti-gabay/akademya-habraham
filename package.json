@@ -9,7 +9,9 @@
     "start": "next start",
     "lint": "eslint . && node scripts/check-logical-classes.mjs",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.14",

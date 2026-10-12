@@ -24,6 +24,13 @@ pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, s
 pnpm test:e2e --update-snapshots   # after an intended visual change
 ```
 
+Database (not needed for the mock stage):
+
+```bash
+pnpm db:generate      # after editing src/server/db/schema.ts: writes a migration into drizzle/
+pnpm db:migrate       # applies migrations to DATABASE_URL_UNPOOLED (Neon; the driver does not reach a local Postgres)
+```
+
 First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
 
 ## Folder structure
@@ -41,7 +48,7 @@ src/server/                  domain layer, no imports from next/*
   repos/types.ts             repo interfaces + view models
   repos/index.ts             the one place that chooses mock or real repos
   mock/                      sample content and in-memory mock repos
-  db/                        Drizzle client (no tables yet)
+  db/                        Drizzle client and schema; migrations are generated into drizzle/
 src/proxy.ts                 locale routing, first-visit redirect, Clerk when keys exist
 tests/                       Playwright specs and screenshot baselines
 design/                      sketch, reference renders, earlier concepts
