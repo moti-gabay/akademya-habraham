@@ -46,12 +46,14 @@ Sign-in is active only when **both** Clerk keys are set **and** `DATA_SOURCE=db`
 
 Keys go in `.env` and are never committed: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, and `CLERK_WEBHOOK_SIGNING_SECRET` once a webhook endpoint exists.
 
+The publishable key is baked in at build time. After changing Clerk keys, rebuild (`pnpm build`) or redeploy; a server started from an older build fails sign-in with a handshake error.
+
 Clerk dashboard checklist:
 
 1. **API keys:** copy the two keys of the development instance into `.env`.
 2. **Sign-in methods** (User & authentication): email address with a verification code. For this audience, consider leaving passwords off.
 3. **Name:** turn on first and last name, first name required (it is used in the greeting).
-4. **Multi-factor:** enable authenticator app (TOTP) and backup codes. The admin area requires a second factor. Check that your Clerk plan includes it in production.
+4. **Multi-factor:** enable authenticator app (TOTP) and backup codes. The admin area requires a second factor. MFA works on development instances; whether the free plan covers it in production is not verified (see open risks in ARCHITECTURE.md).
 5. **Webhook** (Webhooks → Add endpoint): `https://<your-domain>/api/webhooks/clerk`, events `user.created`, `user.updated`, `user.deleted`. Copy the signing secret into `CLERK_WEBHOOK_SIGNING_SECRET`. Clerk cannot reach localhost; local sign-in works without the webhook because a missing user row is created on first request.
 6. **First admin:** Users → your user → Metadata → Public → `{"role": "admin"}`. Roles are `user`, `editor`, `admin`.
 7. **Languages:** the sign-in screens are translated in code (he, en, ru, es). Verification emails come from Clerk's own templates (Customization → Emails) and stay in English unless you edit them there.
@@ -115,3 +117,4 @@ Real lessons are added in the admin screens from Milestone 3 on.
 - On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
 - Without Clerk (mock mode) the user is always the sample user "Moshe".
 - The admin area is a gated placeholder; its screens come in Milestone 6. Rate limiting is not in place yet.
+- Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.

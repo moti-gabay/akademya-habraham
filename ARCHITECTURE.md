@@ -15,7 +15,7 @@ Decision 2026-10-11: Milestone 0 is closed. The UI follows `design/final-sketch.
 | Frontend + API | Next.js (App Router) on Vercel; backend in Route Handlers | One deployable, serverless = stateless + horizontal by default; domain layer kept Next-agnostic for a later lift-out |
 | Database | Neon PostgreSQL (free tier, pooled connection string) | Pure Postgres with built-in PgBouncer, scale-to-zero; Supabase is the alternative |
 | Cache / rate limit | Upstash Redis (free tier, REST) | Serverless-safe; used only for rate limits, entitlement cache, live counters |
-| Auth | Clerk (free ≤ 10k MAU) | Next.js SDK, MFA, bot protection, localizations for he/en/ru/es |
+| Auth | Clerk (free ≤ 10k MAU) | Next.js SDK, MFA (plan coverage unverified, see open risks), bot protection, localizations for he/en/ru/es |
 | Video | Bunny Stream: token auth (signed HLS), allowed referrers, tus direct upload, in-manifest WebVTT | Lowest cost; signed HLS + origin lock accepted as the protection level (no DRM) |
 | Assets | Cloudflare R2 (free tier) via S3 presigned PUT | Zero egress, direct browser uploads bypass Vercel body limits |
 | Email | Resend (free tier) | Localized transactional email |
@@ -23,7 +23,9 @@ Decision 2026-10-11: Milestone 0 is closed. The UI follows `design/final-sketch.
 | Background work | None long-running; inline idempotent webhooks + 2 daily Vercel Cron jobs | Inngest is the escape hatch when queues are needed |
 | i18n | `next-intl`, locales he (default) / en / ru / es, translation tables in DB | RTL-first with logical CSS properties |
 
-Known risk: Vercel Hobby is licensed for non-commercial use. Use Hobby for staging and move to Pro before the first paid subscriber.
+Open risks:
+- **Vercel Hobby** is licensed for non-commercial use. Use Hobby for staging and move to Pro before the first paid subscriber.
+- **Clerk MFA may need a paid plan in production** (recorded 2026-10-13). The admin area requires a verified second factor, and development instances allow MFA for testing, but we could not verify that the free tier covers MFA on a production instance. Check Clerk's current pricing before launch. Options if it is not covered: (a) pay for the plan or add-on that includes MFA when going to production; (b) make the admin second-factor requirement configurable so launch is possible without it, which weakens admin security and should be a deliberate, temporary choice. Nothing is implemented for (b); today the requirement is unconditional.
 
 ## 1. System overview
 
@@ -139,7 +141,8 @@ Cost at launch scale (Volume CDN tier, EU PoPs serve Israel at ~50 ms):
 | Bunny delivery | 1200 viewing h ≈ 840 GB × $0.005 | ~4 (min $1) |
 | Vercel | Hobby / Pro | 0 / 20 |
 | Neon, Upstash, Clerk, R2, Resend | free tiers | 0 |
-| Total | | ~6 (Hobby) / ~26 (Pro) |
+| Clerk MFA for the admin area | only if the free tier does not cover it in production; price not verified | unknown |
+| Total | excluding Clerk MFA if it turns out to be paid | ~6 (Hobby) / ~26 (Pro) |
 
 ### 1.5 Caching
 - Upstash: `rl:*`, `ent:{userId}` (TTL 60 s), `blocked:{userId}`, `live:viewers`, `live:lesson:{id}`. Budget ≈ 1 op per API request, well under the free quota.
@@ -189,6 +192,7 @@ interface BillingProvider {
 9. Hebrew search = trigram; en/ru/es = language-specific tsvector.
 10. Upstash free quota → Redis never on the heartbeat path.
 11. Subtitles must be in-manifest (not `<track>`) for iOS; captions sync retried from cron on failure.
+12. `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is baked into the client bundle at build time, while the secret key is read at runtime. Changing Clerk keys needs a rebuild or redeploy; otherwise browser and server talk to different Clerk instances and sign-in fails with a handshake error.
 
 ## 3. Milestones
 
@@ -200,7 +204,7 @@ drizzle/ (schema + migrations)    .github/workflows/ci.yml    vercel.json (crons
 
 0. **Design pick** → `design/DESIGN_CONCEPTS.md` + five HTML mockups; user selects the UI direction. Done 2026-10-11: `design/final-sketch.pdf`.
 1. **Scaffold** → Next.js + TS + Tailwind (logical props) + `next-intl` + Clerk + Drizzle/Neon + Upstash + Vercel + CI. Verify: locale routing with correct `dir`, sign-in in all 4 languages, `/api/healthz` hits Neon.
-2. **Users & roles** → Clerk webhooks → `users` mirror, `verifyRequest`/`requireRole`, admin MFA gate, audit log. Verify: webhook replay idempotent; admin route rejects non-MFA session. Implemented 2026-10-13; real-session checks against a Clerk instance are recorded in the PR.
+2. **Users & roles** → Clerk webhooks → `users` mirror, `verifyRequest`/`requireRole`, admin MFA gate, audit log. Verify: webhook replay idempotent; admin route rejects non-MFA session. Implemented 2026-10-13. Verified live on a Clerk development instance and the Neon dev branch: session sign-in, user row created on first request, per-user progress, 404/403 for non-admins, admin without a second factor refused on page and API, sign-out, 401 on heartbeat when signed out. **Not verified yet:** the positive second-factor path (an admin with an authenticator app entering `/admin`), real webhook delivery from Clerk (needs a public URL), and the name fields on the sign-up form.
 3. **Catalog + i18n content** → CRUD with per-language tabs, translation tables, R2 presigned uploads, Bunny create + tus + encoding webhook, captions sync, ISR pages per locale, search. Verify: `he`-only lesson falls back on `en` page; VTT appears as a track in the manifest.
 4. **Playback & telemetry** → `/api/play`, player with subtitles, heartbeat UPSERT, resume, watermark. Verify: token rejected after expiry and from a foreign origin; iOS native playback with subtitles; third concurrent session rejected; resume across devices.
 5. **Billing** → `BillingProvider` + chosen adapter, localized checkout, webhooks, state machine, daily cron, entitlement invalidation, Resend emails. Verify: state-machine unit tests with recorded fixtures; canceled user loses `/api/play` within 60 s.
