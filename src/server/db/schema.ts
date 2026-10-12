@@ -1,18 +1,50 @@
-import { index, integer, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import {
+  customType,
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+  type AnyPgColumn,
+} from "drizzle-orm/pg-core";
 import { LOCALES } from "../i18n/locales";
 
-// Tables are added milestone by milestone (see ARCHITECTURE.md §1.3). This file holds
-// the learning path and glossary, plus the catalog tables they reference.
+// Tables are added milestone by milestone (see ARCHITECTURE.md §1.3). So far: users,
+// the catalog core, the learning path, the glossary and per-user lesson progress.
 
 export const localeEnum = pgEnum("locale", LOCALES);
 export const categoryKindEnum = pgEnum("category_kind", ["holiday", "parsha", "halacha"]);
 export const lessonAccessEnum = pgEnum("lesson_access", ["free", "subscriber"]);
 export const lessonStatusEnum = pgEnum("lesson_status", ["draft", "processing", "published", "archived"]);
 export const trackStatusEnum = pgEnum("track_status", ["draft", "published"]);
+export const userRoleEnum = pgEnum("user_role", ["user", "editor", "admin"]);
+export const userStatusEnum = pgEnum("user_status", ["active", "blocked", "deleted"]);
+
+// Case-insensitive text. The extension is enabled at the top of migration 0001.
+const citext = customType<{ data: string }>({ dataType: () => "citext" });
 
 const id = () => uuid().primaryKey().defaultRandom();
 const sortOrder = () => integer("sort_order").notNull().default(0);
 const locale = () => localeEnum().notNull();
+
+// Identity. Rows are mirrored from Clerk by webhooks from Milestone 2 on.
+
+export const users = pgTable("users", {
+  id: id(),
+  clerkUserId: text("clerk_user_id").notNull().unique(),
+  email: citext().notNull(),
+  name: text().notNull(),
+  role: userRoleEnum().notNull().default("user"),
+  status: userStatusEnum().notNull().default("active"),
+  locale: localeEnum().notNull().default("he"),
+  phoneEnc: text("phone_enc"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true }),
+});
 
 // Catalog
 
@@ -55,8 +87,7 @@ export const lessons = pgTable("lessons", {
   // Nullable: a lesson on the learning path need not belong to a holiday/parsha/halacha category.
   categoryId: uuid("category_id").references(() => categories.id, { onDelete: "set null" }),
   teacherId: uuid("teacher_id").references(() => teachers.id, { onDelete: "set null" }),
-  // No foreign key yet: `users` arrives in Milestone 2.
-  createdBy: uuid("created_by"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   durationSec: integer("duration_sec"),
   access: lessonAccessEnum().notNull().default("subscriber"),
   status: lessonStatusEnum().notNull().default("draft"),
@@ -160,4 +191,19 @@ export const lessonGlossaryTerms = pgTable(
     sortOrder: sortOrder(),
   },
   (t) => [primaryKey({ columns: [t.lessonId, t.termId] }), index().on(t.termId)],
+);
+
+// Telemetry
+
+export const userLessonProgress = pgTable(
+  "user_lesson_progress",
+  {
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    lessonId: uuid("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+    lastPositionSec: integer("last_position_sec").notNull().default(0),
+    watchedPct: integer("watched_pct").notNull().default(0),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.lessonId] })],
 );
