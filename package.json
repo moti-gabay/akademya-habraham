@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
-    "test:db": "tsx --test \"src/server/**/*.test.ts\""
+    "test:unit": "tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@clerk/localizations": "^4.23.0",

@@ -100,6 +100,25 @@ test("player controls work and the stop point reaches the home card", async ({ p
   }
 });
 
+test("API rejects mutating calls from other origins", async ({ request }) => {
+  const data = { lessonId: LESSON, positionSec: SKETCH_STOP_POINT };
+  expect((await request.post("/api/telemetry/heartbeat", { data })).status()).toBe(403);
+  const foreign = await request.post("/api/telemetry/heartbeat", { headers: { origin: "https://example.com" }, data });
+  expect(foreign.status()).toBe(403);
+  const own = await request.post("/api/telemetry/heartbeat", { headers: { origin: "http://localhost:3100" }, data });
+  expect(own.status()).toBe(204);
+});
+
+test("without Clerk there is no sign-in, admin area or webhook", async ({ page, request }) => {
+  await withPrefs(page);
+  await page.goto("/he/sign-in");
+  await expect(page).toHaveURL(/\/he$/);
+  expect((await page.goto("/he/admin"))?.status()).toBe(404);
+  expect((await request.post("/api/webhooks/clerk", { data: {} })).status()).toBe(404);
+  const health = await (await request.get("/api/healthz")).json();
+  expect([health.dataSource, health.auth]).toEqual(["mock", "stub"]);
+});
+
 for (const locale of LOCALES) {
   for (const [name, path] of screens) {
     test(`${name} (${locale}): accessible, fits at the largest text size, matches baseline`, async ({ page }) => {

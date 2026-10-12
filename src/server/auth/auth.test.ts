@@ -1,4 +1,4 @@
-// pnpm test:db — Clerk sync, actor resolution, role and second-factor checks, audit log.
+// pnpm test:unit — Clerk sync, actor resolution, role and second-factor checks, audit log.
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { eq } from "drizzle-orm";

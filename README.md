@@ -30,7 +30,7 @@ Database (optional; the app defaults to mock data):
 pnpm db:generate      # after editing src/server/db/schema.ts: writes a migration into drizzle/
 pnpm db:migrate       # applies migrations to DATABASE_URL_UNPOOLED (Neon; the driver does not reach a local Postgres)
 pnpm db:seed          # upserts the fictional sample content into DATABASE_URL; refuses when NODE_ENV=production
-pnpm test:db          # migrations + seed + Drizzle repos on an in-process Postgres (PGlite), no database needed
+pnpm test:unit          # migrations + seed + Drizzle repos on an in-process Postgres (PGlite), no database needed
 DATA_SOURCE=db pnpm dev   # run the app on the database instead of mock data
 ```
 

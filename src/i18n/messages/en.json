@@ -104,5 +104,17 @@
       "whatsapp": "WhatsApp",
       "noContacts": "Contact details will appear here soon."
     }
+  },
+  "auth": {
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}",
+    "blockedTitle": "This account is blocked",
+    "blockedText": "You cannot use this account right now. If this is a mistake, talk to us."
+  },
+  "admin": {
+    "title": "Admin",
+    "intro": "The admin area will be built in a later stage.",
+    "secondFactorTitle": "Two-step verification required",
+    "secondFactorText": "To enter the admin area, turn on two-step verification in your account settings, then sign out and sign in again."
   }
 }

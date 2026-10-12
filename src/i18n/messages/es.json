@@ -105,5 +105,17 @@
       "whatsapp": "WhatsApp",
       "noContacts": "Los datos de contacto aparecerán aquí pronto."
     }
+  },
+  "auth": {
+    "signOut": "Cerrar sesión",
+    "signedInAs": "Sesión iniciada como {name}",
+    "blockedTitle": "Esta cuenta está bloqueada",
+    "blockedText": "No puede usar esta cuenta por ahora. Si es un error, hable con nosotros."
+  },
+  "admin": {
+    "title": "Administración",
+    "intro": "El área de administración se construirá más adelante.",
+    "secondFactorTitle": "Se requiere verificación en dos pasos",
+    "secondFactorText": "Para entrar al área de administración, active la verificación en dos pasos en la configuración de su cuenta, luego cierre sesión y vuelva a entrar."
   }
 }

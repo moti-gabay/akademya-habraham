@@ -20,7 +20,7 @@ jobs:
       # Fails when schema.ts changed without a generated migration.
       - run: pnpm db:generate && test -z "$(git status --porcelain drizzle)"
       # Migrations, seed and Drizzle repos on an in-process Postgres. No database needed.
-      - run: pnpm test:db
+      - run: pnpm test:unit
       - run: pnpm exec playwright install --with-deps chromium
       # Builds and starts the app itself. Needs network for the sample HLS stream.
       - run: pnpm test:e2e

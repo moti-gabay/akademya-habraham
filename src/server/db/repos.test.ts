@@ -1,4 +1,4 @@
-// pnpm test:db — runs migrations, the seed and the Drizzle repos on PGlite (Postgres
+// pnpm test:unit — runs migrations, the seed and the Drizzle repos on PGlite (Postgres
 // in-process) and checks them against the mock repos. No network, no DATABASE_URL.
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
