@@ -30,15 +30,35 @@ Database (optional; the app defaults to mock data):
 pnpm db:generate      # after editing src/server/db/schema.ts: writes a migration into drizzle/
 pnpm db:migrate       # applies migrations to DATABASE_URL_UNPOOLED (Neon; the driver does not reach a local Postgres)
 pnpm db:seed          # upserts the fictional sample content into DATABASE_URL; refuses when NODE_ENV=production
-pnpm test:db          # migrations + seed + Drizzle repos on an in-process Postgres (PGlite), no database needed
+pnpm test:unit        # migrations, seed, Drizzle repos, auth and the Clerk webhook on an in-process Postgres (PGlite)
 DATA_SOURCE=db pnpm dev   # run the app on the database instead of mock data
 ```
 
 The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` there and never commit them.
 
-**The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Keep Vercel on `DATA_SOURCE=mock` (or unset) until Clerk auth lands in Milestone 2: the progress endpoint is unauthenticated and every visitor is the sample user, so anyone could write that user's progress.
+**The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Without Clerk keys every visitor is the sample user, so a database deployment needs sign-in configured first; on Vercel the app refuses to start with `DATA_SOURCE=db` and no Clerk keys. Vercel currently stays on mock (`DATA_SOURCE` unset).
 
 First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
+
+## Sign-in (Clerk)
+
+Sign-in is active only when **both** Clerk keys are set **and** `DATA_SOURCE=db`. In every other case, including mock mode and CI, each visitor is the sample user and no keys are needed. `/api/healthz` shows the current mode (`auth: "clerk" | "stub"`).
+
+Keys go in `.env` and are never committed: `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, and `CLERK_WEBHOOK_SIGNING_SECRET` once a webhook endpoint exists.
+
+The publishable key is baked in at build time. After changing Clerk keys, rebuild (`pnpm build`) or redeploy; a server started from an older build fails sign-in with a handshake error.
+
+Clerk dashboard checklist:
+
+1. **API keys:** copy the two keys of the development instance into `.env`.
+2. **Sign-in methods** (User & authentication): email address with a verification code. For this audience, consider leaving passwords off.
+3. **Name:** turn on first and last name, first name required (it is used in the greeting).
+4. **Multi-factor:** enable authenticator app (TOTP) and backup codes. The admin area requires a second factor. MFA works on development instances; whether the free plan covers it in production is not verified (see open risks in ARCHITECTURE.md).
+5. **Webhook** (Webhooks → Add endpoint): `https://<your-domain>/api/webhooks/clerk`, events `user.created`, `user.updated`, `user.deleted`. Copy the signing secret into `CLERK_WEBHOOK_SIGNING_SECRET`. Clerk cannot reach localhost; local sign-in works without the webhook because a missing user row is created on first request.
+6. **First admin:** Users → your user → Metadata → Public → `{"role": "admin"}`. Roles are `user`, `editor`, `admin`.
+7. **Languages:** the sign-in screens are translated in code (he, en, ru, es). Verification emails come from Clerk's own templates (Customization → Emails) and stay in English unless you edit them there.
+
+Session token customization and dashboard path settings are not needed.
 
 ## Folder structure
 
@@ -50,13 +70,14 @@ src/app/[locale]/            layout sets <html lang dir data-text-size>
 src/app/api/                 thin route handlers (healthz, telemetry/heartbeat)
 src/components/              UI; home/ holds the home page cards
 src/i18n/                    next-intl routing, navigation, messages/{he,en,ru,es}.json
-src/lib/                     text size preference, time formatting, help contacts
+src/lib/                     auth mode and getActor (the only Clerk session code), text size preference, helpers
 src/server/                  domain layer, no imports from next/*
   repos/types.ts             repo interfaces + view models
   repos/index.ts             the one place that chooses mock or database repos (DATA_SOURCE)
   mock/                      sample content (also the seed's source) and in-memory mock repos
   db/                        Drizzle client, schema, repos, seed and their tests; migrations are generated into drizzle/
-src/proxy.ts                 locale routing, first-visit redirect, Clerk when keys exist
+  auth/                      Clerk user sync, actor and role checks, audit log, admin user changes
+src/proxy.ts                 locale routing, first-visit redirect, sign-in redirect, same-origin check for API writes
 tests/                       Playwright specs and screenshot baselines
 design/                      sketch, reference renders, earlier concepts
 ```
@@ -94,4 +115,6 @@ Real lessons are added in the admin screens from Milestone 3 on.
 - Subtitles are loaded with `<track>`. On iOS they must come from the HLS manifest, which arrives with Bunny Stream in Milestone 4.
 - In mock mode progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
 - On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
-- The signed-in user is always the sample user "Moshe".
+- Without Clerk (mock mode) the user is always the sample user "Moshe".
+- The admin area is a gated placeholder; its screens come in Milestone 6. Rate limiting is not in place yet.
+- Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.

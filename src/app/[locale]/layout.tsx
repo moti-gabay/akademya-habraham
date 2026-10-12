@@ -6,6 +6,8 @@ import { Rubik } from "next/font/google";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { dirOf, routing } from "@/i18n/routing";
+import { authMode } from "@/lib/authMode";
+import { clerkAppearance, clerkLocalization } from "@/lib/clerkUi";
 import { parseTextSize, TEXT_SIZE_COOKIE } from "@/lib/prefs";
 import "../globals.css";
 
@@ -30,7 +32,21 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} dir={dirOf(locale)} data-text-size={textSize} className={rubik.variable}>
       <body className="min-h-dvh antialiased">
-        {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? <ClerkProvider>{page}</ClerkProvider> : page}
+        {authMode === "clerk" ? (
+          <ClerkProvider
+            localization={clerkLocalization[locale]}
+            appearance={clerkAppearance}
+            signInUrl={`/${locale}/sign-in`}
+            signUpUrl={`/${locale}/sign-up`}
+            signInFallbackRedirectUrl={`/${locale}`}
+            signUpFallbackRedirectUrl={`/${locale}`}
+            afterSignOutUrl={`/${locale}/sign-in`}
+          >
+            {page}
+          </ClerkProvider>
+        ) : (
+          page
+        )}
       </body>
     </html>
   );

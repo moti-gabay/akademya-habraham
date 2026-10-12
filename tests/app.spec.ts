@@ -92,8 +92,31 @@ test("player controls work and the stop point reaches the home card", async ({ p
     await expect(page.getByText("You stopped at 0:20").filter({ visible: true })).toBeVisible();
   } finally {
     // Put the mock stop point back so later tests see the sketch state.
-    await request.post("/api/telemetry/heartbeat", { data: { lessonId: LESSON, positionSec: SKETCH_STOP_POINT } });
+    // The API only accepts mutating calls from the app's own origin.
+    await request.post("/api/telemetry/heartbeat", {
+      headers: { origin: "http://localhost:3100" },
+      data: { lessonId: LESSON, positionSec: SKETCH_STOP_POINT },
+    });
   }
+});
+
+test("API rejects mutating calls from other origins", async ({ request }) => {
+  const data = { lessonId: LESSON, positionSec: SKETCH_STOP_POINT };
+  expect((await request.post("/api/telemetry/heartbeat", { data })).status()).toBe(403);
+  const foreign = await request.post("/api/telemetry/heartbeat", { headers: { origin: "https://example.com" }, data });
+  expect(foreign.status()).toBe(403);
+  const own = await request.post("/api/telemetry/heartbeat", { headers: { origin: "http://localhost:3100" }, data });
+  expect(own.status()).toBe(204);
+});
+
+test("without Clerk there is no sign-in, admin area or webhook", async ({ page, request }) => {
+  await withPrefs(page);
+  await page.goto("/he/sign-in");
+  await expect(page).toHaveURL(/\/he$/);
+  expect((await page.goto("/he/admin"))?.status()).toBe(404);
+  expect((await request.post("/api/webhooks/clerk", { data: {} })).status()).toBe(404);
+  const health = await (await request.get("/api/healthz")).json();
+  expect([health.dataSource, health.auth]).toEqual(["mock", "stub"]);
 });
 
 for (const locale of LOCALES) {

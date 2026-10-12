@@ -1,9 +1,11 @@
+import { UserButton } from "@clerk/nextjs";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { getPageActor } from "@/lib/auth";
+import { authMode } from "@/lib/authMode";
 import { parseTextSize, TEXT_SIZE_COOKIE } from "@/lib/prefs";
-import { getCurrentUserId } from "@/server/auth";
 import { userRepo } from "@/server/repos";
 import { LanguageMenu, TextSizeMenu } from "./HeaderMenus";
 import { TopNav } from "./MainNav";
@@ -11,7 +13,7 @@ import { TopNav } from "./MainNav";
 export async function Header({ className = "" }: { className?: string }) {
   const t = await getTranslations();
   const locale = (await getLocale()) as Locale;
-  const user = await userRepo.getById(await getCurrentUserId(), locale);
+  const user = await userRepo.getById((await getPageActor(locale)).userId, locale);
   const textSize = parseTextSize((await cookies()).get(TEXT_SIZE_COOKIE)?.value);
   return (
     <header className={`lg:border-b lg:border-line lg:bg-card ${className}`}>
@@ -31,14 +33,20 @@ export async function Header({ className = "" }: { className?: string }) {
             <TextSizeMenu textSize={textSize} />
           </div>
           <LanguageMenu textSize={textSize} />
-          {user && (
-            <span
-              role="img"
-              aria-label={t("prefs.account", { name: user.name })}
-              className="hidden size-12 place-items-center rounded-full bg-green font-medium text-white lg:grid"
-            >
-              {user.name.charAt(0)}
-            </span>
+          {authMode === "clerk" ? (
+            <div className="hidden size-12 place-items-center lg:grid">
+              <UserButton appearance={{ elements: { avatarBox: { width: "3rem", height: "3rem" } } }} />
+            </div>
+          ) : (
+            user && (
+              <span
+                role="img"
+                aria-label={t("prefs.account", { name: user.name })}
+                className="hidden size-12 place-items-center rounded-full bg-green font-medium text-white lg:grid"
+              >
+                {user.name.charAt(0)}
+              </span>
+            )
           )}
         </div>
       </div>

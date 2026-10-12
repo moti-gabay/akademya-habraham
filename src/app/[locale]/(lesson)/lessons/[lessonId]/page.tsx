@@ -4,17 +4,18 @@ import { Player } from "@/components/Player";
 import { TermList } from "@/components/TermList";
 import { card } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
-import { getCurrentUserId } from "@/server/auth";
+import { getPageActor } from "@/lib/auth";
 import { glossaryRepo, lessonRepo, progressRepo } from "@/server/repos";
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("player");
+  const actor = await getPageActor(locale);
   const lesson = await lessonRepo.getById(lessonId, locale);
   if (!lesson) notFound();
   const [startAt, terms] = await Promise.all([
-    progressRepo.getPosition(await getCurrentUserId(), lessonId),
+    progressRepo.getPosition(actor.userId, lessonId),
     glossaryRepo.forLesson(lessonId, locale),
   ]);
 

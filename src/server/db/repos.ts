@@ -16,6 +16,7 @@ import type {
 } from "../repos/types";
 import type { Db } from "./client";
 import * as t from "./schema";
+import { isUuid, uuidOrNil } from "./uuid";
 
 // Drizzle implementations of the repo interfaces. Content is localized in SQL: each
 // query joins the Hebrew row (required) and the requested-locale row (optional).
@@ -24,12 +25,6 @@ const COMPLETED_AT_PCT = 95;
 const DAY_MS = 86_400_000;
 // Longer than any holiday, so one that already began is still found.
 const LOOKBACK_DAYS = 10;
-const NIL_UUID = "00000000-0000-0000-0000-000000000000";
-const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-
-// Ids come from URLs and request bodies; anything that is not a UUID matches no row.
-const uuidOrNil = (value: string) => (isUuid(value) ? value : NIL_UUID);
-
 export function createDrizzleRepos(getDb: () => Db) {
   async function lessonById(lessonId: string, locale: Locale): Promise<Lesson | null> {
     if (!isUuid(lessonId)) return null;

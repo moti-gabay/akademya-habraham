@@ -1,6 +1,6 @@
-import { BookOpen } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
+import { BrandMark } from "@/components/BrandMark";
 import { LanguageList } from "@/components/LanguageList";
 import { TextSizeControl } from "@/components/TextSizeControl";
 import { WelcomeContinue } from "@/components/WelcomeContinue";
@@ -26,10 +26,7 @@ export default async function WelcomePage() {
   return (
     <main id="main" className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6 py-10">
       <div className="text-center">
-        <span className="mx-auto grid size-16 place-items-center rounded-full bg-green text-white">
-          <BookOpen aria-hidden className="size-7" />
-        </span>
-        <h1 className="mt-3 text-2xl font-semibold text-green">{t("brand")}</h1>
+        <BrandMark />
         <p className="mt-2 text-sm text-muted">
           {[greetings.slice(0, 2), greetings.slice(2)].map((pair) => (
             <span key={pair[0].locale} className="block">
