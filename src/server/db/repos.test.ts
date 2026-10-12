@@ -2,16 +2,13 @@
 // in-process) and checks them against the mock repos. No network, no DATABASE_URL.
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
-import { PGlite } from "@electric-sql/pglite";
-import { citext } from "@electric-sql/pglite/contrib/citext";
 import { and, count, eq } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/pglite";
-import { migrate } from "drizzle-orm/pglite/migrator";
 import { SAMPLE_USER_ID } from "../mock/data";
 import * as mock from "../mock/repos";
 import type { Db } from "./client";
 import { createDrizzleRepos } from "./repos";
 import * as t from "./schema";
+import { createTestDb } from "./testDb";
 import { lessonSeedId, seed } from "./seed";
 
 const LESSON = "shabbat-6";
@@ -28,9 +25,7 @@ const omit = <T extends object>(value: T, ...keys: (keyof T)[]) =>
 const withoutId = <T extends { id: string }>(value: T) => omit(value, "id");
 
 before(async () => {
-  const pglite = drizzle(new PGlite({ extensions: { citext } }));
-  await migrate(pglite, { migrationsFolder: "drizzle" });
-  db = pglite;
+  db = await createTestDb();
   await seed(db);
   repos = createDrizzleRepos(() => db);
 });
