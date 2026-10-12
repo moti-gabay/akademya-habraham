@@ -13,4 +13,10 @@ export const clerkAppearance = {
     borderRadius: "1rem",
     fontSize: "1rem",
   },
+  // Same 48px minimum tap target as the rest of the app.
+  elements: {
+    formFieldInput: { minHeight: "3rem" },
+    formButtonPrimary: { minHeight: "3rem" },
+    socialButtonsBlockButton: { minHeight: "3rem" },
+  },
 };
