@@ -1,4 +1,4 @@
-import { flags, HebrewCalendar } from "@hebcal/core";
+import { flags, HebrewCalendar, type HDate } from "@hebcal/core";
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { formatHebrewDate } from "../i18n/hebrewDate";
@@ -21,6 +21,9 @@ import * as t from "./schema";
 // query joins the Hebrew row (required) and the requested-locale row (optional).
 
 const COMPLETED_AT_PCT = 95;
+const DAY_MS = 86_400_000;
+// Longer than any holiday, so one that already began is still found.
+const LOOKBACK_DAYS = 10;
 const NIL_UUID = "00000000-0000-0000-0000-000000000000";
 const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
@@ -249,19 +252,30 @@ export function createDrizzleRepos(getDb: () => Db) {
       for (const row of rows) if (row.hebcalCode && !byCode.has(row.hebcalCode)) byCode.set(row.hebcalCode, row);
       if (byCode.size === 0) return null;
 
-      const end = new Date(now);
-      end.setMonth(end.getMonth() + 13);
-      // Skip the "Erev …" entries: the holiday's date is its first day.
-      const event = HebrewCalendar.calendar({ start: now, end, il: true }).find(
-        (item) => !(item.getFlags() & flags.EREV) && byCode.has(item.basename()),
-      );
-      const holiday = event && byCode.get(event.basename());
-      if (!event || !holiday) return null;
+      // A holiday can span several calendar entries (eight days of Hanukkah). Group them,
+      // looking back far enough to catch one that is under way, and always report its
+      // first day. "Erev …" entries are skipped: they are the day before.
+      const from = new Date(now.getTime() - LOOKBACK_DAYS * DAY_MS);
+      const to = new Date(now);
+      to.setMonth(to.getMonth() + 13);
+      const occurrences: { code: string; start: HDate; lastDay: number }[] = [];
+      for (const item of HebrewCalendar.calendar({ start: from, end: to, il: true })) {
+        const code = item.basename();
+        if (!byCode.has(code) || item.getFlags() & flags.EREV) continue;
+        const day = item.getDate().greg().getTime();
+        const current = occurrences.findLast((occurrence) => occurrence.code === code);
+        if (current && day - current.lastDay <= 2 * DAY_MS) current.lastDay = day;
+        else occurrences.push({ code, start: item.getDate(), lastDay: day });
+      }
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const next = occurrences.find((occurrence) => occurrence.lastDay >= today);
+      const holiday = next && byCode.get(next.code);
+      if (!next || !holiday) return null;
 
       return {
         id: holiday.id,
         name: holiday.name,
-        hebrewDate: formatHebrewDate(event.getDate(), locale),
+        hebrewDate: formatHebrewDate(next.start, locale),
         description: holiday.description ?? "",
         lessonId: holiday.lessonId,
         lessonMinutes: Math.round((holiday.durationSec ?? 0) / 60),

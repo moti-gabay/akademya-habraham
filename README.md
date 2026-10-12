@@ -94,5 +94,4 @@ Real lessons are added in the admin screens from Milestone 3 on.
 - Subtitles are loaded with `<track>`. On iOS they must come from the HLS manifest, which arrives with Bunny Stream in Milestone 4.
 - In mock mode progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
 - On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
-- During a multi-day holiday the "next holiday" card shows the current day's Hebrew date, not the holiday's first day.
 - The signed-in user is always the sample user "Moshe".

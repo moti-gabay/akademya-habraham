@@ -70,7 +70,8 @@ export function Player({ lessonId, src, subtitles, startAt, defaultSubtitle, chi
 
   const saveProgress = useCallback(() => {
     const video = videoRef.current;
-    if (!video || !video.duration) return Promise.resolve();
+    // Nothing watched yet: opening a lesson must not replace the stop point or mark it as started.
+    if (!video || !video.duration || video.currentTime < 1) return Promise.resolve();
     return fetch("/api/telemetry/heartbeat", {
       method: "POST",
       headers: { "content-type": "application/json" },

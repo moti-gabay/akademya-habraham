@@ -84,9 +84,14 @@ test("ids that are not UUIDs match nothing instead of failing", async () => {
   await repos.progressRepo.save("x", "y", 10);
 });
 
-test("after this year's Hanukkah, next year's is the next holiday", async () => {
-  const afterHanukkah = await repos.holidayRepo.getNext("en", new Date("2026-12-15T00:00:00Z"));
-  assert.equal(afterHanukkah?.hebrewDate, "25 Kislev");
+test("a holiday under way keeps showing its first day; afterwards next year's is offered", async () => {
+  // Hanukkah 5787: 25 Kislev = 4 Dec 2026 (first candle on the evening of the 3rd), last day 11 Dec.
+  for (const day of ["2026-12-04", "2026-12-07", "2026-12-11"]) {
+    const holiday = await repos.holidayRepo.getNext("en", new Date(`${day}T12:00:00`));
+    assert.equal(holiday?.hebrewDate, "25 Kislev", day);
+  }
+  assert.equal((await repos.holidayRepo.getNext("he", new Date("2026-12-07T12:00:00")))?.hebrewDate, "כ״ה בכסלו");
+  assert.equal((await repos.holidayRepo.getNext("en", new Date("2026-12-20T12:00:00")))?.hebrewDate, "25 Kislev");
 });
 
 test("seeding again changes nothing and keeps existing progress", async () => {
