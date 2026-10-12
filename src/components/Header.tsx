@@ -2,8 +2,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { cookies } from "next/headers";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
+import { getPageActor } from "@/lib/auth";
 import { parseTextSize, TEXT_SIZE_COOKIE } from "@/lib/prefs";
-import { getCurrentUserId } from "@/server/auth";
 import { userRepo } from "@/server/repos";
 import { LanguageMenu, TextSizeMenu } from "./HeaderMenus";
 import { TopNav } from "./MainNav";
@@ -11,7 +11,7 @@ import { TopNav } from "./MainNav";
 export async function Header({ className = "" }: { className?: string }) {
   const t = await getTranslations();
   const locale = (await getLocale()) as Locale;
-  const user = await userRepo.getById(await getCurrentUserId(), locale);
+  const user = await userRepo.getById((await getPageActor(locale)).userId, locale);
   const textSize = parseTextSize((await cookies()).get(TEXT_SIZE_COOKIE)?.value);
   return (
     <header className={`lg:border-b lg:border-line lg:bg-card ${className}`}>

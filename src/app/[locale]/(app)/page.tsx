@@ -3,13 +3,13 @@ import { ContinueCard } from "@/components/home/ContinueCard";
 import { PathSteps } from "@/components/home/PathSteps";
 import { GlossaryPreview, HelpCard, HolidayCard } from "@/components/home/SideCards";
 import type { Locale } from "@/i18n/routing";
-import { getCurrentUserId } from "@/server/auth";
+import { getPageActor } from "@/lib/auth";
 import { glossaryRepo, holidayRepo, pathRepo, progressRepo, userRepo } from "@/server/repos";
 
 export default async function HomePage() {
   const t = await getTranslations("home");
   const locale = (await getLocale()) as Locale;
-  const userId = await getCurrentUserId();
+  const { userId } = await getPageActor(locale);
   const [user, continueWatching, steps, holiday, glossary] = await Promise.all([
     userRepo.getById(userId, locale),
     progressRepo.getContinueWatching(userId, locale),

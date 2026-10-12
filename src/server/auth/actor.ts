@@ -10,7 +10,6 @@ export type Role = (typeof ROLES)[number];
 // Who is making the request, as the rest of the server sees it.
 export type Actor = {
   userId: string;
-  name: string;
   role: Role;
   locale: Locale;
   // A second factor was verified in this session (required for the admin area).
@@ -63,7 +62,6 @@ export async function resolveActor(
   if (row.status === "blocked") throw new AuthError(403, "account_blocked");
   return {
     userId: row.id,
-    name: row.name,
     role: row.role,
     locale: row.locale,
     secondFactorVerified: session.secondFactorVerified,

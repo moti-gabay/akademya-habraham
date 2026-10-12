@@ -92,7 +92,11 @@ test("player controls work and the stop point reaches the home card", async ({ p
     await expect(page.getByText("You stopped at 0:20").filter({ visible: true })).toBeVisible();
   } finally {
     // Put the mock stop point back so later tests see the sketch state.
-    await request.post("/api/telemetry/heartbeat", { data: { lessonId: LESSON, positionSec: SKETCH_STOP_POINT } });
+    // The API only accepts mutating calls from the app's own origin.
+    await request.post("/api/telemetry/heartbeat", {
+      headers: { origin: "http://localhost:3100" },
+      data: { lessonId: LESSON, positionSec: SKETCH_STOP_POINT },
+    });
   }
 });
 

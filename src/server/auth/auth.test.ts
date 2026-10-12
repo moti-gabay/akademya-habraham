@@ -77,8 +77,8 @@ test("a session without a mirror row is provisioned on the spot", async () => {
 
   const actor = await resolveActor(db, session, async () => clerkUser("user_new"), "ru");
   assert.deepEqual(
-    [actor?.name, actor?.role, actor?.locale, actor?.secondFactorVerified],
-    ["Dana Levi", "user", "ru", false],
+    [actor?.role, actor?.locale, actor?.secondFactorVerified],
+    ["user", "ru", false],
   );
   assert.equal(actor?.userId, (await mirror("user_new")).id);
 });
@@ -94,7 +94,6 @@ test("a blocked user is refused", async () => {
 test("role checks are ordered and the admin area needs a second factor", () => {
   const actor = (role: Actor["role"], secondFactorVerified = false): Actor => ({
     userId: "u",
-    name: "n",
     role,
     locale: "he",
     secondFactorVerified,
