@@ -62,7 +62,13 @@ src/server/            # NO imports from next/* — portable to a standalone ser
 app/api/...            # thin handlers: parse (zod) → call service → respond
 ```
 - Statelessness: no module-level mutable state, no filesystem, config from env only.
-- Data source (added 2026-10-12): `src/server/repos/index.ts` is the single switch. The Drizzle repos (`src/server/db/repos.ts`) are used only when `DATA_SOURCE=db`; anything else, including a `DATABASE_URL` with no flag, selects the mock repos. **Public deployments stay on mock until Clerk auth lands in Milestone 2**: `POST /api/telemetry/heartbeat` is unauthenticated and the current user is always the seeded sample user, so with a database anyone could write that user's progress.
+- Data source (added 2026-10-12): `src/server/repos/index.ts` is the single switch. The Drizzle repos (`src/server/db/repos.ts`) are used only when `DATA_SOURCE=db`; anything else, including a `DATABASE_URL` with no flag, selects the mock repos. Vercel currently stays on mock (`DATA_SOURCE` unset) by decision; switching it to the database needs the Clerk keys and webhook endpoint in place first.
+- Auth (Milestone 2, added 2026-10-13). Auth mode is derived in `src/lib/authMode.ts`: **clerk** when both Clerk keys exist and `DATA_SOURCE=db`, otherwise **stub** (every visitor is the sample user; this is mock mode and CI). On Vercel, `DATA_SOURCE=db` without Clerk keys throws at startup.
+  - `src/lib/auth.ts` is the only caller of Clerk's session API: `getActor()` → `{ userId, role, locale, secondFactorVerified }`. Our user id, role and status come from the `users` mirror (one lookup per authenticated request), not from custom session claims. Clerk `publicMetadata.role` is the source of truth for the role and reaches the mirror by webhook, so a role change made in the Clerk dashboard applies when the webhook lands.
+  - A signed-in user with no mirror row is provisioned on the spot from the Clerk API with the same upsert the webhook uses.
+  - `src/server/auth/`: `clerkSync` (idempotent via `webhook_events`; events older than `users.clerk_updated_at` are ignored; deletion scrubs personal data), `actor` (`requireActor`, `requireRole` with user < editor < admin, `requireSecondFactor`), `audit`, `adminUsers`.
+  - The proxy covers `/api/*`: mutating calls must be same-origin (`Sec-Fetch-Site` or `Origin`); `/api/webhooks/*` is exempt and signature-verified. In clerk mode every page except `/welcome`, `/sign-in`, `/sign-up` requires a session.
+  - Admin area (`/[locale]/admin`, `PATCH /api/admin/users/[id]`): staff only, and only in a session where a second factor was verified. Admin mutations write `audit_log`. An admin cannot change their own role or block themselves.
 - Seed: `pnpm db:seed` upserts fictional sample content (`src/server/db/seed.ts`, same data as the mock repos) and refuses to run when `NODE_ENV=production`.
 - DB: Drizzle over Neon pooled string (transaction-mode PgBouncer), `pg` Pool size 1–2 per invocation, or `@neondatabase/serverless` HTTP driver for single-shot queries. Migrations run in CI, never at runtime.
 - CSRF: middleware rejects mutating `/api/*` requests unless `Sec-Fetch-Site: same-origin` or `Origin` matches. Webhook routes are exempt and signature-verified.
@@ -109,7 +115,7 @@ Telemetry
 - `user_lesson_progress` — pk(user_id, lesson_id), last_position_sec, watched_pct, completed_at, updated_at (migrated 2026-10-12; `completed_at` is set once at ≥ 95% watched and never cleared, `watched_pct` never decreases)
 - `daily_lesson_stats`, `daily_platform_stats` — daily rollups
 
-Ops
+Ops (`audit_log` and `webhook_events` migrated 2026-10-13 in `drizzle/0002_auth_ops.sql`, with `users.clerk_updated_at`)
 - `audit_log` — actor_id, action, target_type, target_id, diff jsonb, ip, created_at
 
 Storage separation
@@ -194,7 +200,7 @@ drizzle/ (schema + migrations)    .github/workflows/ci.yml    vercel.json (crons
 
 0. **Design pick** → `design/DESIGN_CONCEPTS.md` + five HTML mockups; user selects the UI direction. Done 2026-10-11: `design/final-sketch.pdf`.
 1. **Scaffold** → Next.js + TS + Tailwind (logical props) + `next-intl` + Clerk + Drizzle/Neon + Upstash + Vercel + CI. Verify: locale routing with correct `dir`, sign-in in all 4 languages, `/api/healthz` hits Neon.
-2. **Users & roles** → Clerk webhooks → `users` mirror, `verifyRequest`/`requireRole`, admin MFA gate, audit log. Verify: webhook replay idempotent; admin route rejects non-MFA session.
+2. **Users & roles** → Clerk webhooks → `users` mirror, `verifyRequest`/`requireRole`, admin MFA gate, audit log. Verify: webhook replay idempotent; admin route rejects non-MFA session. Implemented 2026-10-13; real-session checks against a Clerk instance are recorded in the PR.
 3. **Catalog + i18n content** → CRUD with per-language tabs, translation tables, R2 presigned uploads, Bunny create + tus + encoding webhook, captions sync, ISR pages per locale, search. Verify: `he`-only lesson falls back on `en` page; VTT appears as a track in the manifest.
 4. **Playback & telemetry** → `/api/play`, player with subtitles, heartbeat UPSERT, resume, watermark. Verify: token rejected after expiry and from a foreign origin; iOS native playback with subtitles; third concurrent session rejected; resume across devices.
 5. **Billing** → `BillingProvider` + chosen adapter, localized checkout, webhooks, state machine, daily cron, entitlement invalidation, Resend emails. Verify: state-machine unit tests with recorded fixtures; canceled user loses `/api/play` within 60 s.
