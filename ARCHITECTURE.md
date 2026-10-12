@@ -6,6 +6,8 @@ Design constraint: stateless and horizontally scalable from day one.
 
 Decided 2026-10-07. Update this file when a decision changes.
 
+Decision 2026-10-11: Milestone 0 is closed. The UI follows `design/final-sketch.pdf`, which replaces the five concepts and is the visual source of truth. The audience is older adults, so tap targets are ≥ 48 px, contrast is WCAG AA or better, and every icon has a text label.
+
 ## Decisions
 
 | Area | Choice | Why |
@@ -40,6 +42,7 @@ Known risk: Vercel Hobby is licensed for non-commercial use. Use Hobby for stagi
 ### 1.1 Frontend
 - `app/[locale]/...` routing with `next-intl`. `<html dir>` per locale. Tailwind logical properties only (`ms-`, `pe-`, `text-start`) so one stylesheet serves RTL and LTR. Font: Rubik (Hebrew, Cyrillic, Latin) via `next/font`.
 - Locale resolution: URL prefix → `users.locale` → `Accept-Language` → `he`. Hebrew calendar dates shown alongside Gregorian.
+- Text size (added 2026-10-11): three levels (`s|m|l`) stored in the `ah_text_size` cookie. The root layout reads it and sets `data-text-size` on `<html>`, which changes the root font-size (100% / 112.5% / 125%), so SSR renders the right size with no flash. All sizes are in rem. A missing cookie means a first visit and redirects to `/[locale]/welcome`. Reading the cookie makes a page dynamic; ISR pages will set the attribute from an inline head script instead.
 - Clerk `clerkMiddleware()` guards `/[locale]/app/*` and `/[locale]/admin/*`; `<ClerkProvider localization>` per locale.
 - Public catalog pages: ISR per locale, tag-revalidated on publish. Authenticated pages: TanStack Query → same-origin `/api/*`.
 - Player: hls.js (Android/desktop), native HLS (iOS). Subtitles come from the HLS manifest so they work natively on iOS; default track = UI locale. Server-side resume, ABR, speed, PiP, Media Session API, session watermark overlay.
@@ -84,6 +87,18 @@ Catalog (localized; fallback chain: requested locale → `he`)
 - `lesson_subtitles` — pk(lesson_id, locale), r2_key, bunny_synced_at, source enum(manual|auto)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)
+
+Learning path and glossary (**proposed 2026-10-11, not migrated**; the final sketch needs both, see `src/server/repos/types.ts` for the shapes the UI already consumes from mock repos)
+- `tracks` — id, code unique, sort_order, status enum(draft|published). One track at launch (the conversion path); the table keeps a second track possible without a schema change.
+- `track_translations` — pk(track_id, locale), name, slug. Unique (locale, slug).
+- `track_steps` — id, track_id, sort_order. Unique (track_id, sort_order).
+- `track_step_translations` — pk(step_id, locale), name, slug.
+- `track_step_lessons` — pk(step_id, lesson_id), sort_order. A lesson keeps its `category_id`, so the path and the holiday/parsha/halacha catalog stay independent and one lesson can sit in both.
+- `glossary_terms` — id, code unique, sort_order
+- `glossary_term_translations` — pk(term_id, locale), term, short_definition, slug. Unique (locale, slug).
+- `lesson_glossary_terms` — pk(lesson_id, term_id), sort_order. Drives "Words from the lesson"; a term is underlined in a lesson title when its translated `term` appears there literally.
+- No new progress table. Step status is derived: completed = every lesson of the step has `user_lesson_progress.completed_at`; in progress = some do; "up next" = the first step after the current one. "Continue watching" = the latest `user_lesson_progress.updated_at` without `completed_at`.
+- Same fallback chain as the catalog (requested locale → `he`); `he` rows are required.
 
 Telemetry
 - `playback_sessions` — id, user_id, lesson_id, started_at, last_heartbeat_at, last_position_sec, watched_sec, max_position_sec, completed, device, user_agent, ip_hash. Index (user_id, last_heartbeat_at).
@@ -167,13 +182,13 @@ interface BillingProvider {
 
 ## 3. Milestones
 
-Repo layout (single Next.js app):
+Repo layout (single Next.js app; the `app` directory lives under `src/`):
 ```
-app/[locale]/(public|app|admin)/...    app/api/...    src/server/...    src/i18n/messages/{he,en,ru,es}.json
+src/app/[locale]/(public|app|admin)/...    src/app/api/...    src/server/...    src/i18n/messages/{he,en,ru,es}.json
 drizzle/ (schema + migrations)    .github/workflows/ci.yml    vercel.json (crons, headers)    design/ (concepts)
 ```
 
-0. **Design pick** → `design/DESIGN_CONCEPTS.md` + five HTML mockups; user selects the UI direction.
+0. **Design pick** → `design/DESIGN_CONCEPTS.md` + five HTML mockups; user selects the UI direction. Done 2026-10-11: `design/final-sketch.pdf`.
 1. **Scaffold** → Next.js + TS + Tailwind (logical props) + `next-intl` + Clerk + Drizzle/Neon + Upstash + Vercel + CI. Verify: locale routing with correct `dir`, sign-in in all 4 languages, `/api/healthz` hits Neon.
 2. **Users & roles** → Clerk webhooks → `users` mirror, `verifyRequest`/`requireRole`, admin MFA gate, audit log. Verify: webhook replay idempotent; admin route rejects non-MFA session.
 3. **Catalog + i18n content** → CRUD with per-language tabs, translation tables, R2 presigned uploads, Bunny create + tus + encoding webhook, captions sync, ISR pages per locale, search. Verify: `he`-only lesson falls back on `en` page; VTT appears as a track in the manifest.

@@ -6,3 +6,11 @@ node_modules/
 .next/
 .DS_Store
 *.png
+
+# tests
+playwright-report/
+test-results/
+!design/reference/*.png
+!tests/**/*-snapshots/*.png
+next-env.d.ts
+*.tsbuildinfo

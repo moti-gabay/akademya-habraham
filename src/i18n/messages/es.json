@@ -1,0 +1,109 @@
+{
+  "_review": "Initial machine draft. Needs review by a native speaker.",
+  "brand": "Akademya Habraham",
+  "common": {
+    "skipToContent": "Ir al contenido",
+    "back": "Volver",
+    "comingSoon": "Esta página todavía está en construcción. Pronto estará aquí."
+  },
+  "nav": {
+    "label": "Navegación principal",
+    "home": "Inicio",
+    "path": "Mi camino",
+    "search": "Buscar",
+    "holidays": "Fiestas",
+    "glossary": "Glosario",
+    "help": "Ayuda"
+  },
+  "prefs": {
+    "welcome": "Bienvenidos",
+    "chooseLanguage": "Elija el idioma",
+    "language": "Idioma",
+    "textSize": "Tamaño del texto",
+    "sizes": {
+      "s": "Pequeño",
+      "m": "Normal",
+      "l": "Grande"
+    },
+    "continue": "Continuar",
+    "changeAnytime": "Puede cambiar esto en cualquier momento",
+    "account": "Cuenta de {name}",
+    "sizeLetter": "A"
+  },
+  "home": {
+    "greeting": "Hola, {name}",
+    "subtitle": "Qué bueno verle de nuevo. Esta es su próxima clase.",
+    "stepChip": "Etapa {n} · {step}",
+    "stepChipLesson": "Etapa {n} · {step} · Clase {lesson} de {total}",
+    "lessonMeta": "Clase {lesson} de {total} · Se detuvo en <tc></tc>",
+    "teacherMeta": "{teacher} · Se detuvo en <tc></tc>",
+    "progress": "Avance de la clase",
+    "continueWatching": "Seguir viendo",
+    "myPath": "Mi camino",
+    "seeFullPath": "Ver todo el camino",
+    "stepNumber": "Etapa {n}",
+    "status": {
+      "completed": "Completada",
+      "inProgress": "En curso · {done} de {total} clases",
+      "inProgressShort": "{done} de {total} clases",
+      "upNext": "A continuación"
+    },
+    "nextHoliday": "Próxima fiesta · {date}",
+    "holidayMeta": "{description} · {minutes} minutos",
+    "holidayCta": "Ver la clase de {holiday}",
+    "glossaryTitle": "Glosario",
+    "allTerms": "Todos los términos",
+    "helpTitle": "¿Necesita ayuda?",
+    "helpText": "¿Tiene dificultades con el sitio o con una clase? Estamos aquí.",
+    "talkToUs": "Hable con nosotros"
+  },
+  "term": {
+    "explain": "Explicación: {term}",
+    "close": "Cerrar"
+  },
+  "player": {
+    "meta": "Etapa {n} · {step} · Clase {lesson}",
+    "video": "Video de la clase",
+    "play": "Reproducir",
+    "pause": "Pausa",
+    "back10": "10 segundos atrás",
+    "forward10": "10 segundos adelante",
+    "timeline": "Posición en la clase",
+    "timelineValue": "{current} de {total}",
+    "speed": "Velocidad del habla",
+    "speeds": {
+      "slow": "Lenta",
+      "normal": "Normal",
+      "fast": "Rápida"
+    },
+    "subtitles": "Subtítulos",
+    "subtitlesOff": "Sin subtítulos",
+    "words": "Palabras de la clase",
+    "error": "No pudimos cargar el video. Inténtelo de nuevo en un momento."
+  },
+  "pages": {
+    "path": {
+      "title": "Mi camino",
+      "intro": "Las cinco etapas de su camino, en orden."
+    },
+    "search": {
+      "title": "Buscar",
+      "intro": "Aquí podrá buscar una clase por tema o palabra."
+    },
+    "holidays": {
+      "title": "Fiestas",
+      "intro": "Clases para cada fiesta del calendario."
+    },
+    "glossary": {
+      "title": "Glosario",
+      "intro": "Palabras que aparecen en las clases, explicadas brevemente."
+    },
+    "help": {
+      "title": "Ayuda",
+      "intro": "¿Tiene dificultades con el sitio o con una clase? Estamos aquí.",
+      "phone": "Teléfono",
+      "whatsapp": "WhatsApp",
+      "noContacts": "Los datos de contacto aparecerán aquí pronto."
+    }
+  }
+}

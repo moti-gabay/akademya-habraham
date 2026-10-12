@@ -1,0 +1,108 @@
+{
+  "brand": "אקדמיה האברהם",
+  "common": {
+    "skipToContent": "דילוג לתוכן",
+    "back": "חזרה",
+    "comingSoon": "העמוד הזה עוד בבנייה. בקרוב הוא יהיה כאן."
+  },
+  "nav": {
+    "label": "ניווט ראשי",
+    "home": "בית",
+    "path": "המסלול שלי",
+    "search": "חיפוש",
+    "holidays": "חגים",
+    "glossary": "מילון מושגים",
+    "help": "עזרה"
+  },
+  "prefs": {
+    "welcome": "ברוכים הבאים",
+    "chooseLanguage": "בחרו שפה",
+    "language": "שפה",
+    "textSize": "גודל טקסט",
+    "sizes": {
+      "s": "קטן",
+      "m": "רגיל",
+      "l": "גדול"
+    },
+    "continue": "המשך",
+    "changeAnytime": "אפשר לשנות את זה בכל רגע",
+    "account": "החשבון של {name}",
+    "sizeLetter": "א"
+  },
+  "home": {
+    "greeting": "שלום, {name}",
+    "subtitle": "טוב שחזרת. הנה השיעור הבא שלך.",
+    "stepChip": "שלב {n} · {step}",
+    "stepChipLesson": "שלב {n} · {step} · שיעור {lesson} מתוך {total}",
+    "lessonMeta": "שיעור {lesson} מתוך {total} · נעצרת בדקה <tc></tc>",
+    "teacherMeta": "{teacher} · נעצרת בדקה <tc></tc>",
+    "progress": "התקדמות בשיעור",
+    "continueWatching": "המשך לצפות",
+    "myPath": "המסלול שלי",
+    "seeFullPath": "לכל המסלול",
+    "stepNumber": "שלב {n}",
+    "status": {
+      "completed": "הושלם",
+      "inProgress": "באמצע · {done} מתוך {total} שיעורים",
+      "inProgressShort": "{done} מתוך {total} שיעורים",
+      "upNext": "הבא בתור"
+    },
+    "nextHoliday": "החג הקרוב · {date}",
+    "holidayMeta": "{description} · {minutes} דקות",
+    "holidayCta": "לשיעור על {holiday}",
+    "glossaryTitle": "מילון מושגים",
+    "allTerms": "לכל המושגים",
+    "helpTitle": "צריכים עזרה?",
+    "helpText": "מתקשים באתר או בשיעור? אנחנו כאן.",
+    "talkToUs": "דברו איתנו"
+  },
+  "term": {
+    "explain": "הסבר: {term}",
+    "close": "סגירה"
+  },
+  "player": {
+    "meta": "שלב {n} · {step} · שיעור {lesson}",
+    "video": "סרטון השיעור",
+    "play": "הפעלה",
+    "pause": "השהיה",
+    "back10": "10 שניות אחורה",
+    "forward10": "10 שניות קדימה",
+    "timeline": "מיקום בשיעור",
+    "timelineValue": "{current} מתוך {total}",
+    "speed": "מהירות דיבור",
+    "speeds": {
+      "slow": "איטי",
+      "normal": "רגיל",
+      "fast": "מהיר"
+    },
+    "subtitles": "כתוביות",
+    "subtitlesOff": "בלי כתוביות",
+    "words": "מילים מהשיעור",
+    "error": "לא הצלחנו לטעון את הסרטון. נסו שוב בעוד רגע."
+  },
+  "pages": {
+    "path": {
+      "title": "המסלול שלי",
+      "intro": "חמשת השלבים בדרך שלך, לפי הסדר."
+    },
+    "search": {
+      "title": "חיפוש",
+      "intro": "כאן אפשר יהיה לחפש שיעור לפי נושא או מילה."
+    },
+    "holidays": {
+      "title": "חגים",
+      "intro": "שיעורים לקראת כל חג בלוח השנה."
+    },
+    "glossary": {
+      "title": "מילון מושגים",
+      "intro": "מילים שחוזרות בשיעורים, בהסבר קצר."
+    },
+    "help": {
+      "title": "עזרה",
+      "intro": "מתקשים באתר או בשיעור? אנחנו כאן.",
+      "phone": "טלפון",
+      "whatsapp": "וואטסאפ",
+      "noContacts": "פרטי הקשר יופיעו כאן בקרוב."
+    }
+  }
+}

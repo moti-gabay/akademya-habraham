@@ -1,5 +1,7 @@
 # Design concepts — Akademya Habraham
 
+> **Decision 2026-10-11:** the chosen design is `design/final-sketch.pdf` (Hebrew phone screens, home in Hebrew vs. English, desktop home). It replaces the five concepts below and is the visual source of truth; the concepts stay for reference only. The shared rules below still apply, with two changes: tap targets are ≥ 48 px (not 44), and where the sketch and a shared rule differ, the sketch wins.
+
 Five visual directions for the home page and the video viewing interface. Each has a browsable mockup in `design/concepts/` (open `design/concepts/index.html`). Every mockup renders both screens, defaults to Hebrew RTL, and has toggles for English LTR and a 390 px phone frame.
 
 Shared rules that apply to every concept:

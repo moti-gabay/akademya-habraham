@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* Design tokens from design/final-sketch.pdf */
+@theme {
+  --font-sans: var(--font-rubik), system-ui, sans-serif;
+
+  --color-green: #2e5a3e;
+  --color-green-dark: #234731;
+  --color-green-tint: #e2ebe2;
+  --color-paper: #f3efe9;
+  --color-card: #ffffff;
+  --color-cream: #fbf0dc;
+  --color-gold: #76560f;
+  --color-ink: #1f2420;
+  --color-muted: #59605a;
+  --color-line: #e0d9ce;
+  --color-track: #e6dfd3;
+  --color-video: #3c463e;
+
+  --radius-card: 1rem;
+}
+
+/* Text size preference: everything is sized in rem, so this scales the whole UI. */
+html {
+  font-size: 100%;
+}
+html[data-text-size="m"] {
+  font-size: 112.5%;
+}
+html[data-text-size="l"] {
+  font-size: 125%;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+/* Minimum tap target: 48px at the base size, grows with the text size. */
+@utility tap {
+  min-height: 3rem;
+  min-width: 3rem;
+}
+
+/* Timecodes and numbers keep LTR order inside RTL text. */
+@utility ltr-isolate {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Lesson timeline: a native range input, 48px tall to tap, drawn as a thin bar.
+   --fill is the played share; it fills from the start edge in both directions. */
+.player-range {
+  appearance: none;
+  inline-size: 100%;
+  block-size: 3rem;
+  cursor: pointer;
+  background: linear-gradient(to right, var(--color-green) var(--fill, 0%), var(--color-track) var(--fill, 0%)) center /
+    100% 0.375rem no-repeat;
+}
+[dir="rtl"] .player-range {
+  background-image: linear-gradient(to left, var(--color-green) var(--fill, 0%), var(--color-track) var(--fill, 0%));
+}
+.player-range::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.player-range::-webkit-slider-thumb {
+  appearance: none;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-card);
+  background: var(--color-green);
+}
+.player-range::-moz-range-track {
+  background: transparent;
+}
+.player-range::-moz-range-thumb {
+  inline-size: 1rem;
+  block-size: 1rem;
+  border-radius: 50%;
+  border: 2px solid var(--color-card);
+  background: var(--color-green);
+}
+
+video::cue {
+  background: rgb(0 0 0 / 0.8);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+}
