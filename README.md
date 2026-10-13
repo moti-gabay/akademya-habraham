@@ -128,6 +128,6 @@ Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, ot
 - The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
 - A lesson can be published without a video: every lesson still plays the sample stream until uploads arrive (Milestone 3b).
 - Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
-- Migration `0003` (lesson access `members`, key points) is generated but not applied to Neon. Until it is, the app on `DATA_SOURCE=db` fails wherever it reads lessons.
+- Migration `0003` (lesson access `members`, key points) is applied to the Neon dev database. Any other database needs it before the app can read lessons with `DATA_SOURCE=db`.
 - Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
 - Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.
