@@ -66,3 +66,24 @@ export interface HolidayRepo {
   // `now` exists so tests can pin the date.
   getNext(locale: Locale, now?: Date): Promise<Holiday | null>;
 }
+
+// Public catalog (holiday pages). Slugs are per locale, with the Hebrew slug as fallback.
+export type HolidayCategory = { id: string; slug: string; name: string; lessonCount: number };
+export type CatalogLesson = {
+  id: string;
+  slug: string;
+  title: string;
+  teacher: string;
+  durationSec: number;
+  access: LessonAccess;
+  description: string;
+  keyPoints: string[];
+};
+export interface CatalogRepo {
+  // Holiday categories that have at least one published lesson.
+  listHolidayCategories(locale: Locale): Promise<HolidayCategory[]>;
+  // Finds the category by its slug in any language; `category.slug` is the one for `locale`.
+  getHolidayCategory(slug: string, locale: Locale): Promise<{ category: HolidayCategory; lessons: CatalogLesson[] } | null>;
+  // Id of a published lesson by its slug in any language.
+  findLessonBySlug(slug: string): Promise<string | null>;
+}

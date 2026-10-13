@@ -14,6 +14,8 @@ import type {
   ProgressRepo,
   UserRepo,
 } from "../repos/types";
+import { createDrizzleAdminCatalogRepo } from "./adminCatalog";
+import { createDrizzleCatalogRepo } from "./catalog";
 import type { Db } from "./client";
 import * as t from "./schema";
 import { isUuid, uuidOrNil } from "./uuid";
@@ -261,5 +263,14 @@ export function createDrizzleRepos(getDb: () => Db) {
     },
   };
 
-  return { userRepo, pathRepo, lessonRepo, progressRepo, glossaryRepo, holidayRepo };
+  return {
+    userRepo,
+    pathRepo,
+    lessonRepo,
+    progressRepo,
+    glossaryRepo,
+    holidayRepo,
+    catalogRepo: createDrizzleCatalogRepo(getDb),
+    adminCatalogRepo: createDrizzleAdminCatalogRepo(getDb),
+  };
 }
