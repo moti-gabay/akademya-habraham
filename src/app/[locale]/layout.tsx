@@ -3,12 +3,11 @@ import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Rubik } from "next/font/google";
-import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { dirOf, routing } from "@/i18n/routing";
 import { authMode } from "@/lib/authMode";
 import { clerkAppearance, clerkLocalization } from "@/lib/clerkUi";
-import { parseTextSize, TEXT_SIZE_COOKIE } from "@/lib/prefs";
+import { DEFAULT_TEXT_SIZE, TEXT_SIZE_SCRIPT } from "@/lib/prefs";
 import "../globals.css";
 
 const rubik = Rubik({ subsets: ["hebrew", "latin", "latin-ext", "cyrillic"], variable: "--font-rubik" });
@@ -26,11 +25,15 @@ export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
   setRequestLocale(locale);
-  const textSize = parseTextSize((await cookies()).get(TEXT_SIZE_COOKIE)?.value);
 
   const page = <NextIntlClientProvider>{children}</NextIntlClientProvider>;
   return (
-    <html lang={locale} dir={dirOf(locale)} data-text-size={textSize} className={rubik.variable}>
+    // The script sets the visitor's text size; reading the cookie here would make every
+    // page dynamic. The attribute then differs from the server's, hence the suppression.
+    <html lang={locale} dir={dirOf(locale)} data-text-size={DEFAULT_TEXT_SIZE} className={rubik.variable} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: TEXT_SIZE_SCRIPT }} />
+      </head>
       <body className="min-h-dvh antialiased">
         {authMode === "clerk" ? (
           <ClerkProvider

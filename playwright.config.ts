@@ -1,6 +1,12 @@
 import { defineConfig } from "@playwright/test";
 
 const PORT = 3100;
+// The admin screens are tested on a dev server: the local admin stand-in (MOCK_ROLE) is
+// ignored in production builds by design.
+const ADMIN_PORT = 3101;
+// e2e always runs on mock data and never opens the database, even when a local .env
+// selects one.
+const env = { DATA_SOURCE: "mock", DATABASE_URL: "" };
 
 export default defineConfig({
   testDir: "tests",
@@ -14,15 +20,28 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, browserName: "chromium", locale: "he-IL" },
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
   projects: [
-    { name: "mobile", use: { viewport: { width: 375, height: 812 } } },
-    { name: "desktop", use: { viewport: { width: 1280, height: 800 } } },
+    { name: "mobile", testIgnore: /admin/, use: { viewport: { width: 375, height: 812 } } },
+    { name: "desktop", testIgnore: /admin/, use: { viewport: { width: 1280, height: 800 } } },
+    {
+      name: "admin",
+      testMatch: /admin/,
+      use: { baseURL: `http://localhost:${ADMIN_PORT}`, viewport: { width: 1280, height: 800 } },
+    },
   ],
-  webServer: {
-    command: `pnpm build && pnpm start -p ${PORT}`,
-    url: `http://localhost:${PORT}/api/healthz`,
-    // e2e always runs on mock data, even when a local .env selects the database.
-    env: { DATA_SOURCE: "mock" },
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: [
+    {
+      command: `pnpm build && pnpm start -p ${PORT}`,
+      url: `http://localhost:${PORT}/api/healthz`,
+      env,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+    {
+      command: `pnpm dev -p ${ADMIN_PORT}`,
+      url: `http://localhost:${ADMIN_PORT}/api/healthz`,
+      env: { ...env, MOCK_ROLE: "admin" },
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+  ],
 });

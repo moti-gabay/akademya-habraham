@@ -106,6 +106,16 @@
       "noContacts": "Los datos de contacto aparecerán aquí pronto."
     }
   },
+  "catalog": {
+    "lessonCount": "Clases: {count}",
+    "free": "Clase gratuita",
+    "lessonMeta": "{teacher} · {minutes} min",
+    "keyPoints": "En esta clase",
+    "watch": "Ver la clase",
+    "signUpToWatch": "Regístrate para verla",
+    "allHolidays": "Todas las fiestas",
+    "empty": "Las clases de las fiestas aparecerán aquí pronto."
+  },
   "auth": {
     "signOut": "Cerrar sesión",
     "signedInAs": "Sesión iniciada como {name}",
@@ -114,8 +124,144 @@
   },
   "admin": {
     "title": "Administración",
-    "intro": "El área de administración se construirá más adelante.",
+    "intro": "Gestiona las clases, las fiestas, los maestros, el glosario y el camino de estudio.",
     "secondFactorTitle": "Se requiere verificación en dos pasos",
-    "secondFactorText": "Para entrar al área de administración, active la verificación en dos pasos en la configuración de su cuenta, luego cierre sesión y vuelva a entrar."
+    "secondFactorText": "Para entrar al área de administración, active la verificación en dos pasos en la configuración de su cuenta, luego cierre sesión y vuelva a entrar.",
+    "nav": {
+      "label": "Secciones de administración",
+      "overview": "Resumen",
+      "lessons": "Clases",
+      "categories": "Categorías",
+      "teachers": "Maestros",
+      "glossary": "Glosario",
+      "tracks": "Camino de estudio"
+    },
+    "sections": {
+      "lessons": {
+        "title": "Clases",
+        "new": "Nueva clase",
+        "empty": "Todavía no hay clases."
+      },
+      "categories": {
+        "title": "Categorías",
+        "new": "Nueva categoría",
+        "empty": "Todavía no hay categorías."
+      },
+      "teachers": {
+        "title": "Maestros",
+        "new": "Nuevo maestro",
+        "empty": "Todavía no hay maestros."
+      },
+      "glossary": {
+        "title": "Glosario",
+        "new": "Nuevo término",
+        "empty": "Todavía no hay términos."
+      },
+      "tracks": {
+        "title": "Camino de estudio",
+        "new": "Nuevo camino",
+        "empty": "Todavía no hay caminos."
+      },
+      "steps": {
+        "title": "Etapas",
+        "new": "Nueva etapa",
+        "empty": "Este camino todavía no tiene etapas."
+      }
+    },
+    "count": "En total: {count}",
+    "fields": {
+      "kind": "Tipo",
+      "parentId": "Categoría superior",
+      "sortOrder": "Posición en las listas",
+      "hebcalCode": "Código de la fiesta en el calendario hebreo",
+      "categoryId": "Categoría",
+      "teacherId": "Maestro",
+      "durationSec": "Duración en minutos",
+      "access": "Quién puede verla",
+      "code": "Código interno",
+      "name": "Nombre",
+      "slug": "Nombre en la dirección",
+      "title": "Título",
+      "description": "Descripción breve",
+      "keyPoints": "Puntos principales",
+      "term": "Término",
+      "shortDefinition": "Definición breve"
+    },
+    "hints": {
+      "slug": "Aparece en la dirección de la página. Letras y números, con guiones entre palabras.",
+      "keyPoints": "Un punto por línea, hasta 8.",
+      "hebcalCode": "Por ejemplo: Chanukah, Purim, Pesach. Déjalo vacío si no es una fiesta.",
+      "code": "Letras minúsculas en inglés y números, con guiones. No se muestra a los visitantes."
+    },
+    "kinds": {
+      "holiday": "Fiesta",
+      "parsha": "Porción semanal",
+      "halacha": "Halajá"
+    },
+    "access": {
+      "free": "Gratis: para quien haya iniciado sesión",
+      "members": "Solo para suscriptores"
+    },
+    "status": {
+      "label": "Estado",
+      "draft": "Borrador",
+      "published": "Publicado",
+      "processing": "En proceso",
+      "archived": "Archivado"
+    },
+    "none": "Ninguno",
+    "languages": {
+      "label": "Idiomas",
+      "translated": "{language}: traducido",
+      "missing": "{language}: sin traducir",
+      "required": "obligatorio",
+      "add": "Añadir traducción",
+      "remove": "Quitar esta traducción",
+      "fallback": "Todavía sin traducir. Los lectores de este idioma ven el texto en hebreo."
+    },
+    "actions": {
+      "save": "Guardar",
+      "create": "Crear",
+      "back": "Volver a la lista",
+      "delete": "Eliminar",
+      "confirmDelete": "¿Eliminar «{name}»? No se puede deshacer.",
+      "publish": "Publicar",
+      "unpublish": "Retirar la publicación",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "remove": "Quitar",
+      "add": "Añadir",
+      "choose": "Elegir…",
+      "saveOrder": "Guardar el orden",
+      "saveList": "Guardar la lista"
+    },
+    "messages": {
+      "saved": "Guardado.",
+      "working": "Guardando…"
+    },
+    "links": {
+      "terms": "Palabras de la clase",
+      "lessons": "Clases de esta etapa",
+      "steps": "Orden de las etapas",
+      "empty": "Todavía no se ha elegido nada.",
+      "addLabel": "Añadir a la lista",
+      "position": "{position}. {name}"
+    },
+    "errors": {
+      "summary": "No se guardó. Revisa los campos marcados.",
+      "required": "Este campo es obligatorio.",
+      "invalid": "Este valor no es válido.",
+      "invalid_body": "No se guardó. Revisa los campos marcados.",
+      "slug_taken": "Este nombre en la dirección ya se usa en este idioma.",
+      "code_taken": "Este código ya se usa.",
+      "unknown_reference": "El elemento elegido ya no existe. Vuelve a cargar la página.",
+      "in_use": "Clases que todavía lo usan: {count}. Muévelas o retira su publicación primero.",
+      "not_draft": "Retira la publicación primero. Solo se pueden eliminar borradores.",
+      "has_progress": "Ya hay quien vio esta clase, así que no se puede eliminar. Déjala sin publicar.",
+      "not_found": "Este elemento ya no existe.",
+      "forbidden": "No tienes permiso para hacer esto.",
+      "second_factor_required": "Se necesita la verificación en dos pasos. Cierra la sesión y vuelve a entrar.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
   }
 }

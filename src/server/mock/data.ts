@@ -1,6 +1,6 @@
 import type { Localized } from "../i18n/locales";
 import { SAMPLE_HLS, sampleSubtitles } from "../media/sample";
-import type { StepStatus } from "../repos/types";
+import type { LessonAccess, StepStatus } from "../repos/types";
 
 // Sample content that matches design/final-sketch.pdf. It feeds both the mock repos
 // and the database seed (src/server/db/seed.ts), so the two cannot drift.
@@ -72,6 +72,12 @@ export const lessons: Record<
     videoUrl: string;
     subtitles: typeof sampleSubtitles;
     termIds: string[];
+    // Catalog fields. Defaults: no category, members only, published.
+    categoryId?: string;
+    access?: LessonAccess;
+    status?: "draft" | "published";
+    description?: Localized;
+    keyPoints?: Localized<string[]>;
   }
 > = {
   "shabbat-6": {
@@ -103,6 +109,124 @@ export const lessons: Record<
     videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
+    categoryId: "hanukkah",
+    access: "free",
+    description: {
+      he: "שיעור היכרות: נס פך השמן",
+      en: "Introduction: the miracle of the oil",
+      ru: "Вводный урок: чудо с маслом",
+      es: "Introducción: el milagro del aceite",
+    },
+    keyPoints: {
+      he: ["מה קרה בימי החשמונאים", "למה חוגגים שמונה ימים", "מה מיוחד בשמן הזית"],
+      en: ["What happened in the days of the Hasmoneans", "Why the holiday lasts eight days", "What is special about olive oil"],
+      ru: ["Что произошло во времена Хасмонеев", "Почему праздник длится восемь дней", "Чем особенно оливковое масло"],
+      es: ["Qué ocurrió en los días de los asmoneos", "Por qué la fiesta dura ocho días", "Qué tiene de especial el aceite de oliva"],
+    },
+  },
+  "hanukkah-candles": {
+    title: {
+      he: "חנוכה: איך מדליקים נרות",
+      en: "Hanukkah: how to light the candles",
+      ru: "Ханука: как зажигать свечи",
+      es: "Janucá: cómo encender las velas",
+    },
+    teacher: teacher.name,
+    durationSec: 27 * 60,
+    stepId: "holidays",
+    lessonNumber: 2,
+    videoUrl: SAMPLE_HLS,
+    subtitles: sampleSubtitles,
+    termIds: [],
+    categoryId: "hanukkah",
+    description: {
+      he: "סדר ההדלקה והברכות, צעד אחר צעד",
+      en: "The order of lighting and the blessings, step by step",
+      ru: "Порядок зажигания и благословения, шаг за шагом",
+      es: "El orden del encendido y las bendiciones, paso a paso",
+    },
+    keyPoints: {
+      he: ["איפה מעמידים את החנוכייה", "באיזה סדר מדליקים", "אילו ברכות אומרים"],
+      en: ["Where to place the menorah", "In what order to light", "Which blessings are said"],
+      ru: ["Где ставить ханукию", "В каком порядке зажигать", "Какие благословения произносят"],
+      es: ["Dónde colocar la januquiá", "En qué orden se enciende", "Qué bendiciones se dicen"],
+    },
+  },
+  "purim-megillah": {
+    title: {
+      he: "פורים: סיפור המגילה",
+      en: "Purim: the story of the Megillah",
+      ru: "Пурим: история Мегилы",
+      es: "Purim: la historia de la Meguilá",
+    },
+    teacher: teacher.name,
+    durationSec: 31 * 60,
+    stepId: "holidays",
+    lessonNumber: 3,
+    videoUrl: SAMPLE_HLS,
+    subtitles: sampleSubtitles,
+    termIds: [],
+    categoryId: "purim",
+    access: "free",
+    description: {
+      he: "שיעור היכרות: מגילת אסתר וארבע מצוות היום",
+      en: "Introduction: the Book of Esther and the four mitzvot of the day",
+      ru: "Вводный урок: Книга Эстер и четыре заповеди дня",
+      es: "Introducción: el Libro de Ester y los cuatro preceptos del día",
+    },
+    keyPoints: {
+      he: ["מי היו אסתר ומרדכי", "ארבע מצוות הפורים", "למה מתחפשים"],
+      en: ["Who Esther and Mordechai were", "The four mitzvot of Purim", "Why people dress up"],
+      ru: ["Кто такие Эстер и Мордехай", "Четыре заповеди Пурима", "Почему надевают костюмы"],
+      es: ["Quiénes fueron Ester y Mordejai", "Los cuatro preceptos de Purim", "Por qué la gente se disfraza"],
+    },
+  },
+  "pesach-seder": {
+    title: {
+      he: "פסח: ליל הסדר",
+      en: "Pesach: the Seder night",
+      ru: "Песах: ночь Седера",
+      es: "Pésaj: la noche del Séder",
+    },
+    teacher: teacher.name,
+    durationSec: 38 * 60,
+    stepId: "holidays",
+    lessonNumber: 4,
+    videoUrl: SAMPLE_HLS,
+    subtitles: sampleSubtitles,
+    termIds: [],
+    categoryId: "pesach",
+    access: "free",
+    description: {
+      he: "שיעור היכרות: מה עושים בליל הסדר ולמה",
+      en: "Introduction: what is done on the Seder night, and why",
+      ru: "Вводный урок: что делают в ночь Седера и почему",
+      es: "Introducción: qué se hace en la noche del Séder y por qué",
+    },
+    keyPoints: {
+      he: ["סדר הערב לפי ההגדה", "מה מונח על קערת הסדר", "ארבע הכוסות"],
+      en: ["The order of the evening in the Haggadah", "What is on the Seder plate", "The four cups"],
+      ru: ["Порядок вечера по Агаде", "Что лежит на блюде Седера", "Четыре бокала"],
+      es: ["El orden de la noche según la Hagadá", "Qué hay en el plato del Séder", "Las cuatro copas"],
+    },
+  },
+  // A draft: it never appears on the public pages.
+  "pesach-chametz": {
+    title: {
+      he: "פסח: מהו חמץ",
+      en: "Pesach: what is chametz",
+      ru: "Песах: что такое хамец",
+      es: "Pésaj: qué es el jametz",
+    },
+    teacher: teacher.name,
+    durationSec: 24 * 60,
+    stepId: "holidays",
+    lessonNumber: 5,
+    videoUrl: SAMPLE_HLS,
+    subtitles: sampleSubtitles,
+    termIds: [],
+    categoryId: "pesach",
+    status: "draft",
   },
 };
 
@@ -149,20 +273,14 @@ export const glossary: { id: string; term: Localized; definition: Localized }[] 
   },
 ];
 
-export const nextHoliday = {
-  id: "hanukkah",
-  // Holiday name as @hebcal/core spells it (Event.basename()).
-  hebcalCode: "Chanukah",
-  name: { he: "חנוכה", en: "Hanukkah", ru: "Ханука", es: "Janucá" } as Localized,
-  hebrewDate: { he: "כ״ה בכסלו", en: "25 Kislev", ru: "25 кислева", es: "25 de kislev" } as Localized,
-  description: {
-    he: "שיעור היכרות: נס פך השמן",
-    en: "Introduction: the miracle of the oil",
-    ru: "Вводный урок: чудо с маслом",
-    es: "Introducción: el milagro del aceite",
-  } as Localized,
-  lessonId: "hanukkah-intro",
-};
+// Holiday names as @hebcal/core spells them (Event.basename()). The home card shows the
+// next one that has a published lesson; Shavuot has none yet.
+export const holidayCategories: { id: string; hebcalCode: string; name: Localized }[] = [
+  { id: "hanukkah", hebcalCode: "Chanukah", name: { he: "חנוכה", en: "Hanukkah", ru: "Ханука", es: "Janucá" } },
+  { id: "purim", hebcalCode: "Purim", name: { he: "פורים", en: "Purim", ru: "Пурим", es: "Purim" } },
+  { id: "pesach", hebcalCode: "Pesach", name: { he: "פסח", en: "Pesach", ru: "Песах", es: "Pésaj" } },
+  { id: "shavuot", hebcalCode: "Shavuot", name: { he: "שבועות", en: "Shavuot", ru: "Шавуот", es: "Shavuot" } },
+];
 
 export const initialProgress: [userId: string, lessonId: string, positionSec: number][] = [
   [SAMPLE_USER_ID, "shabbat-6", 12 * 60 + 40],

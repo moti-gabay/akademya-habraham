@@ -1,10 +1,14 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { LessonCta } from "@/components/catalog/LessonCta";
+import { LessonPreviewCard } from "@/components/catalog/LessonPreviewCard";
 import { Player } from "@/components/Player";
 import { TermList } from "@/components/TermList";
 import { card } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 import { getPageActor } from "@/lib/auth";
+import { authMode } from "@/lib/authMode";
+import { canWatch } from "@/server/catalog/access";
 import { glossaryRepo, lessonRepo, progressRepo } from "@/server/repos";
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
@@ -14,6 +18,16 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const actor = await getPageActor(locale);
   const lesson = await lessonRepo.getById(lessonId, locale);
   if (!lesson) notFound();
+  // UI gating only: the video itself is protected in /api/play (Milestone 4).
+  if (!canWatch(actor, lesson)) {
+    return (
+      <main id="main" className="mx-auto max-w-2xl px-4 pt-4 pb-10">
+        <LessonPreviewCard title={lesson.title} teacher={lesson.teacher} durationSec={lesson.durationSec} free={lesson.access === "free"}>
+          <LessonCta mode={authMode} lessonId={lesson.id} />
+        </LessonPreviewCard>
+      </main>
+    );
+  }
   const [startAt, terms] = await Promise.all([
     progressRepo.getPosition(actor.userId, lessonId),
     glossaryRepo.forLesson(lessonId, locale),

@@ -6,6 +6,6 @@ import * as mockRepos from "../mock/repos";
 // DATABASE_URL on its own does not. Who may write to it is decided in src/lib/authMode.ts.
 export const dataSource: "db" | "mock" = process.env.DATA_SOURCE === "db" ? "db" : "mock";
 
-export const { glossaryRepo, holidayRepo, lessonRepo, pathRepo, progressRepo, userRepo } =
+export const { adminCatalogRepo, catalogRepo, glossaryRepo, holidayRepo, lessonRepo, pathRepo, progressRepo, userRepo } =
   dataSource === "db" ? createDrizzleRepos(getDb) : mockRepos;
 export type * from "./types";

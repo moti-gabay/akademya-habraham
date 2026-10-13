@@ -1,6 +1,6 @@
-import { flags, HebrewCalendar, type HDate } from "@hebcal/core";
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import type { Locale } from "../i18n/locales";
 import { SAMPLE_HLS, sampleSubtitles } from "../media/sample";
@@ -14,6 +14,8 @@ import type {
   ProgressRepo,
   UserRepo,
 } from "../repos/types";
+import { createDrizzleAdminCatalogRepo } from "./adminCatalog";
+import { createDrizzleCatalogRepo } from "./catalog";
 import type { Db } from "./client";
 import * as t from "./schema";
 import { isUuid, uuidOrNil } from "./uuid";
@@ -22,9 +24,6 @@ import { isUuid, uuidOrNil } from "./uuid";
 // query joins the Hebrew row (required) and the requested-locale row (optional).
 
 const COMPLETED_AT_PCT = 95;
-const DAY_MS = 86_400_000;
-// Longer than any holiday, so one that already began is still found.
-const LOOKBACK_DAYS = 10;
 export function createDrizzleRepos(getDb: () => Db) {
   async function lessonById(lessonId: string, locale: Locale): Promise<Lesson | null> {
     if (!isUuid(lessonId)) return null;
@@ -40,6 +39,7 @@ export function createDrizzleRepos(getDb: () => Db) {
       .select({
         id: t.lessons.id,
         durationSec: t.lessons.durationSec,
+        access: t.lessons.access,
         title: sql<string>`coalesce(${lessonLoc.title}, ${lessonHe.title})`,
         teacher: sql<string | null>`coalesce(${teacherLoc.name}, ${teacherHe.name})`,
         stepNumber: t.trackSteps.sortOrder,
@@ -65,6 +65,7 @@ export function createDrizzleRepos(getDb: () => Db) {
       title: row.title,
       teacher: row.teacher ?? "",
       durationSec: row.durationSec ?? 0,
+      access: row.access,
       stepNumber: row.stepNumber ?? 0,
       stepName: row.stepName ?? "",
       lessonNumber: row.lessonNumber ?? 0,
@@ -247,23 +248,7 @@ export function createDrizzleRepos(getDb: () => Db) {
       for (const row of rows) if (row.hebcalCode && !byCode.has(row.hebcalCode)) byCode.set(row.hebcalCode, row);
       if (byCode.size === 0) return null;
 
-      // A holiday can span several calendar entries (eight days of Hanukkah). Group them,
-      // looking back far enough to catch one that is under way, and always report its
-      // first day. "Erev …" entries are skipped: they are the day before.
-      const from = new Date(now.getTime() - LOOKBACK_DAYS * DAY_MS);
-      const to = new Date(now);
-      to.setMonth(to.getMonth() + 13);
-      const occurrences: { code: string; start: HDate; lastDay: number }[] = [];
-      for (const item of HebrewCalendar.calendar({ start: from, end: to, il: true })) {
-        const code = item.basename();
-        if (!byCode.has(code) || item.getFlags() & flags.EREV) continue;
-        const day = item.getDate().greg().getTime();
-        const current = occurrences.findLast((occurrence) => occurrence.code === code);
-        if (current && day - current.lastDay <= 2 * DAY_MS) current.lastDay = day;
-        else occurrences.push({ code, start: item.getDate(), lastDay: day });
-      }
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-      const next = occurrences.find((occurrence) => occurrence.lastDay >= today);
+      const next = nextHolidayOccurrence(new Set(byCode.keys()), now);
       const holiday = next && byCode.get(next.code);
       if (!next || !holiday) return null;
 
@@ -278,5 +263,14 @@ export function createDrizzleRepos(getDb: () => Db) {
     },
   };
 
-  return { userRepo, pathRepo, lessonRepo, progressRepo, glossaryRepo, holidayRepo };
+  return {
+    userRepo,
+    pathRepo,
+    lessonRepo,
+    progressRepo,
+    glossaryRepo,
+    holidayRepo,
+    catalogRepo: createDrizzleCatalogRepo(getDb),
+    adminCatalogRepo: createDrizzleAdminCatalogRepo(getDb),
+  };
 }

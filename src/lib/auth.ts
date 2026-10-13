@@ -1,16 +1,23 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+import { notFound } from "next/navigation";
 import { cache } from "react";
 import { redirect } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
-import { AuthError, resolveActor, type Actor } from "@/server/auth/actor";
+import { AuthError, resolveActor, ROLES, type Actor } from "@/server/auth/actor";
+import { ADMIN_ROLE } from "@/server/catalog/service";
 import { getDb } from "@/server/db/client";
 import { SAMPLE_USER_ID } from "@/server/mock/data";
-import { authMode } from "./authMode";
+import { authMode, mockRole } from "./authMode";
 
 // The only module that talks to Clerk's session API. Everything else works with Actor.
 
-const SAMPLE_ACTOR: Actor = { userId: SAMPLE_USER_ID, role: "user", locale: "he", secondFactorVerified: false };
+const SAMPLE_ACTOR: Actor = {
+  userId: SAMPLE_USER_ID,
+  role: mockRole ?? "user",
+  locale: "he",
+  secondFactorVerified: mockRole !== null,
+};
 
 async function preferredLocale(): Promise<Locale | undefined> {
   const value = (await cookies()).get("NEXT_LOCALE")?.value;
@@ -59,6 +66,19 @@ export async function getPageActor(locale: Locale): Promise<Actor> {
     throw error;
   }
   return redirect({ href: "/sign-in", locale });
+}
+
+// For the admin area: anyone below the admin role gets a 404, so the area is not advertised.
+export async function getAdminActor(locale: Locale): Promise<Actor> {
+  const actor = await getPageActor(locale);
+  if (ROLES.indexOf(actor.role) < ROLES.indexOf(ADMIN_ROLE)) notFound();
+  return actor;
+}
+
+// For every admin page except the entry page, which explains the second factor.
+export async function requireAdminPage(locale: Locale): Promise<Actor> {
+  const actor = await getAdminActor(locale);
+  return actor.secondFactorVerified ? actor : redirect({ href: "/admin", locale });
 }
 
 // For route handlers: turns a failed auth check into its HTTP response.
