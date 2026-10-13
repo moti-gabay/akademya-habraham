@@ -65,6 +65,25 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   expect((await request.put(`/api/dev/media/files/captions/${id}/he.vtt`, { headers: own, data: "WEBVTT" })).status()).toBe(404);
   expect((await request.put("/api/dev/media/video/fake-unknown", { headers: own, data: "x" })).status()).toBe(404);
 
+  // Captions are served by the app, with the right type, and only for a published lesson.
+  const vtt = "WEBVTT\n\n00:00.000 --> 00:02.000\nשלום\n";
+  expect((await request.put(`${media}/captions/he`, { headers: own, data: "1\n00:00 --> 00:02\nnot vtt" })).status()).toBe(400);
+  const saved = await request.put(`${media}/captions/he`, { headers: own, data: vtt });
+  expect([saved.status(), (await saved.json()).synced]).toEqual([200, true]);
+  expect((await request.get(`/api/captions/${id}/he`)).status()).toBe(404);
+  expect((await request.post(`/api/admin/catalog/lessons/${id}/publish`, { headers: own })).status()).toBe(200);
+  const caption = await request.get(`/api/captions/${id}/he`);
+  expect([caption.status(), await caption.text()]).toEqual([200, vtt]);
+  expect(caption.headers()).toMatchObject({
+    "content-type": "text/vtt; charset=utf-8",
+    "x-content-type-options": "nosniff",
+    "cache-control": "private, no-store",
+  });
+  expect((await request.get(`/api/captions/${id}/en`)).status()).toBe(404);
+  expect((await request.get(`/api/captions/${id}/xx`)).status()).toBe(404);
+  expect((await request.get("/api/captions/shabbat-6/he")).status()).toBe(404);
+  expect((await request.post(`/api/admin/catalog/lessons/${id}/unpublish`, { headers: own })).status()).toBe(200);
+
   // Deleting the lesson takes its media with it.
   expect((await request.delete(`/api/admin/catalog/lessons/${id}`, { headers: own })).status()).toBe(200);
   expect((await request.get(started.upload.url)).status()).toBe(404);
