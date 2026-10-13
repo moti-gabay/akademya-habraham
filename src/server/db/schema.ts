@@ -19,7 +19,7 @@ import { LOCALES } from "../i18n/locales";
 
 export const localeEnum = pgEnum("locale", LOCALES);
 export const categoryKindEnum = pgEnum("category_kind", ["holiday", "parsha", "halacha"]);
-export const lessonAccessEnum = pgEnum("lesson_access", ["free", "subscriber"]);
+export const lessonAccessEnum = pgEnum("lesson_access", ["free", "members"]);
 export const lessonStatusEnum = pgEnum("lesson_status", ["draft", "processing", "published", "archived"]);
 export const trackStatusEnum = pgEnum("track_status", ["draft", "published"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "editor", "admin"]);
@@ -93,7 +93,7 @@ export const lessons = pgTable("lessons", {
   teacherId: uuid("teacher_id").references(() => teachers.id, { onDelete: "set null" }),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   durationSec: integer("duration_sec"),
-  access: lessonAccessEnum().notNull().default("subscriber"),
+  access: lessonAccessEnum().notNull().default("members"),
   status: lessonStatusEnum().notNull().default("draft"),
   publishedAt: timestamp("published_at", { withTimezone: true }),
   thumbnailKey: text("thumbnail_key"),
@@ -110,6 +110,7 @@ export const lessonTranslations = pgTable(
     locale: locale(),
     title: text().notNull(),
     description: text(),
+    keyPoints: text("key_points").array(),
     slug: text().notNull(),
   },
   (t) => [primaryKey({ columns: [t.lessonId, t.locale] }), unique().on(t.locale, t.slug)],

@@ -1,3 +1,5 @@
+import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
+import { formatHebrewDate } from "../i18n/hebrewDate";
 import { localize, type Locale } from "../i18n/locales";
 import type {
   GlossaryRepo,
@@ -9,7 +11,7 @@ import type {
   ProgressRepo,
   UserRepo,
 } from "../repos/types";
-import { glossary, initialProgress, lessons, nextHoliday, steps, users } from "./data";
+import { glossary, holidayCategories, initialProgress, lessons, steps, users } from "./data";
 
 // Mock only: the one place in src/server that keeps state in memory. It lives on
 // globalThis so route handlers and pages share it, and it resets on restart.
@@ -30,7 +32,7 @@ const toTerm = (term: (typeof glossary)[number], locale: Locale): GlossaryTerm =
 
 function toLesson(id: string, locale: Locale): Lesson | null {
   const lesson = lessons[id];
-  if (!lesson) return null;
+  if (!lesson || lesson.status === "draft") return null;
   const stepIndex = steps.findIndex((step) => step.id === lesson.stepId);
   const step = steps[stepIndex];
   return {
@@ -38,6 +40,7 @@ function toLesson(id: string, locale: Locale): Lesson | null {
     title: localize(lesson.title, locale),
     teacher: localize(lesson.teacher, locale),
     durationSec: lesson.durationSec,
+    access: lesson.access ?? "members",
     stepNumber: stepIndex + 1,
     stepName: step ? localize(step.name, locale) : "",
     lessonNumber: lesson.lessonNumber,
@@ -77,7 +80,7 @@ export const progressRepo: ProgressRepo = {
     return progressByUser.get(userId)?.get(lessonId)?.positionSec ?? 0;
   },
   async save(userId, lessonId, positionSec) {
-    if (!lessons[lessonId]) return;
+    if (!lessons[lessonId] || lessons[lessonId].status === "draft") return;
     const store = progressByUser.get(userId) ?? new Map();
     store.set(lessonId, { lessonId, positionSec, updatedAt: Date.now() });
     progressByUser.set(userId, store);
@@ -95,14 +98,23 @@ export const glossaryRepo: GlossaryRepo = {
 };
 
 export const holidayRepo: HolidayRepo = {
-  async getNext(locale) {
+  async getNext(locale, now = new Date()) {
+    // The first published lesson of each holiday is its introduction.
+    const introOf = (categoryId: string) =>
+      Object.entries(lessons).find(([, lesson]) => lesson.categoryId === categoryId && lesson.status !== "draft");
+    const withLessons = holidayCategories.filter((category) => introOf(category.id));
+    const next = nextHolidayOccurrence(new Set(withLessons.map((category) => category.hebcalCode)), now);
+    const holiday = next && withLessons.find((category) => category.hebcalCode === next.code);
+    const intro = holiday && introOf(holiday.id);
+    if (!next || !holiday || !intro) return null;
+    const [lessonId, lesson] = intro;
     return {
-      id: nextHoliday.id,
-      name: localize(nextHoliday.name, locale),
-      hebrewDate: localize(nextHoliday.hebrewDate, locale),
-      description: localize(nextHoliday.description, locale),
-      lessonId: nextHoliday.lessonId,
-      lessonMinutes: Math.round(lessons[nextHoliday.lessonId].durationSec / 60),
+      id: holiday.id,
+      name: localize(holiday.name, locale),
+      hebrewDate: formatHebrewDate(next.start, locale),
+      description: lesson.description ? localize(lesson.description, locale) : "",
+      lessonId,
+      lessonMinutes: Math.round(lesson.durationSec / 60),
     };
   },
 };

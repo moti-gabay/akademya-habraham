@@ -2,7 +2,17 @@ import { createHash } from "node:crypto";
 import { getTableColumns, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { LOCALES, type Localized } from "../i18n/locales";
-import { glossary, initialProgress, lessons, nextHoliday, SAMPLE_USER_ID, steps, teacher, track, users } from "../mock/data";
+import {
+  glossary,
+  holidayCategories,
+  initialProgress,
+  lessons,
+  SAMPLE_USER_ID,
+  steps,
+  teacher,
+  track,
+  users,
+} from "../mock/data";
 import type { Db } from "./client";
 import * as t from "./schema";
 
@@ -52,6 +62,11 @@ function buildLessons() {
         title,
         durationSec: named?.[1].durationSec ?? PLACEHOLDER_MINUTES * 60,
         termIds: named?.[1].termIds ?? [],
+        categoryId: named?.[1].categoryId,
+        access: named?.[1].access ?? ("members" as const),
+        status: named?.[1].status ?? ("published" as const),
+        description: named?.[1].description,
+        keyPoints: named?.[1].keyPoints,
         completed: number <= step.lessonsDone,
       };
     }),
@@ -65,7 +80,7 @@ export async function seed(db: Db) {
 
   const trackId = seedId(`track:${track.code}`);
   const teacherId = seedId(`teacher:${teacher.id}`);
-  const holidayCategoryId = seedId(`category:${nextHoliday.id}`);
+  const categoryId = (id: string) => seedId(`category:${id}`);
   const termId = (id: string) => seedId(`term:${id}`);
   const seedLessons = buildLessons();
   const publishedAt = new Date("2026-10-01T00:00:00Z");
@@ -87,29 +102,40 @@ export async function seed(db: Db) {
     translations(teacher.name, (locale, name) => ({ teacherId, locale, name })),
   );
 
-  await upsert(db, t.categories, [t.categories.id], [
-    { id: holidayCategoryId, kind: "holiday" as const, hebcalCode: nextHoliday.hebcalCode },
-  ]);
+  await upsert(
+    db,
+    t.categories,
+    [t.categories.id],
+    holidayCategories.map((category, index) => ({
+      id: categoryId(category.id),
+      kind: "holiday" as const,
+      sortOrder: index + 1,
+      hebcalCode: category.hebcalCode,
+    })),
+  );
   await upsert(
     db,
     t.categoryTranslations,
     [t.categoryTranslations.categoryId, t.categoryTranslations.locale],
-    translations(nextHoliday.name, (locale, name) => ({ categoryId: holidayCategoryId, locale, name, slug: nextHoliday.id })),
+    holidayCategories.flatMap((category) =>
+      translations(category.name, (locale, name) => ({ categoryId: categoryId(category.id), locale, name, slug: category.id })),
+    ),
   );
 
   await upsert(
     db,
     t.lessons,
     [t.lessons.id],
-    seedLessons.map((lesson) => ({
+    // One second apart, so "first published" has a stable order.
+    seedLessons.map((lesson, index) => ({
       id: lesson.id,
-      categoryId: lesson.key === nextHoliday.lessonId ? holidayCategoryId : null,
+      categoryId: lesson.categoryId ? categoryId(lesson.categoryId) : null,
       teacherId,
       createdBy: SAMPLE_USER_ID,
       durationSec: lesson.durationSec,
-      access: "subscriber" as const,
-      status: "published" as const,
-      publishedAt,
+      access: lesson.access,
+      status: lesson.status,
+      publishedAt: lesson.status === "published" ? new Date(publishedAt.getTime() + index * 1000) : null,
       createdAt: publishedAt,
     })),
   );
@@ -122,7 +148,8 @@ export async function seed(db: Db) {
         lessonId: lesson.id,
         locale,
         title,
-        description: lesson.key === nextHoliday.lessonId ? (nextHoliday.description[locale] ?? null) : null,
+        description: lesson.description?.[locale] ?? null,
+        keyPoints: lesson.keyPoints?.[locale] ?? null,
         slug: lesson.key,
       })),
     ),

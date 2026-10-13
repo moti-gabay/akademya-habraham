@@ -58,7 +58,7 @@ for (const locale of ["he", "en"] as const) {
     );
 
     const holiday = await repos.holidayRepo.getNext(locale, NOW);
-    const mockHoliday = await mock.holidayRepo.getNext(locale);
+    const mockHoliday = await mock.holidayRepo.getNext(locale, NOW);
     assert.ok(holiday && mockHoliday);
     assert.deepEqual(omit(holiday, "id", "lessonId"), omit(mockHoliday, "id", "lessonId"));
     assert.equal(holiday.lessonId, lessonSeedId(mockHoliday.lessonId));
@@ -79,14 +79,30 @@ test("ids that are not UUIDs match nothing instead of failing", async () => {
   await repos.progressRepo.save("x", "y", 10);
 });
 
-test("a holiday under way keeps showing its first day; afterwards next year's is offered", async () => {
+test("a holiday under way keeps showing its first day; afterwards the next holiday is offered", async () => {
   // Hanukkah 5787: 25 Kislev = 4 Dec 2026 (first candle on the evening of the 3rd), last day 11 Dec.
   for (const day of ["2026-12-04", "2026-12-07", "2026-12-11"]) {
     const holiday = await repos.holidayRepo.getNext("en", new Date(`${day}T12:00:00`));
     assert.equal(holiday?.hebrewDate, "25 Kislev", day);
   }
   assert.equal((await repos.holidayRepo.getNext("he", new Date("2026-12-07T12:00:00")))?.hebrewDate, "כ״ה בכסלו");
-  assert.equal((await repos.holidayRepo.getNext("en", new Date("2026-12-20T12:00:00")))?.hebrewDate, "25 Kislev");
+  // Purim 5787 (a leap year): 14 Adar II. Shavuot has no lesson, so Pesach is followed by Hanukkah.
+  const after = new Date("2026-12-20T12:00:00");
+  assert.equal((await repos.holidayRepo.getNext("en", after))?.hebrewDate, "14 Adar II");
+  assert.deepEqual(await mock.holidayRepo.getNext("en", after).then((h) => h?.name), "Purim");
+  assert.equal((await repos.holidayRepo.getNext("en", new Date("2027-05-01T12:00:00")))?.name, "Hanukkah");
+});
+
+test("each holiday's introduction is its first published lesson, and it is free", async () => {
+  for (const [day, key] of [["2026-10-12", "hanukkah-intro"], ["2026-12-20", "purim-megillah"], ["2027-03-30", "pesach-seder"]]) {
+    const holiday = await repos.holidayRepo.getNext("he", new Date(`${day}T12:00:00`));
+    assert.equal(holiday?.lessonId, lessonSeedId(key), key);
+    assert.equal((await repos.lessonRepo.getById(holiday.lessonId, "he"))?.access, "free");
+  }
+  // Drafts are not served, and everything else is for members.
+  assert.equal(await repos.lessonRepo.getById(lessonSeedId("pesach-chametz"), "he"), null);
+  assert.equal(await mock.lessonRepo.getById("pesach-chametz", "he"), null);
+  assert.equal((await repos.lessonRepo.getById(lessonSeedId("hanukkah-candles"), "he"))?.access, "members");
 });
 
 test("seeding again changes nothing and keeps existing progress", async () => {

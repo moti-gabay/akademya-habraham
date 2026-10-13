@@ -94,8 +94,8 @@ Catalog (localized; fallback chain: requested locale → `he`)
 - `category_translations` — pk(category_id, locale), name, slug. Unique (locale, slug).
 - `teachers` — id, created_at (added 2026-10-12)
 - `teacher_translations` — pk(teacher_id, locale), name
-- `lessons` — id, category_id, teacher_id, duration_sec, access enum(free|subscriber), status enum(draft|processing|published|archived), published_at, thumbnail_key, parsha_code, holiday_code, created_by
-- `lesson_translations` — pk(lesson_id, locale), title, description, slug, search_vector tsvector GENERATED (`english`/`russian`/`spanish` for en/ru/es, `simple` for he) + GIN; `pg_trgm` GIN on title. Unique (locale, slug).
+- `lessons` — id, category_id, teacher_id, duration_sec, access enum(free|members; renamed from `subscriber` in `drizzle/0003_lesson_access_key_points.sql`, generated 2026-10-13, not yet applied to Neon), status enum(draft|processing|published|archived), published_at, thumbnail_key, parsha_code, holiday_code, created_by
+- `lesson_translations` — pk(lesson_id, locale), title, description, key_points text[] (migration 0003), slug, search_vector tsvector GENERATED (`english`/`russian`/`spanish` for en/ru/es, `simple` for he) + GIN; `pg_trgm` GIN on title. Unique (locale, slug).
 - `lesson_subtitles` — pk(lesson_id, locale), r2_key, bunny_synced_at, source enum(manual|auto)
 - `video_assets` — id, lesson_id, bunny_video_id, bunny_library_id, status enum(created|uploading|processing|ready|error), duration_sec, ready_at, raw jsonb
 - `lesson_attachments` — id, lesson_id, r2_key, name, mime, size, locale (nullable = all)

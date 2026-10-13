@@ -17,11 +17,14 @@ export type PathStep = {
 
 export type GlossaryTerm = { id: string; term: string; definition: string };
 
+export type LessonAccess = "free" | "members";
+
 export type Lesson = {
   id: string;
   title: string;
   teacher: string;
   durationSec: number;
+  access: LessonAccess;
   stepNumber: number;
   stepName: string;
   lessonNumber: number;
