@@ -106,6 +106,16 @@
       "noContacts": "Контакты скоро появятся здесь."
     }
   },
+  "catalog": {
+    "lessonCount": "Уроков: {count}",
+    "free": "Бесплатный урок",
+    "lessonMeta": "{teacher} · {minutes} мин",
+    "keyPoints": "В этом уроке",
+    "watch": "Смотреть урок",
+    "signUpToWatch": "Зарегистрироваться и смотреть",
+    "allHolidays": "Все праздники",
+    "empty": "Уроки к праздникам скоро появятся здесь."
+  },
   "auth": {
     "signOut": "Выйти из аккаунта",
     "signedInAs": "Вы вошли как {name}",

@@ -105,6 +105,16 @@
       "noContacts": "Contact details will appear here soon."
     }
   },
+  "catalog": {
+    "lessonCount": "Lessons: {count}",
+    "free": "Free lesson",
+    "lessonMeta": "{teacher} · {minutes} min",
+    "keyPoints": "In this lesson",
+    "watch": "Watch the lesson",
+    "signUpToWatch": "Sign up to watch",
+    "allHolidays": "All holidays",
+    "empty": "Lessons for the holidays will appear here soon."
+  },
   "auth": {
     "signOut": "Sign out",
     "signedInAs": "Signed in as {name}",

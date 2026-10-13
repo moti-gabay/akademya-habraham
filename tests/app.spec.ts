@@ -18,6 +18,9 @@ const screens = [
   ["welcome", "/welcome"],
   ["home", ""],
   ["lesson", `/lessons/${LESSON}`],
+  ["holidays", "/holidays"],
+  ["holiday", "/holidays/hanukkah"],
+  ["preview", "/holidays/hanukkah/hanukkah-intro"],
 ] as const;
 
 test("first visit goes through language and text size, and remembers both", async ({ page }) => {
@@ -98,6 +101,44 @@ test("player controls work and the stop point reaches the home card", async ({ p
       data: { lessonId: LESSON, positionSec: SKETCH_STOP_POINT },
     });
   }
+});
+
+test("the holiday catalog opens without the welcome screen and shows previews, not the player", async ({ page }) => {
+  // No preferences cookie: a shared link lands on the page itself.
+  await page.goto("/en/holidays");
+  await expect(page).toHaveURL(/\/en\/holidays$/);
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "m");
+  // Shavuot has no published lesson, so it is not listed.
+  await expect(page.getByRole("main").getByRole("link")).toHaveText([/Hanukkah.*Lessons: 2/, /Purim.*Lessons: 1/, /Pesach.*Lessons: 1/]);
+
+  await page.getByRole("link", { name: /Hanukkah/ }).click();
+  const lessons = page.getByRole("main").getByRole("listitem");
+  await expect(lessons).toHaveCount(2);
+  await expect(lessons.first()).toContainText("Free lesson");
+  await expect(lessons.last()).not.toContainText("Free lesson");
+
+  await lessons.first().getByRole("link").click();
+  await expect(page).toHaveURL(/\/en\/holidays\/hanukkah\/hanukkah-intro$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hanukkah: the miracle of the oil");
+  await expect(page.getByRole("heading", { name: "In this lesson" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("listitem")).toHaveCount(3);
+  await expect(page.locator("video")).toHaveCount(0);
+  // Without Clerk every visitor is the signed-in sample user, so the button leads to the lesson.
+  await expect(page.getByRole("link", { name: "Watch the lesson" })).toHaveAttribute("href", "/en/lessons/hanukkah-intro");
+
+  // Drafts and unknown addresses are not served.
+  expect((await page.goto("/en/holidays/pesach/pesach-chametz"))?.status()).toBe(404);
+  expect((await page.goto("/en/holidays/shavuot"))?.status()).toBe(404);
+});
+
+test("static pages take the text size from the cookie before they are shown", async ({ page }) => {
+  await withPrefs(page, "l");
+  await page.goto("/he/holidays");
+  await expect(page.locator("html")).toHaveAttribute("data-text-size", "l");
+  // The size control is in the language menu on a phone and has its own button on desktop.
+  const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+  await page.getByRole("button", { name: wide ? "גודל טקסט" : /עברית/ }).click();
+  await expect(page.getByRole("radio", { name: "גדול" })).toBeChecked();
 });
 
 test("API rejects mutating calls from other origins", async ({ request }) => {

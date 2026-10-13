@@ -105,6 +105,16 @@
       "noContacts": "פרטי הקשר יופיעו כאן בקרוב."
     }
   },
+  "catalog": {
+    "lessonCount": "שיעורים: {count}",
+    "free": "שיעור חינם",
+    "lessonMeta": "{teacher} · {minutes} דק׳",
+    "keyPoints": "בשיעור הזה",
+    "watch": "לצפייה בשיעור",
+    "signUpToWatch": "להרשמה ולצפייה",
+    "allHolidays": "כל החגים",
+    "empty": "שיעורים לחגים יופיעו כאן בקרוב."
+  },
   "auth": {
     "signOut": "יציאה מהחשבון",
     "signedInAs": "מחוברים בתור {name}",

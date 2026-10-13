@@ -1,11 +1,9 @@
 import { UserButton } from "@clerk/nextjs";
 import { getLocale, getTranslations } from "next-intl/server";
-import { cookies } from "next/headers";
 import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { getPageActor } from "@/lib/auth";
 import { authMode } from "@/lib/authMode";
-import { parseTextSize, TEXT_SIZE_COOKIE } from "@/lib/prefs";
 import { userRepo } from "@/server/repos";
 import { LanguageMenu, TextSizeMenu } from "./HeaderMenus";
 import { TopNav } from "./MainNav";
@@ -14,7 +12,6 @@ export async function Header({ className = "" }: { className?: string }) {
   const t = await getTranslations();
   const locale = (await getLocale()) as Locale;
   const user = await userRepo.getById((await getPageActor(locale)).userId, locale);
-  const textSize = parseTextSize((await cookies()).get(TEXT_SIZE_COOKIE)?.value);
   return (
     <header className={`lg:border-b lg:border-line lg:bg-card ${className}`}>
       <a
@@ -30,9 +27,9 @@ export async function Header({ className = "" }: { className?: string }) {
         <TopNav />
         <div className="ms-auto flex items-center gap-2">
           <div className="hidden lg:block">
-            <TextSizeMenu textSize={textSize} />
+            <TextSizeMenu />
           </div>
-          <LanguageMenu textSize={textSize} />
+          <LanguageMenu />
           {authMode === "clerk" ? (
             <div className="hidden size-12 place-items-center lg:grid">
               <UserButton appearance={{ elements: { avatarBox: { width: "3rem", height: "3rem" } } }} />

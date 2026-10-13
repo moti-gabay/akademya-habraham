@@ -5,13 +5,12 @@ import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { localeNames, type Locale } from "@/i18n/routing";
-import type { TextSize } from "@/lib/prefs";
 import { LanguageList } from "./LanguageList";
 import { TextSizeControl } from "./TextSizeControl";
 import { outlineBtn, popover } from "./ui";
 
 // On mobile the header has room for one button, so text size lives in this menu too.
-export function LanguageMenu({ textSize }: { textSize: TextSize }) {
+export function LanguageMenu() {
   const t = useTranslations("prefs");
   const locale = useLocale() as Locale;
   const [open, setOpen] = useState(false);
@@ -28,7 +27,7 @@ export function LanguageMenu({ textSize }: { textSize: TextSize }) {
           </h2>
           <LanguageList labelledBy="language-menu-title" onNavigate={() => setOpen(false)} />
           <div className="mt-4 lg:hidden">
-            <TextSizeControl initial={textSize} legend={t("textSize")} />
+            <TextSizeControl legend={t("textSize")} />
           </div>
         </Popover.Content>
       </Popover.Portal>
@@ -36,7 +35,7 @@ export function LanguageMenu({ textSize }: { textSize: TextSize }) {
   );
 }
 
-export function TextSizeMenu({ textSize }: { textSize: TextSize }) {
+export function TextSizeMenu() {
   const t = useTranslations("prefs");
   return (
     <Popover.Root>
@@ -50,7 +49,7 @@ export function TextSizeMenu({ textSize }: { textSize: TextSize }) {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content align="end" sideOffset={8} className={popover}>
-          <TextSizeControl initial={textSize} legend={t("textSize")} />
+          <TextSizeControl legend={t("textSize")} />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

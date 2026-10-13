@@ -71,6 +71,56 @@ test("deleting a teacher who still has lessons is refused with an explanation", 
   await expect(page.getByRole("main").getByRole("alert")).toContainText("Move or unpublish them first.");
 });
 
+test("a lesson appears on the public holiday page when published and leaves it when unpublished", async ({ page }) => {
+  await withPrefs(page);
+  const slug = `megillah-reading-${Date.now()}`;
+  const title = `קריאת המגילה ${slug}`;
+  const listed = async () => {
+    await page.goto("/he/holidays/purim");
+    return page.getByRole("link", { name: title }).count();
+  };
+
+  await page.goto("/he/admin/lessons/new");
+  await page.getByLabel("קטגוריה").selectOption({ label: "פורים" });
+  await page.getByLabel("מי יכול לצפות").selectOption("free");
+  await page.getByLabel("כותרת").fill(title);
+  await page.getByLabel("תיאור קצר").fill("מתי קוראים ואיך מקשיבים");
+  await page.getByLabel("נקודות עיקריות").fill("קוראים פעמיים\nבלילה וביום");
+  await page.getByLabel("שם בכתובת").fill(slug);
+  await page.getByRole("button", { name: "יצירה" }).click();
+  await expect(page).toHaveURL(/\/he\/admin\/lessons\/[0-9a-f-]{36}$/);
+  const editUrl = page.url();
+  await expect(page.getByText("מצב: טיוטה")).toBeVisible();
+
+  // A draft is not public.
+  expect(await listed()).toBe(0);
+
+  await page.goto(editUrl);
+  await page.getByRole("button", { name: "פרסום", exact: true }).click();
+  await expect(page.getByText("מצב: מפורסם")).toBeVisible();
+  // The cached page is refreshed in the background, so the first visit may still be the old one.
+  await expect.poll(listed).toBe(1);
+
+  // Only Hebrew exists, so the English preview shows the Hebrew text.
+  await page.goto(`/en/holidays/purim/${slug}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
+  await expect(page.getByText("Free lesson")).toBeVisible();
+  await expect(page.getByRole("main").getByRole("listitem")).toHaveText(["קוראים פעמיים", "בלילה וביום"]);
+
+  // A published lesson cannot be deleted; unpublished, it leaves the public page and can be.
+  await page.goto(editUrl);
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "מחיקה" }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("אפשר למחוק רק טיוטות");
+  await page.getByRole("button", { name: "ביטול פרסום" }).click();
+  await expect(page.getByText("מצב: טיוטה")).toBeVisible();
+  await expect.poll(listed).toBe(0);
+
+  await page.goto(editUrl);
+  await page.getByRole("button", { name: "מחיקה" }).click();
+  await expect(page).toHaveURL(/\/he\/admin\/lessons$/);
+});
+
 for (const locale of ["he", "en"] as const) {
   for (const [name, path] of [
     ["overview", ""],
