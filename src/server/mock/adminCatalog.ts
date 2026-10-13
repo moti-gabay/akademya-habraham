@@ -114,6 +114,10 @@ export function createMockAdminCatalogRepo(store: MockStore): AdminCatalogRepo {
       return [...store.progress.values()].some((byLesson) => byLesson.has(lessonId));
     },
 
+    async videoStatus(lessonId) {
+      return store.videos.get(lessonId)?.status ?? null;
+    },
+
     async audit(entry) {
       store.audit.push(entry);
     },

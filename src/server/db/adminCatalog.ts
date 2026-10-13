@@ -261,6 +261,16 @@ export function createDrizzleAdminCatalogRepo(getDb: () => Db): AdminCatalogRepo
       return row !== undefined;
     },
 
+    async videoStatus(lessonId) {
+      if (!isUuid(lessonId)) return null;
+      const [row] = await getDb()
+        .select({ status: t.videoAssets.status })
+        .from(t.videoAssets)
+        .where(eq(t.videoAssets.lessonId, lessonId))
+        .limit(1);
+      return row?.status ?? null;
+    },
+
     audit: (entry) => writeAudit(getDb(), entry),
   };
 }

@@ -46,6 +46,7 @@ export type LessonMedia = {
   lessonId: string;
   // Hebrew title, used to name the video at the provider.
   title: string;
+  published: boolean;
   thumbnailKey: string | null;
   video: VideoAsset | null;
   captions: Caption[];

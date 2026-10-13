@@ -160,6 +160,9 @@ test("without Clerk there is no sign-in, admin area or webhook", async ({ page, 
   const own = { origin: "http://localhost:3100" };
   expect((await request.patch("/api/admin/users/x", { headers: own, data: { blocked: true } })).status()).toBe(404);
   expect((await request.post("/api/admin/catalog/teachers", { headers: own, data: {} })).status()).toBe(403);
+  expect((await request.post("/api/admin/media/lessons/shabbat-6/video", { headers: own })).status()).toBe(403);
+  expect((await request.put("/api/dev/media/video/fake-sample-shabbat-6", { headers: own, data: "x" })).status()).toBe(403);
+  expect((await request.put("/api/dev/media/files/thumbnails/x.png", { headers: own, data: "x" })).status()).toBe(403);
   const health = await (await request.get("/api/healthz")).json();
   expect([health.dataSource, health.auth]).toEqual(["mock", "stub"]);
 });

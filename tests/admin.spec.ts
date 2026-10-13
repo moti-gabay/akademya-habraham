@@ -1,5 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 // Runs on the dev server, where MOCK_ROLE=admin makes the sample visitor an admin.
 const ORIGIN = "http://localhost:3101";
@@ -19,9 +19,57 @@ test("the catalog API takes changes only from our own pages, and validates them"
   expect((await request.delete(`/api/admin/catalog/teachers/${id}`, { headers: own })).status()).toBe(404);
 });
 
+// Gives a lesson a finished video through the fake provider: start, send a few bytes,
+// wait for the fake "encoding".
+async function uploadVideo(request: APIRequestContext, lessonId: string) {
+  const media = `/api/admin/media/lessons/${lessonId}/video`;
+  const { upload } = await (await request.post(media, { headers: own })).json();
+  expect((await request.put(upload.url, { headers: own, data: Buffer.from("not really a video") })).status()).toBe(204);
+  await expect.poll(async () => (await (await request.get(media)).json()).media.video.status, { timeout: 15_000 }).toBe("ready");
+}
+
 async function withPrefs(page: Page) {
   await page.context().addCookies([{ name: "ah_text_size", value: "m", url: ORIGIN }]);
 }
+
+test("the media API uploads a video and a thumbnail through the fake services", async ({ request }) => {
+  const lesson = {
+    categoryId: null,
+    teacherId: null,
+    durationSec: null,
+    access: "members",
+    translations: { he: { title: "שיעור מדיה", description: null, keyPoints: [], slug: `media-${Date.now()}` } },
+  };
+  const { id } = await (await request.post("/api/admin/catalog/lessons", { headers: own, data: lesson })).json();
+  const media = `/api/admin/media/lessons/${id}`;
+
+  // Writes need our own origin, like every other API.
+  expect((await request.post(`${media}/video`)).status()).toBe(403);
+  expect((await request.post(`/api/admin/catalog/lessons/${id}/publish`, { headers: own })).status()).toBe(409);
+  await uploadVideo(request, id);
+  const { media: state } = await (await request.get(`${media}/video`)).json();
+  expect(state.video.videoId).toMatch(/^fake-/);
+  expect(state.video.durationSec).toBe(634);
+
+  // Thumbnail: ask where to send it, send it, confirm.
+  expect((await request.post(`${media}/thumbnail`, { headers: own, data: { contentType: "text/html" } })).status()).toBe(400);
+  const started = await (await request.post(`${media}/thumbnail`, { headers: own, data: { contentType: "image/png" } })).json();
+  expect((await request.put(`${media}/thumbnail`, { headers: own, data: { key: started.key } })).status()).toBe(400);
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+  expect((await request.put(started.upload.url, { headers: { ...own, "content-type": "image/png" }, data: png })).status()).toBe(204);
+  expect((await request.put(`${media}/thumbnail`, { headers: own, data: { key: started.key } })).status()).toBe(200);
+  const served = await request.get(started.upload.url);
+  expect([served.status(), served.headers()["content-type"], served.headers()["x-content-type-options"]]).toEqual([200, "image/png", "nosniff"]);
+
+  // The stand-in bucket holds thumbnails only: nothing else can be put there or read from it.
+  expect((await request.put(`/api/dev/media/files/captions/${id}/he.vtt`, { headers: own, data: "WEBVTT" })).status()).toBe(404);
+  expect((await request.put("/api/dev/media/video/fake-unknown", { headers: own, data: "x" })).status()).toBe(404);
+
+  // Deleting the lesson takes its media with it.
+  expect((await request.delete(`/api/admin/catalog/lessons/${id}`, { headers: own })).status()).toBe(200);
+  expect((await request.get(started.upload.url)).status()).toBe(404);
+  expect((await request.get(`${media}/video`)).status()).toBe(404);
+});
 
 test("a teacher is created in Hebrew, translated, and deleted", async ({ page }) => {
   await withPrefs(page);
@@ -95,7 +143,13 @@ test("a lesson appears on the public holiday page when published and leaves it w
   // A draft is not public.
   expect(await listed()).toBe(0);
 
+  // Publishing needs a finished video.
   await page.goto(editUrl);
+  await page.getByRole("button", { name: "פרסום", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toBeVisible();
+  await expect(page.getByText("מצב: טיוטה")).toBeVisible();
+  await uploadVideo(page.request, editUrl.split("/").pop()!);
+
   await page.getByRole("button", { name: "פרסום", exact: true }).click();
   await expect(page.getByText("מצב: מפורסם")).toBeVisible();
   // The cached page is refreshed in the background, so the first visit may still be the old one.

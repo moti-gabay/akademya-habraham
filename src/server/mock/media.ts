@@ -11,6 +11,7 @@ export function createMockMediaRepo(store: MockStore): MediaRepo {
       return structuredClone({
         lessonId,
         title: lesson.translations.he.title,
+        published: lesson.status === "published",
         thumbnailKey: lesson.thumbnailKey,
         video: store.videos.get(lessonId) ?? null,
         captions: [...(store.captions.get(lessonId) ?? [])].sort((a, b) => byLocale(a.locale, b.locale)),
