@@ -15,15 +15,17 @@ if (usesDatabase && !hasClerkKeys && process.env.VERCEL) {
 export const authMode: "clerk" | "stub" = usesDatabase && hasClerkKeys ? "clerk" : "stub";
 
 // Local stand-in for an admin, so the admin screens can be used and tested with no keys.
-// Honoured only with stub sign-in, off Vercel and outside production builds; anywhere
-// else it is ignored. The sample actor then counts as an admin with a second factor.
+// Honoured only on mock data, with stub sign-in, off Vercel and outside production
+// builds; anywhere else it is ignored, so it can never write to a database. The sample
+// actor then counts as an admin with a second factor.
 export function resolveMockRole(env: Record<string, string | undefined>, mode: typeof authMode): "admin" | null {
   if (!env.MOCK_ROLE) return null;
   if (mode === "clerk") {
     console.warn("MOCK_ROLE is ignored while Clerk sign-in is active.");
     return null;
   }
-  return env.MOCK_ROLE === "admin" && !env.VERCEL && env.NODE_ENV !== "production" ? "admin" : null;
+  const local = env.DATA_SOURCE !== "db" && !env.VERCEL && env.NODE_ENV !== "production";
+  return env.MOCK_ROLE === "admin" && local ? "admin" : null;
 }
 
 export const mockRole = resolveMockRole(process.env, authMode);

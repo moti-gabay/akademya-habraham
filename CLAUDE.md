@@ -18,8 +18,9 @@ Read `ARCHITECTURE.md` before changing anything; its decisions are binding. `REA
 - The database is opt-in: only `DATA_SOURCE=db` selects it. With anything else the app runs on mock data.
 - Vercel stays on mock (`DATA_SOURCE` unset, no Clerk keys) until the owner says otherwise.
 - Sign-in is active only with both Clerk keys and `DATA_SOURCE=db`. The app, CI and the e2e suite must keep working with no keys.
-- `MOCK_ROLE=admin` is a local stand-in for an admin. It is honoured only with stub sign-in, off Vercel and outside production builds; never widen that.
+- `MOCK_ROLE=admin` is a local stand-in for an admin. It is honoured only on mock data (never with `DATA_SOURCE=db`), with stub sign-in, off Vercel and outside production builds; never widen that.
 - A build must not fail because the database is unreachable or behind on migrations: catalog `generateStaticParams` goes through `safeStaticParams`. Run `STRICT_STATIC_PARAMS=1 DATA_SOURCE=mock pnpm build` before a PR.
+- Tests and dev tooling must never reach a real database unless `DATA_SOURCE=db` was set explicitly by the owner.
 - Schema changes go through `pnpm db:generate`; migrations are applied to a real database only on request.
 
 ## Code

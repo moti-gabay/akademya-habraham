@@ -39,7 +39,7 @@ The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled)
 
 **The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Without Clerk keys every visitor is the sample user, so a database deployment needs sign-in configured first; on Vercel the app refuses to start with `DATA_SOURCE=db` and no Clerk keys. Vercel currently stays on mock (`DATA_SOURCE` unset).
 
-`MOCK_ROLE=admin` works only without Clerk, off Vercel and outside production builds (`pnpm start` ignores it), and admin changes in mock mode live in server memory until restart. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
+`MOCK_ROLE=admin` works only on mock data: it is ignored with `DATA_SOURCE=db`, with Clerk, on Vercel and in production builds (`pnpm start` ignores it). Its changes live in server memory until restart; on a database the admin screens need a real admin signed in through Clerk. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
 
 A build never fails because the catalog cannot be read: the holiday pages are then rendered on first request, with a `[build]` warning. `STRICT_STATIC_PARAMS=1` turns that into an error.
 
@@ -128,6 +128,6 @@ Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, ot
 - The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
 - A lesson can be published without a video: every lesson still plays the sample stream until uploads arrive (Milestone 3b).
 - Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
-- Migration `0003` (lesson access `members`, key points) is generated but not applied to Neon. Until it is, the app on `DATA_SOURCE=db` fails wherever it reads lessons.
+- Migration `0003` (lesson access `members`, key points) is applied to the Neon dev database. Any other database needs it before the app can read lessons with `DATA_SOURCE=db`.
 - Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
 - Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.

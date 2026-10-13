@@ -3,11 +3,16 @@ import assert from "node:assert/strict";
 import { mock, test } from "node:test";
 import { resolveMockRole } from "./authMode";
 
-test("MOCK_ROLE=admin works only with stub sign-in, off Vercel, outside production", () => {
+test("MOCK_ROLE=admin works only on mock data, with stub sign-in, off Vercel, outside production", () => {
   assert.equal(resolveMockRole({ MOCK_ROLE: "admin", NODE_ENV: "development" }, "stub"), "admin");
   assert.equal(resolveMockRole({ MOCK_ROLE: "admin", NODE_ENV: "test" }, "stub"), "admin");
   assert.equal(resolveMockRole({ NODE_ENV: "development" }, "stub"), null);
   assert.equal(resolveMockRole({ MOCK_ROLE: "editor", NODE_ENV: "development" }, "stub"), null);
+});
+
+test("MOCK_ROLE is ignored on the database, even without Clerk keys", () => {
+  assert.equal(resolveMockRole({ MOCK_ROLE: "admin", NODE_ENV: "development", DATA_SOURCE: "db" }, "stub"), null);
+  assert.equal(resolveMockRole({ MOCK_ROLE: "admin", NODE_ENV: "development", DATA_SOURCE: "mock" }, "stub"), "admin");
 });
 
 test("MOCK_ROLE is ignored on Vercel", () => {
