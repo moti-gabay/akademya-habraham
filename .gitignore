@@ -4,6 +4,7 @@ node_modules/
 !.env.example
 .vercel/
 .next/
+.next-e2e-dev/
 .DS_Store
 *.png
 

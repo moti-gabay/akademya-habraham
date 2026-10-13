@@ -39,7 +39,9 @@ export default defineConfig({
     {
       command: `pnpm dev -p ${ADMIN_PORT}`,
       url: `http://localhost:${ADMIN_PORT}/api/healthz`,
-      env: { ...env, MOCK_ROLE: "admin" },
+      // Its own output directory: sharing .next with the production build made the two
+      // overwrite each other's files, and the dev server's pages reloaded in a loop.
+      env: { ...env, MOCK_ROLE: "admin", NEXT_DIST_DIR: ".next-e2e-dev" },
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
     },
