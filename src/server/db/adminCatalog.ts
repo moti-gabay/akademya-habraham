@@ -42,7 +42,7 @@ const defs: Record<
     tr: columns(t.lessonTranslations),
     fk: "lessonId",
     base: ["categoryId", "teacherId", "durationSec", "access"],
-    managed: ["status", "publishedAt"],
+    managed: ["status", "publishedAt", "thumbnailKey"],
     order: ["createdAt", "id"],
   },
   terms: {

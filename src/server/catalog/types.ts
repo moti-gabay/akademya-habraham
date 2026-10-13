@@ -9,7 +9,7 @@ export type PublishStatus = "draft" | "published";
 type Managed = {
   categories: object;
   teachers: object;
-  lessons: { status: LessonStatus; publishedAt: Date | null };
+  lessons: { status: LessonStatus; publishedAt: Date | null; thumbnailKey: string | null };
   terms: object;
   tracks: { status: PublishStatus };
   steps: { sortOrder: number };

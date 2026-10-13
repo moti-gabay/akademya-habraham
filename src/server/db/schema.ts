@@ -13,6 +13,7 @@ import {
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import { LOCALES } from "../i18n/locales";
+import { VIDEO_STATUSES } from "../media/types";
 
 // Tables are added milestone by milestone (see ARCHITECTURE.md §1.3). So far: users,
 // the catalog core, the learning path, the glossary and per-user lesson progress.
@@ -21,6 +22,8 @@ export const localeEnum = pgEnum("locale", LOCALES);
 export const categoryKindEnum = pgEnum("category_kind", ["holiday", "parsha", "halacha"]);
 export const lessonAccessEnum = pgEnum("lesson_access", ["free", "members"]);
 export const lessonStatusEnum = pgEnum("lesson_status", ["draft", "processing", "published", "archived"]);
+export const videoStatusEnum = pgEnum("video_status", VIDEO_STATUSES);
+export const subtitleSourceEnum = pgEnum("subtitle_source", ["manual", "auto"]);
 export const trackStatusEnum = pgEnum("track_status", ["draft", "published"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "editor", "admin"]);
 export const userStatusEnum = pgEnum("user_status", ["active", "blocked", "deleted"]);
@@ -114,6 +117,38 @@ export const lessonTranslations = pgTable(
     slug: text().notNull(),
   },
   (t) => [primaryKey({ columns: [t.lessonId, t.locale] }), unique().on(t.locale, t.slug)],
+);
+
+// Media. The video itself lives at the video provider and the caption files in file
+// storage; these rows record what was uploaded. Column names follow ARCHITECTURE §1.3.
+
+// One current video per lesson. Replacing it replaces the row.
+export const videoAssets = pgTable("video_assets", {
+  id: id(),
+  lessonId: uuid("lesson_id").notNull().unique().references(() => lessons.id, { onDelete: "cascade" }),
+  bunnyVideoId: text("bunny_video_id").notNull().unique(),
+  bunnyLibraryId: text("bunny_library_id").notNull(),
+  status: videoStatusEnum().notNull().default("created"),
+  durationSec: integer("duration_sec"),
+  // The thumbnail the provider generated; lessons.thumbnail_key overrides it.
+  thumbnailUrl: text("thumbnail_url"),
+  readyAt: timestamp("ready_at", { withTimezone: true }),
+  raw: jsonb(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const lessonSubtitles = pgTable(
+  "lesson_subtitles",
+  {
+    lessonId: uuid("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+    locale: locale(),
+    r2Key: text("r2_key").notNull(),
+    // Null until the caption reached the video provider.
+    bunnySyncedAt: timestamp("bunny_synced_at", { withTimezone: true }),
+    source: subtitleSourceEnum().notNull().default("manual"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.lessonId, t.locale] })],
 );
 
 // Learning path: track → steps → ordered lessons

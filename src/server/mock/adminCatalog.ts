@@ -43,7 +43,7 @@ export function createMockAdminCatalogRepo(store: MockStore): AdminCatalogRepo {
       const existing = table(entity).get(id);
       // What the database fills in when the row is created.
       const created: Record<string, unknown> = {};
-      if (entity === "lessons") Object.assign(created, { status: "draft", publishedAt: null });
+      if (entity === "lessons") Object.assign(created, { status: "draft", publishedAt: null, thumbnailKey: null });
       if (entity === "tracks") created.status = "draft";
       if (entity === "steps") {
         const { trackId } = input as { trackId: string };
@@ -58,6 +58,8 @@ export function createMockAdminCatalogRepo(store: MockStore): AdminCatalogRepo {
       if (entity === "lessons") {
         without(store.stepLessons, id);
         store.lessonTerms.delete(id);
+        store.videos.delete(id);
+        store.captions.delete(id);
       }
       if (entity === "terms") without(store.lessonTerms, id);
       if (entity === "steps") store.stepLessons.delete(id);

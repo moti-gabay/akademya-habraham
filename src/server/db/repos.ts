@@ -17,6 +17,7 @@ import type {
 import { createDrizzleAdminCatalogRepo } from "./adminCatalog";
 import { createDrizzleCatalogRepo } from "./catalog";
 import type { Db } from "./client";
+import { createDrizzleMediaRepo } from "./media";
 import * as t from "./schema";
 import { isUuid, uuidOrNil } from "./uuid";
 
@@ -40,6 +41,8 @@ export function createDrizzleRepos(getDb: () => Db) {
         id: t.lessons.id,
         durationSec: t.lessons.durationSec,
         access: t.lessons.access,
+        thumbnailKey: t.lessons.thumbnailKey,
+        videoThumbnailUrl: t.videoAssets.thumbnailUrl,
         title: sql<string>`coalesce(${lessonLoc.title}, ${lessonHe.title})`,
         teacher: sql<string | null>`coalesce(${teacherLoc.name}, ${teacherHe.name})`,
         stepNumber: t.trackSteps.sortOrder,
@@ -54,11 +57,17 @@ export function createDrizzleRepos(getDb: () => Db) {
       .leftJoin(teacherLoc, and(eq(teacherLoc.teacherId, t.lessons.teacherId), eq(teacherLoc.locale, locale)))
       .leftJoin(t.trackStepLessons, eq(t.trackStepLessons.lessonId, t.lessons.id))
       .leftJoin(t.trackSteps, eq(t.trackSteps.id, t.trackStepLessons.stepId))
+      .leftJoin(t.videoAssets, eq(t.videoAssets.lessonId, t.lessons.id))
       .leftJoin(stepHe, and(eq(stepHe.stepId, t.trackSteps.id), eq(stepHe.locale, "he")))
       .leftJoin(stepLoc, and(eq(stepLoc.stepId, t.trackSteps.id), eq(stepLoc.locale, locale)))
       .where(and(eq(t.lessons.id, lessonId), eq(t.lessons.status, "published")))
       .limit(1);
     if (!row) return null;
+    const captions = await getDb()
+      .select({ locale: t.lessonSubtitles.locale })
+      .from(t.lessonSubtitles)
+      .where(eq(t.lessonSubtitles.lessonId, lessonId))
+      .orderBy(asc(t.lessonSubtitles.locale));
 
     return {
       id: row.id,
@@ -73,6 +82,9 @@ export function createDrizzleRepos(getDb: () => Db) {
       // Until video_assets and lesson_subtitles exist (Milestones 3–4).
       videoUrl: SAMPLE_HLS,
       subtitles: sampleSubtitles,
+      thumbnailKey: row.thumbnailKey,
+      videoThumbnailUrl: row.videoThumbnailUrl,
+      captions: captions.map((caption) => caption.locale),
     };
   }
 
@@ -272,5 +284,6 @@ export function createDrizzleRepos(getDb: () => Db) {
     holidayRepo,
     catalogRepo: createDrizzleCatalogRepo(getDb),
     adminCatalogRepo: createDrizzleAdminCatalogRepo(getDb),
+    mediaRepo: createDrizzleMediaRepo(getDb),
   };
 }
