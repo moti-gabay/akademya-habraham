@@ -113,8 +113,144 @@
   },
   "admin": {
     "title": "Admin",
-    "intro": "The admin area will be built in a later stage.",
+    "intro": "Manage the lessons, holidays, teachers, glossary and learning path.",
     "secondFactorTitle": "Two-step verification required",
-    "secondFactorText": "To enter the admin area, turn on two-step verification in your account settings, then sign out and sign in again."
+    "secondFactorText": "To enter the admin area, turn on two-step verification in your account settings, then sign out and sign in again.",
+    "nav": {
+      "label": "Admin sections",
+      "overview": "Overview",
+      "lessons": "Lessons",
+      "categories": "Categories",
+      "teachers": "Teachers",
+      "glossary": "Glossary",
+      "tracks": "Learning path"
+    },
+    "sections": {
+      "lessons": {
+        "title": "Lessons",
+        "new": "New lesson",
+        "empty": "No lessons yet."
+      },
+      "categories": {
+        "title": "Categories",
+        "new": "New category",
+        "empty": "No categories yet."
+      },
+      "teachers": {
+        "title": "Teachers",
+        "new": "New teacher",
+        "empty": "No teachers yet."
+      },
+      "glossary": {
+        "title": "Glossary",
+        "new": "New term",
+        "empty": "No terms yet."
+      },
+      "tracks": {
+        "title": "Learning path",
+        "new": "New path",
+        "empty": "No paths yet."
+      },
+      "steps": {
+        "title": "Steps",
+        "new": "New step",
+        "empty": "This path has no steps yet."
+      }
+    },
+    "count": "{count} in total",
+    "fields": {
+      "kind": "Kind",
+      "parentId": "Parent category",
+      "sortOrder": "Position in lists",
+      "hebcalCode": "Holiday code in the Hebrew calendar",
+      "categoryId": "Category",
+      "teacherId": "Teacher",
+      "durationSec": "Length in minutes",
+      "access": "Who can watch",
+      "code": "Internal code",
+      "name": "Name",
+      "slug": "Address name",
+      "title": "Title",
+      "description": "Short description",
+      "keyPoints": "Key points",
+      "term": "Term",
+      "shortDefinition": "Short definition"
+    },
+    "hints": {
+      "slug": "Appears in the page address. Letters and digits, with hyphens between words.",
+      "keyPoints": "One point per line, up to 8.",
+      "hebcalCode": "For example: Chanukah, Purim, Pesach. Leave empty if this is not a holiday.",
+      "code": "Lowercase English letters and digits, with hyphens. Not shown to visitors."
+    },
+    "kinds": {
+      "holiday": "Holiday",
+      "parsha": "Weekly portion",
+      "halacha": "Halacha"
+    },
+    "access": {
+      "free": "Free: every signed-in visitor",
+      "members": "Members only"
+    },
+    "status": {
+      "label": "Status",
+      "draft": "Draft",
+      "published": "Published",
+      "processing": "Processing",
+      "archived": "Archived"
+    },
+    "none": "None",
+    "languages": {
+      "label": "Languages",
+      "translated": "{language}: translated",
+      "missing": "{language}: not translated",
+      "required": "required",
+      "add": "Add a translation",
+      "remove": "Remove this translation",
+      "fallback": "Not translated yet. Readers of this language see the Hebrew text."
+    },
+    "actions": {
+      "save": "Save",
+      "create": "Create",
+      "back": "Back to the list",
+      "delete": "Delete",
+      "confirmDelete": "Delete “{name}”? This cannot be undone.",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "moveUp": "Up",
+      "moveDown": "Down",
+      "remove": "Remove",
+      "add": "Add",
+      "choose": "Choose…",
+      "saveOrder": "Save the order",
+      "saveList": "Save the list"
+    },
+    "messages": {
+      "saved": "Saved.",
+      "working": "Saving…"
+    },
+    "links": {
+      "terms": "Words from the lesson",
+      "lessons": "Lessons in this step",
+      "steps": "Order of the steps",
+      "empty": "Nothing chosen yet.",
+      "addLabel": "Add to the list",
+      "position": "{position}. {name}"
+    },
+    "errors": {
+      "summary": "Not saved. Check the marked fields.",
+      "required": "This field is required.",
+      "invalid": "This value is not valid.",
+      "invalid_body": "Not saved. Check the marked fields.",
+      "slug_taken": "This address name is already used in this language.",
+      "code_taken": "This code is already used.",
+      "unknown_reference": "The chosen item no longer exists. Reload the page.",
+      "in_use": "Lessons still using it: {count}. Move or unpublish them first.",
+      "not_draft": "Unpublish it first. Only drafts can be deleted.",
+      "has_progress": "Viewers already watched this lesson, so it cannot be deleted. Keep it unpublished instead.",
+      "not_found": "This item no longer exists.",
+      "forbidden": "You are not allowed to do this.",
+      "second_factor_required": "Two-step verification is required. Sign out and sign in again.",
+      "generic": "Something went wrong. Try again."
+    }
   }
 }
