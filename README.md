@@ -5,13 +5,14 @@ Recorded Torah lessons for people studying toward conversion. Hebrew first (RTL)
 - Architecture and decisions: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - Visual source of truth: [`design/final-sketch.pdf`](design/final-sketch.pdf) (page renders in `design/reference/`)
 
-Current state: the UI from the sketch (language selection, home, lesson player) runs on mock data by default, or on Postgres with `DATA_SOURCE=db`. No keys are needed for mock mode. Auth, video hosting and billing are later milestones.
+Current state: the UI from the sketch (language selection, home, lesson player), public holiday pages and the admin catalog screens run on mock data by default, or on Postgres with `DATA_SOURCE=db`. No keys are needed for mock mode. Video hosting, search and billing are later milestones.
 
 ## Run
 
 ```bash
 pnpm install
 pnpm dev              # http://localhost:3000
+MOCK_ROLE=admin pnpm dev   # the same, with the sample visitor as an admin: open /he/admin
 ```
 
 Optional: copy `.env.example` to `.env.local`. `NEXT_PUBLIC_HELP_PHONE` and `NEXT_PUBLIC_HELP_WHATSAPP` fill the "Need help?" card. Everything else is unused until its milestone.
@@ -19,7 +20,7 @@ Optional: copy `.env.example` to `.env.local`. `NEXT_PUBLIC_HELP_PHONE` and `NEX
 ```bash
 pnpm lint             # ESLint + check that only logical Tailwind classes are used
 pnpm typecheck
-pnpm build
+pnpm build            # before a pull request: STRICT_STATIC_PARAMS=1 DATA_SOURCE=mock pnpm build
 pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, screenshots (screenshots compare locally only, not in CI)
 pnpm test:e2e --update-snapshots   # after an intended visual change
 ```
@@ -37,6 +38,10 @@ DATA_SOURCE=db pnpm dev   # run the app on the database instead of mock data
 The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` there and never commit them.
 
 **The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Without Clerk keys every visitor is the sample user, so a database deployment needs sign-in configured first; on Vercel the app refuses to start with `DATA_SOURCE=db` and no Clerk keys. Vercel currently stays on mock (`DATA_SOURCE` unset).
+
+`MOCK_ROLE=admin` works only without Clerk, off Vercel and outside production builds (`pnpm start` ignores it), and admin changes in mock mode live in server memory until restart. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
+
+A build never fails because the catalog cannot be read: the holiday pages are then rendered on first request, with a `[build]` warning. `STRICT_STATIC_PARAMS=1` turns that into an error.
 
 First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
 
@@ -65,16 +70,20 @@ Session token customization and dashboard path settings are not needed.
 ```
 src/app/[locale]/            layout sets <html lang dir data-text-size>
   welcome/                   first visit: language + text size
-  (app)/                     header + bottom navigation: home, path, search, holidays, glossary, help
+  (app)/                     header + bottom navigation: home, path, search, glossary, help
+    admin/                   admin catalog: lists, and one form per entity with a tab per language
+  (public)/holidays/         holiday catalog and lesson previews: static, open to signed-out visitors
+  blocked/, sign-in/, sign-up/
   (lesson)/lessons/[id]/     lesson player (no header or bottom navigation on mobile)
-src/app/api/                 thin route handlers (healthz, telemetry/heartbeat)
-src/components/              UI; home/ holds the home page cards
+src/app/api/                 thin route handlers (healthz, telemetry/heartbeat, admin/users, admin/catalog, webhooks/clerk)
+src/components/              UI; home/ holds the home page cards, admin/ the admin forms, catalog/ the lesson preview
 src/i18n/                    next-intl routing, navigation, messages/{he,en,ru,es}.json
-src/lib/                     auth mode and getActor (the only Clerk session code), text size preference, helpers
+src/lib/                     auth mode and getActor (the only Clerk session code), text size preference, catalog cache, helpers
 src/server/                  domain layer, no imports from next/*
   repos/types.ts             repo interfaces + view models
   repos/index.ts             the one place that chooses mock or database repos (DATA_SOURCE)
-  mock/                      sample content (also the seed's source) and in-memory mock repos
+  mock/                      sample content (also the seed's source), the in-memory store and mock repos
+  catalog/                   catalog rules: admin service, input schemas, who can watch, public reads
   db/                        Drizzle client, schema, repos, seed and their tests; migrations are generated into drizzle/
   auth/                      Clerk user sync, actor and role checks, audit log, admin user changes
 src/proxy.ts                 locale routing, first-visit redirect, sign-in redirect, same-origin check for API writes
@@ -107,7 +116,7 @@ Edit `src/server/mock/data.ts` (the mock repos and `pnpm db:seed` both read it):
 2. List glossary term ids in `termIds`. They appear under "Words from the lesson", and a term is underlined in the title when its name appears there literally. New terms go in `glossary` in the same file.
 3. Open `/he/lessons/<id>` in mock mode. On the database, run `pnpm db:seed` again; lesson ids there are UUIDs, so follow the link from the home page.
 
-Real lessons are added in the admin screens from Milestone 3 on.
+Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, other languages in their tabs, then Publish. A lesson in a holiday category appears under `/holidays` once published.
 
 ## Known limits
 
@@ -116,5 +125,9 @@ Real lessons are added in the admin screens from Milestone 3 on.
 - In mock mode progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
 - On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
 - Without Clerk (mock mode) the user is always the sample user "Moshe".
-- The admin area is a gated placeholder; its screens come in Milestone 6. Rate limiting is not in place yet.
+- The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
+- A lesson can be published without a video: every lesson still plays the sample stream until uploads arrive (Milestone 3b).
+- Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
+- Migration `0003` (lesson access `members`, key points) is generated but not applied to Neon. Until it is, the app on `DATA_SOURCE=db` fails wherever it reads lessons.
+- Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
 - Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.
