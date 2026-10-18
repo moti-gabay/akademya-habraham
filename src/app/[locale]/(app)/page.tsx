@@ -4,6 +4,7 @@ import { PathSteps } from "@/components/home/PathSteps";
 import { GlossaryPreview, HelpCard, HolidayCard } from "@/components/home/SideCards";
 import type { Locale } from "@/i18n/routing";
 import { getPageActor } from "@/lib/auth";
+import { lessonThumbnailUrl } from "@/lib/media";
 import { glossaryRepo, holidayRepo, pathRepo, progressRepo, userRepo } from "@/server/repos";
 
 export default async function HomePage() {
@@ -26,7 +27,9 @@ export default async function HomePage() {
           <h1 className="text-2xl font-medium lg:text-3xl">{t("greeting", { name: user?.name ?? "" })}</h1>
           <p className="mt-1 text-muted">{t("subtitle")}</p>
         </div>
-        {continueWatching && <ContinueCard item={continueWatching} terms={lessonTerms} />}
+        {continueWatching && (
+          <ContinueCard item={continueWatching} terms={lessonTerms} thumbnailUrl={lessonThumbnailUrl(continueWatching.lesson)} />
+        )}
         <PathSteps steps={steps} />
       </div>
       <aside className="mt-6 space-y-4 lg:mt-0">

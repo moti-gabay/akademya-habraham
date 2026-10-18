@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { createBunnyMediaProvider } from "./bunny";
-import { createFakeFileStorage, createFakeMediaProvider, createFakeMediaState, FAKE_VIDEO_PREFIX } from "./fake";
+import { createFakeFileStorage, createFakeMediaProvider, createFakeMediaState, FAKE_VIDEO_PREFIX, type FakeMediaProvider } from "./fake";
 import { fileStorageName, getFileStorage, getMediaProvider, mediaProviderName } from "./index";
 import { createR2FileStorage } from "./r2";
 import { presignUrl } from "./sigv4";
@@ -176,4 +176,17 @@ test("the real services are opt-in, and a missing key is named without showing a
     (error: Error) => error.message === "R2_SECRET_ACCESS_KEY is not set" && !error.message.includes("id-value"),
   );
   assert.ok(getMediaProvider({}) && getFileStorage({}));
+});
+
+test("FAKE_MEDIA_PROCESSING_MS sets how long the fake encoding takes; anything else keeps the default", async () => {
+  const statusAfterUpload = async (env: Record<string, string>) => {
+    const provider = getMediaProvider(env) as FakeMediaProvider;
+    const { videoId } = await provider.createVideo("x");
+    provider.receiveUpload(videoId, 1);
+    return (await provider.getVideo(videoId))?.status;
+  };
+  assert.equal(await statusAfterUpload({ FAKE_MEDIA_PROCESSING_MS: "0" }), "ready");
+  assert.equal(await statusAfterUpload({}), "processing");
+  assert.equal(await statusAfterUpload({ FAKE_MEDIA_PROCESSING_MS: "-1" }), "processing");
+  assert.equal(await statusAfterUpload({ FAKE_MEDIA_PROCESSING_MS: "soon" }), "processing");
 });

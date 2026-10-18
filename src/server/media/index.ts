@@ -18,8 +18,14 @@ function required(env: Env, name: string): string {
   return value;
 }
 
+// FAKE_MEDIA_PROCESSING_MS shortens the fake "encoding" (e2e sets it); unset, the fake's own default applies.
+function fakeProcessingMs(env: Env): number | undefined {
+  const ms = Number(env.FAKE_MEDIA_PROCESSING_MS);
+  return env.FAKE_MEDIA_PROCESSING_MS && ms >= 0 ? ms : undefined;
+}
+
 export function getMediaProvider(env: Env = process.env): MediaProvider {
-  if (mediaProviderName(env) === "fake") return createFakeMediaProvider(fakeMediaState);
+  if (mediaProviderName(env) === "fake") return createFakeMediaProvider(fakeMediaState, { processingMs: fakeProcessingMs(env) });
   return createBunnyMediaProvider({
     libraryId: required(env, "BUNNY_LIBRARY_ID"),
     apiKey: required(env, "BUNNY_API_KEY"),

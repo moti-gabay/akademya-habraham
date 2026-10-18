@@ -28,7 +28,8 @@ type Props = {
   src: string;
   subtitles: { locale: Locale; url: string }[];
   startAt: number;
-  defaultSubtitle: Locale;
+  // "off" when the lesson has no captions in the visitor's language.
+  defaultSubtitle: Locale | "off";
   // Lesson meta and title, shown between the video and the controls.
   children: React.ReactNode;
 };

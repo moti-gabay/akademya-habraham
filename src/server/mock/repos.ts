@@ -1,7 +1,7 @@
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import { byLocale, LOCALES, localize, type Locale } from "../i18n/locales";
-import { SAMPLE_HLS, sampleSubtitles } from "../media/sample";
+import { SAMPLE_HLS } from "../media/sample";
 import type {
   CatalogLesson,
   CatalogRepo,
@@ -63,7 +63,6 @@ export function createMockRepos(store: MockStore) {
       lessonNumber: sampleLessons[id]?.lessonNumber ?? (stepLessons ? stepLessons.indexOf(id) + 1 : 0),
       lessonsInStep: sampleStep?.lessonsTotal ?? stepLessons?.length ?? 0,
       videoUrl: SAMPLE_HLS,
-      subtitles: sampleSubtitles,
       thumbnailKey: lesson.thumbnailKey,
       videoThumbnailUrl: store.videos.get(id)?.thumbnailUrl ?? null,
       captions: (store.captions.get(id) ?? []).map((caption) => caption.locale).sort(byLocale),

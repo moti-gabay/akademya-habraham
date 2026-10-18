@@ -246,6 +246,45 @@
       "addLabel": "Add to the list",
       "position": "{position}. {name}"
     },
+    "media": {
+      "title": "Video, captions and image",
+      "fakeBanner": "Fake media. No real video service is connected: files uploaded here are not kept, and every lesson plays the sample video.",
+      "video": {
+        "title": "Video",
+        "none": "No video yet.",
+        "created": "Waiting for the file.",
+        "uploading": "Uploading: {percent}%",
+        "processing": "Processing. This can take a few minutes.",
+        "ready": "Ready · {minutes} min",
+        "error": "Processing failed. Upload the file again.",
+        "upload": "Upload a video",
+        "replace": "Replace the video",
+        "remove": "Remove the video",
+        "confirmRemove": "Remove the video?",
+        "progress": "Upload progress",
+        "uploadFailed": "The upload failed. Try again."
+      },
+      "captions": {
+        "title": "Captions",
+        "hint": "One WebVTT file (.vtt) per language.",
+        "none": "No captions",
+        "synced": "Sent to the video",
+        "pending": "Stored. It is sent when the video is ready.",
+        "upload": "Upload",
+        "replace": "Replace",
+        "remove": "Remove",
+        "sync": "Send again"
+      },
+      "thumbnail": {
+        "title": "Image",
+        "hint": "JPEG, PNG or WebP.",
+        "none": "No image yet. The video's own image is used once the video is ready.",
+        "fromVideo": "Image from the video",
+        "uploaded": "Uploaded image",
+        "upload": "Upload an image",
+        "useVideo": "Use the video's image"
+      }
+    },
     "errors": {
       "summary": "Not saved. Check the marked fields.",
       "required": "This field is required.",
@@ -260,7 +299,12 @@
       "not_found": "This item no longer exists.",
       "forbidden": "You are not allowed to do this.",
       "second_factor_required": "Two-step verification is required. Sign out and sign in again.",
-      "generic": "Something went wrong. Try again."
+      "generic": "Something went wrong. Try again.",
+      "video_not_ready": "Upload a video and wait until it is ready. Only then can the lesson be published.",
+      "invalid_caption": "This is not a valid WebVTT file (it must start with WEBVTT and be under 1 MB).",
+      "unsupported_type": "Use a JPEG, PNG or WebP image.",
+      "upload_missing": "The file did not arrive. Upload it again.",
+      "provider_failed": "The video service did not answer. Try again in a moment."
     }
   }
 }

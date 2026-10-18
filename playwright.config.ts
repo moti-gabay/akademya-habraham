@@ -4,9 +4,10 @@ const PORT = 3100;
 // The admin screens are tested on a dev server: the local admin stand-in (MOCK_ROLE) is
 // ignored in production builds by design.
 const ADMIN_PORT = 3101;
-// e2e always runs on mock data and never opens the database, even when a local .env
-// selects one.
-const env = { DATA_SOURCE: "mock", DATABASE_URL: "" };
+// e2e always runs on mock data and the fake media services, and never opens the database
+// or a real media account, even when a local .env selects one (Next keeps a variable that
+// is already set, even to ""). The fake "encoding" is kept short.
+const env = { DATA_SOURCE: "mock", DATABASE_URL: "", MEDIA_PROVIDER: "", FILE_STORAGE: "", FAKE_MEDIA_PROCESSING_MS: "500" };
 
 export default defineConfig({
   testDir: "tests",

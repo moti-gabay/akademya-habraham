@@ -247,6 +247,45 @@
       "addLabel": "Añadir a la lista",
       "position": "{position}. {name}"
     },
+    "media": {
+      "title": "Video, subtítulos e imagen",
+      "fakeBanner": "Medios de prueba. No hay un servicio de video real conectado: los archivos que se suben aquí no se guardan, y cada clase reproduce el video de muestra.",
+      "video": {
+        "title": "Video",
+        "none": "Todavía no hay video.",
+        "created": "Esperando el archivo.",
+        "uploading": "Subiendo: {percent}%",
+        "processing": "Procesando. Puede tardar unos minutos.",
+        "ready": "Listo · {minutes} min",
+        "error": "El procesamiento falló. Sube el archivo otra vez.",
+        "upload": "Subir un video",
+        "replace": "Reemplazar el video",
+        "remove": "Quitar el video",
+        "confirmRemove": "¿Quitar el video?",
+        "progress": "Progreso de la subida",
+        "uploadFailed": "La subida falló. Inténtalo de nuevo."
+      },
+      "captions": {
+        "title": "Subtítulos",
+        "hint": "Un archivo WebVTT (.vtt) por idioma.",
+        "none": "Sin subtítulos",
+        "synced": "Enviado al video",
+        "pending": "Guardado. Se envía cuando el video esté listo.",
+        "upload": "Subir",
+        "replace": "Reemplazar",
+        "remove": "Quitar",
+        "sync": "Enviar de nuevo"
+      },
+      "thumbnail": {
+        "title": "Imagen",
+        "hint": "JPEG, PNG o WebP.",
+        "none": "Todavía no hay imagen. Cuando el video esté listo se usará la suya.",
+        "fromVideo": "Imagen del video",
+        "uploaded": "Imagen subida",
+        "upload": "Subir una imagen",
+        "useVideo": "Usar la imagen del video"
+      }
+    },
     "errors": {
       "summary": "No se guardó. Revisa los campos marcados.",
       "required": "Este campo es obligatorio.",
@@ -261,7 +300,12 @@
       "not_found": "Este elemento ya no existe.",
       "forbidden": "No tienes permiso para hacer esto.",
       "second_factor_required": "Se necesita la verificación en dos pasos. Cierra la sesión y vuelve a entrar.",
-      "generic": "Algo salió mal. Inténtalo de nuevo."
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "video_not_ready": "Sube un video y espera a que esté listo. Solo entonces se puede publicar la clase.",
+      "invalid_caption": "No es un archivo WebVTT válido (debe empezar con WEBVTT y pesar menos de 1 MB).",
+      "unsupported_type": "Usa una imagen JPEG, PNG o WebP.",
+      "upload_missing": "El archivo no llegó. Súbelo otra vez.",
+      "provider_failed": "El servicio de video no respondió. Inténtalo en un momento."
     }
   }
 }

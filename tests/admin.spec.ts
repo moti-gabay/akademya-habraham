@@ -90,6 +90,81 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   expect((await request.get(`${media}/video`)).status()).toBe(404);
 });
 
+// fixme: on the e2e dev server this page sometimes reloads itself over and over (the
+// Create button keeps detaching), even with the dev server on its own distDir and after
+// the production build has finished. Every assertion passed in the one run where the
+// loop did not occur. To be investigated, one run each with the dev server's file-change
+// logging on: generated type files included by tsconfig (next-env.d.ts,
+// .next-e2e-dev/types), files under the project root changing during the run
+// (test-results/), and a full reload on a route's first compile.
+test.fixme("an admin uploads a video, captions and an image, and viewers get them", async ({ page }) => {
+  await withPrefs(page);
+  const slug = `media-ui-${Date.now()}`;
+  await page.goto("/en/admin/lessons/new");
+  await page.getByLabel("Title").fill(`Media lesson ${slug}`);
+  await page.getByLabel("Address name").fill(slug);
+  await page.getByRole("button", { name: "Create" }).click();
+  await expect(page).toHaveURL(/\/en\/admin\/lessons\/[0-9a-f-]{36}$/);
+  const id = page.url().split("/").pop()!;
+  const media = page.getByRole("region", { name: "Video, captions and image" });
+
+  // It is plain to see that nothing real is connected.
+  await expect(page.getByRole("note")).toContainText("Fake media");
+  await expect(media.getByText("No video yet.")).toBeVisible();
+
+  // Without a finished video the lesson cannot be published, and the reason is given.
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("Upload a video and wait until it is ready");
+
+  await media.getByLabel("Upload a video").setInputFiles({ name: "lesson.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(2048, 1) });
+  await expect(media.getByText("Processing. This can take a few minutes.")).toBeVisible();
+  await expect(media.getByText("Ready · 11 min")).toBeVisible({ timeout: 10_000 });
+  await expect(media.getByText("Image from the video")).toBeVisible();
+
+  // Captions: a file that is not WebVTT is refused; a real one reaches the video.
+  const hebrew = media.getByRole("listitem").filter({ hasText: "עברית" });
+  await hebrew.getByLabel("Upload: עברית").setInputFiles({ name: "he.vtt", mimeType: "text/vtt", buffer: Buffer.from("1\n00:00 --> 00:02\nsrt") });
+  await expect(media.getByRole("alert")).toContainText("not a valid WebVTT file");
+  await hebrew.getByLabel("Upload: עברית").setInputFiles({
+    name: "he.vtt",
+    mimeType: "text/vtt",
+    buffer: Buffer.from("WEBVTT\n\n00:00.000 --> 00:05.000\nשלום וברכה\n"),
+  });
+  await expect(hebrew.getByText("Sent to the video")).toBeVisible();
+  await expect(media.getByRole("listitem").filter({ hasText: "English" }).getByText("No captions")).toBeVisible();
+
+  // The image: an upload replaces the video's own, and can be taken back.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64");
+  await media.getByLabel("Upload an image").setInputFiles({ name: "cover.png", mimeType: "image/png", buffer: png });
+  await expect(media.getByText("Uploaded image")).toBeVisible();
+
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(page.getByText("Status: Published")).toBeVisible();
+
+  // The player offers the uploaded caption, served by the app, instead of the samples.
+  await page.goto(`/he/lessons/${id}`);
+  await expect(page.getByLabel("כתוביות").getByRole("option")).toHaveText(["עברית", "בלי כתוביות"]);
+  await expect(page.locator("track")).toHaveAttribute("src", `/api/captions/${id}/he`);
+  await page.goto(`/en/lessons/${id}`);
+  await expect(page.getByLabel("Subtitles")).toHaveValue("off");
+
+  // Once it is the lesson being watched, the home card shows its image.
+  await page.request.post("/api/telemetry/heartbeat", { headers: own, data: { lessonId: id, positionSec: 5 } });
+  await page.goto("/en");
+  const cardImage = page.locator(`a[href="/en/lessons/${id}"][aria-hidden]`);
+  await expect(cardImage).toHaveCSS("background-image", new RegExp(`/api/dev/media/files/thumbnails/${id}/`));
+
+  await page.goto(`/en/admin/lessons/${id}`);
+  await media.getByRole("button", { name: "Use the video's image" }).click();
+  await expect(media.getByText("Image from the video")).toBeVisible();
+  await page.goto("/en");
+  await expect(cardImage).toHaveCSS("background-image", /samples\/thumbnail\.svg/);
+
+  // Tidy up: the sample lesson is the one being watched again, and this one is gone.
+  await page.request.post("/api/telemetry/heartbeat", { headers: own, data: { lessonId: "shabbat-6", positionSec: 760 } });
+  await page.request.post(`/api/admin/catalog/lessons/${id}/unpublish`, { headers: own });
+});
+
 test("a teacher is created in Hebrew, translated, and deleted", async ({ page }) => {
   await withPrefs(page);
   const name = `הרב בדיקה ${Date.now()}`;
