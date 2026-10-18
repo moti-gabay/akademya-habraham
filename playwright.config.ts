@@ -38,7 +38,9 @@ export default defineConfig({
       timeout: 180_000,
     },
     {
-      command: `pnpm dev -p ${ADMIN_PORT}`,
+      // Always from an empty output directory: a dev cache left by an earlier, interrupted
+      // run sends every page a "HMR hash mismatch" and the pages reload in a loop.
+      command: `rm -rf .next-e2e-dev && pnpm dev -p ${ADMIN_PORT}`,
       url: `http://localhost:${ADMIN_PORT}/api/healthz`,
       // Its own output directory: sharing .next with the production build made the two
       // overwrite each other's files, and the dev server's pages reloaded in a loop.
