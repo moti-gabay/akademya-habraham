@@ -41,6 +41,10 @@ The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled)
 
 `MOCK_ROLE=admin` works only on mock data: it is ignored with `DATA_SOURCE=db`, with Clerk, on Vercel and in production builds (`pnpm start` ignores it). Its changes live in server memory until restart; on a database the admin screens need a real admin signed in through Clerk. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
 
+**Media is opt-in too.** Only `MEDIA_PROVIDER=bunny` and `FILE_STORAGE=r2` select Bunny Stream and Cloudflare R2. Otherwise in-memory fakes stand in: uploads go to the app itself, a video is "ready" a few seconds after upload (`FAKE_MEDIA_PROCESSING_MS`), files are lost on restart, and the admin media section says so in a banner. The fake routes (`/api/dev/media/*`) are switched off on Vercel.
+
+The e2e servers never use a real media account or database, even when `.env` selects one: Playwright sets `DATA_SOURCE=mock` and blanks `DATABASE_URL`, `MEDIA_PROVIDER` and `FILE_STORAGE` for them. The admin dev server writes to its own output directory, `.next-e2e-dev` (via `NEXT_DIST_DIR` in `next.config.ts`), which is emptied on every start: sharing `.next` with the production build, or a cache left by an interrupted run, made its pages reload in a loop.
+
 A build never fails because the catalog cannot be read: the holiday pages are then rendered on first request, with a `[build]` warning. `STRICT_STATIC_PARAMS=1` turns that into an error.
 
 First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
@@ -65,6 +69,24 @@ Clerk dashboard checklist:
 
 Session token customization and dashboard path settings are not needed.
 
+## Media (Bunny Stream and R2)
+
+Variables, in `.env` and never committed (names are in `.env.example`):
+- `MEDIA_PROVIDER=bunny` with `BUNNY_LIBRARY_ID`, `BUNNY_API_KEY`, `BUNNY_PULL_ZONE_HOST` and `BUNNY_WEBHOOK_SECRET`. `BUNNY_TOKEN_SECURITY_KEY` is for signed playback in Milestone 4.
+- `FILE_STORAGE=r2` with `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_URL`.
+
+Bunny Stream checklist:
+1. Create a video library; copy its library id and API key, and the pull zone host name.
+2. **Webhook:** set the library's webhook URL to `https://<your-domain>/api/webhooks/bunny/<secret>`, where `<secret>` is a long random string you also put in `BUNNY_WEBHOOK_SECRET`. Bunny cannot reach localhost; locally the admin screen's polling picks up the status instead.
+3. Token authentication, allowed referrers and blocking direct file access are Milestone 4 (§1.4 in ARCHITECTURE.md); leave them off until signed playback exists.
+
+Cloudflare R2 checklist:
+1. Create a bucket and an API token with object read and write on that bucket only; copy the account id, access key id and secret.
+2. Give the bucket a public address (custom domain or r2.dev) and put it in `R2_PUBLIC_URL`. Only thumbnails are read through it; captions are served by the app.
+3. **CORS** on the bucket: allow `PUT` from the app's origins (production, preview and `http://localhost:3000`) with the `Content-Type` header, so the browser can upload thumbnails with the presigned URL.
+
+**After this branch is merged:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
+
 ## Folder structure
 
 ```
@@ -75,7 +97,7 @@ src/app/[locale]/            layout sets <html lang dir data-text-size>
   (public)/holidays/         holiday catalog and lesson previews: static, open to signed-out visitors
   blocked/, sign-in/, sign-up/
   (lesson)/lessons/[id]/     lesson player (no header or bottom navigation on mobile)
-src/app/api/                 thin route handlers (healthz, telemetry/heartbeat, admin/users, admin/catalog, webhooks/clerk)
+src/app/api/                 thin route handlers (healthz, telemetry/heartbeat, admin/users, admin/catalog, admin/media, captions, webhooks/clerk, webhooks/bunny, dev/media for the fakes)
 src/components/              UI; home/ holds the home page cards, admin/ the admin forms, catalog/ the lesson preview
 src/i18n/                    next-intl routing, navigation, messages/{he,en,ru,es}.json
 src/lib/                     auth mode and getActor (the only Clerk session code), text size preference, catalog cache, helpers
@@ -84,6 +106,7 @@ src/server/                  domain layer, no imports from next/*
   repos/index.ts             the one place that chooses mock or database repos (DATA_SOURCE)
   mock/                      sample content (also the seed's source), the in-memory store and mock repos
   catalog/                   catalog rules: admin service, input schemas, who can watch, public reads
+  media/                     media interfaces, Bunny and R2 adapters, fakes, the one switch, media service
   db/                        Drizzle client, schema, repos, seed and their tests; migrations are generated into drizzle/
   auth/                      Clerk user sync, actor and role checks, audit log, admin user changes
 src/proxy.ts                 locale routing, first-visit redirect, sign-in redirect, same-origin check for API writes
@@ -126,7 +149,8 @@ Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, ot
 - On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
 - Without Clerk (mock mode) the user is always the sample user "Moshe".
 - The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
-- A lesson can be published without a video: every lesson still plays the sample stream until uploads arrive (Milestone 3b).
+- A lesson can be published only once its uploaded video is ready, but the player still streams the sample video until signed playback arrives (Milestone 4). Uploaded captions and the lesson image are used.
+- Not verified without keys: every Bunny call (create, tus upload from a browser, status, captions, delete, thumbnail URL), the Bunny webhook's real payload, and R2 from a browser (presigned PUT, which needs bucket CORS) and from the server. Only the R2 signing is checked, against AWS's published example. Migration `0004` is not applied anywhere yet.
 - Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
 - Migration `0003` (lesson access `members`, key points) is applied to the Neon dev database. Any other database needs it before the app can read lessons with `DATA_SOURCE=db`.
 - Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
