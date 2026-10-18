@@ -10,6 +10,8 @@ import { CATALOG_TAG } from "./catalogCache";
 export async function adminCatalogResponse(
   request: Request,
   run: (actor: Actor | null, ip: string | null) => Promise<Result>,
+  // False for reads, which change nothing the public pages show.
+  changesCatalog = true,
 ): Promise<Response> {
   try {
     const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? null;
@@ -19,7 +21,7 @@ export async function adminCatalogResponse(
       return Response.json(body, { status });
     }
     // Stale pages are served while fresh ones are built in the background.
-    revalidateTag(CATALOG_TAG, "max");
+    if (changesCatalog) revalidateTag(CATALOG_TAG, "max");
     return Response.json(result);
   } catch (error) {
     return authErrorResponse(error);

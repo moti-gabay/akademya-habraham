@@ -8,6 +8,7 @@ import { card } from "@/components/ui";
 import type { Locale } from "@/i18n/routing";
 import { getPageActor } from "@/lib/auth";
 import { authMode } from "@/lib/authMode";
+import { lessonSubtitles } from "@/lib/media";
 import { canWatch } from "@/server/catalog/access";
 import { glossaryRepo, lessonRepo, progressRepo } from "@/server/repos";
 
@@ -28,6 +29,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       </main>
     );
   }
+  const subtitles = lessonSubtitles(lesson);
   const [startAt, terms] = await Promise.all([
     progressRepo.getPosition(actor.userId, lessonId),
     glossaryRepo.forLesson(lessonId, locale),
@@ -38,9 +40,9 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
       <Player
         lessonId={lesson.id}
         src={lesson.videoUrl}
-        subtitles={lesson.subtitles}
+        subtitles={subtitles}
         startAt={startAt}
-        defaultSubtitle={locale}
+        defaultSubtitle={subtitles.some((track) => track.locale === locale) ? locale : "off"}
       >
         <div>
           <p className="text-sm font-medium text-green">

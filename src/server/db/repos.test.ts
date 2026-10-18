@@ -65,6 +65,16 @@ for (const locale of ["he", "en"] as const) {
   });
 }
 
+test("every sample lesson has a finished sample video in both sources", async () => {
+  const media = await repos.mediaRepo.getLessonMedia(lessonId);
+  const mockMedia = await mock.mediaRepo.getLessonMedia(LESSON);
+  assert.ok(media && mockMedia);
+  assert.deepEqual(omit(media, "lessonId"), omit(mockMedia, "lessonId"));
+  assert.deepEqual([media.video?.status, media.video?.videoId, media.captions], ["ready", "fake-sample-shabbat-6", []]);
+  assert.equal(await repos.mediaRepo.findLessonByVideo("fake-sample-shabbat-6"), lessonId);
+  assert.equal(await repos.mediaRepo.getLessonMedia("not-a-uuid"), null);
+});
+
 test("the sample user is fictional and has one name for every locale", async () => {
   assert.deepEqual(await repos.userRepo.getById(SAMPLE_USER_ID, "en"), { id: SAMPLE_USER_ID, name: "משה" });
   const [row] = await db.select({ email: t.users.email }).from(t.users);

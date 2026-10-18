@@ -42,7 +42,7 @@ const defs: Record<
     tr: columns(t.lessonTranslations),
     fk: "lessonId",
     base: ["categoryId", "teacherId", "durationSec", "access"],
-    managed: ["status", "publishedAt"],
+    managed: ["status", "publishedAt", "thumbnailKey"],
     order: ["createdAt", "id"],
   },
   terms: {
@@ -259,6 +259,16 @@ export function createDrizzleAdminCatalogRepo(getDb: () => Db): AdminCatalogRepo
         .where(eq(t.userLessonProgress.lessonId, lessonId))
         .limit(1);
       return row !== undefined;
+    },
+
+    async videoStatus(lessonId) {
+      if (!isUuid(lessonId)) return null;
+      const [row] = await getDb()
+        .select({ status: t.videoAssets.status })
+        .from(t.videoAssets)
+        .where(eq(t.videoAssets.lessonId, lessonId))
+        .limit(1);
+      return row?.status ?? null;
     },
 
     audit: (entry) => writeAudit(getDb(), entry),

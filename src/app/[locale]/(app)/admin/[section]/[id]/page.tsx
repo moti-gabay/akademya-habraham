@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { EntityForm, type EntityFormRecord } from "@/components/admin/EntityForm";
+import { LessonMediaPanel } from "@/components/admin/LessonMediaPanel";
 import { OrderedList } from "@/components/admin/OrderedList";
 import { RecordActions } from "@/components/admin/RecordActions";
 import { outlineBtn } from "@/components/ui";
@@ -8,7 +9,8 @@ import { Link } from "@/i18n/navigation";
 import type { Locale } from "@/i18n/routing";
 import { isSection, labelOf, SECTIONS } from "@/lib/adminCatalog";
 import { requireAdminPage } from "@/lib/auth";
-import { adminCatalogRepo as repo } from "@/server/repos";
+import { fakeMediaActive, lessonThumbnailUrl } from "@/lib/media";
+import { adminCatalogRepo as repo, mediaRepo } from "@/server/repos";
 
 // What a new entity starts with. Lists put it last.
 const blank = (entity: string, count: number): EntityFormRecord => ({
@@ -18,8 +20,8 @@ const blank = (entity: string, count: number): EntityFormRecord => ({
   translations: { he: {} },
 });
 
-// Create ("new") or edit one catalog entity. Lessons also choose their glossary terms
-// and are published here; a path is published here and its steps are ordered.
+// Create ("new") or edit one catalog entity. Lessons also get their video, captions and
+// image here, choose their glossary terms and are published; a path is published here and its steps are ordered.
 export default async function AdminEditPage({ params }: { params: Promise<{ section: string; id: string }> }) {
   const { section, id } = await params;
   if (!isSection(section)) notFound();
@@ -53,12 +55,31 @@ export default async function AdminEditPage({ params }: { params: Promise<{ sect
   const record = await repo.get(entity, id);
   if (!record) notFound();
   const name = labelOf(record, locale);
+  const media = entity === "lessons" ? await mediaRepo.getLessonMedia(id) : null;
   const steps = entity === "tracks" ? await repo.list("steps", { trackId: id }) : [];
   return (
     <div className="grid gap-6">
       <h1 className="text-2xl font-medium lg:text-3xl">{name}</h1>
       <RecordActions entity={entity} id={id} name={name} status={"status" in record ? record.status : undefined} listHref={listHref} />
       <EntityForm entity={entity} id={id} initial={record} listHref={listHref} editHref={listHref} options={refs} />
+      {entity === "lessons" && media && (
+        <>
+          {fakeMediaActive() && (
+            <p role="note" className="rounded-xl border-2 border-gold bg-cream p-4 font-medium text-gold">
+              {t("media.fakeBanner")}
+            </p>
+          )}
+          <LessonMediaPanel
+            lessonId={id}
+            video={media.video && { status: media.video.status, durationSec: media.video.durationSec }}
+            captions={media.captions.map((caption) => ({ locale: caption.locale, synced: Boolean(caption.syncedAt) }))}
+            thumbnail={{
+              url: lessonThumbnailUrl({ thumbnailKey: media.thumbnailKey, videoThumbnailUrl: media.video?.thumbnailUrl ?? null }),
+              uploaded: Boolean(media.thumbnailKey),
+            }}
+          />
+        </>
+      )}
       {entity === "lessons" && (
         <OrderedList
           title={t("links.terms")}

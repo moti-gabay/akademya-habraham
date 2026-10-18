@@ -9,7 +9,16 @@ import type { ContinueWatching, GlossaryTerm } from "@/server/repos";
 
 const chip = "w-fit rounded-full bg-green-tint px-3 py-1 text-sm font-medium text-green";
 
-export async function ContinueCard({ item, terms }: { item: ContinueWatching; terms: GlossaryTerm[] }) {
+export async function ContinueCard({
+  item,
+  terms,
+  thumbnailUrl,
+}: {
+  item: ContinueWatching;
+  terms: GlossaryTerm[];
+  // The lesson's image; without one the card keeps its plain placeholder.
+  thumbnailUrl: string | null;
+}) {
   const t = await getTranslations("home");
   const { lesson, positionSec } = item;
   const href = `/lessons/${lesson.id}`;
@@ -24,7 +33,8 @@ export async function ContinueCard({ item, terms }: { item: ContinueWatching; te
         href={href}
         tabIndex={-1}
         aria-hidden
-        className="grid aspect-[12/5] place-items-center rounded-xl bg-video lg:aspect-[3/2] lg:w-1/2"
+        className="grid aspect-[12/5] place-items-center rounded-xl bg-video bg-cover bg-center lg:aspect-[3/2] lg:w-1/2"
+        style={thumbnailUrl ? { backgroundImage: `url("${encodeURI(thumbnailUrl)}")` } : undefined}
       >
         <span className="hidden size-14 place-items-center rounded-full bg-white/90 text-ink lg:grid">
           <Play className="size-5 fill-current" />

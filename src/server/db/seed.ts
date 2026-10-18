@@ -14,6 +14,7 @@ import {
   users,
 } from "../mock/data";
 import type { Db } from "./client";
+import { sampleVideo } from "../mock/store";
 import * as t from "./schema";
 
 // Seeds the sample content from src/server/mock/data.ts (all fictional).
@@ -153,6 +154,26 @@ export async function seed(db: Db) {
         slug: lesson.key,
       })),
     ),
+  );
+
+  // The same finished sample video per lesson as in mock mode.
+  await upsert(
+    db,
+    t.videoAssets,
+    [t.videoAssets.lessonId],
+    seedLessons.map((lesson) => {
+      const video = sampleVideo(lesson.key, lesson.durationSec);
+      return {
+        id: seedId(`video:${lesson.key}`),
+        lessonId: lesson.id,
+        bunnyVideoId: video.videoId,
+        bunnyLibraryId: video.libraryId,
+        status: video.status,
+        durationSec: video.durationSec,
+        readyAt: video.readyAt,
+        createdAt: publishedAt,
+      };
+    }),
   );
 
   await upsert(db, t.tracks, [t.tracks.id], [{ id: trackId, code: track.code, sortOrder: 1, status: "published" as const }]);

@@ -29,6 +29,13 @@
       "when": 1791910820329,
       "tag": "0003_lesson_access_key_points",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791919262652,
+      "tag": "0004_media",
+      "breakpoints": true
     }
   ]
 }

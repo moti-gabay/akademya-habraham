@@ -13,7 +13,7 @@ export const ADMIN_ROLE: Role = "admin";
 
 export type Failure = {
   ok: false;
-  status: 400 | 404 | 409;
+  status: 400 | 404 | 409 | 502;
   error:
     | "invalid_body"
     | "not_found"
@@ -22,7 +22,12 @@ export type Failure = {
     | "code_taken"
     | "in_use"
     | "not_draft"
-    | "has_progress";
+    | "has_progress"
+    | "video_not_ready"
+    | "invalid_caption"
+    | "unsupported_type"
+    | "upload_missing"
+    | "provider_failed";
   // Path of the offending input field, e.g. "translations.en.slug".
   field?: string;
   fields?: string[];
@@ -31,15 +36,15 @@ export type Failure = {
 };
 export type Result<T = object> = ({ ok: true } & T) | Failure;
 
-const fail = (status: Failure["status"], error: Failure["error"], extra: Partial<Failure> = {}): Failure => ({
+export const fail = (status: Failure["status"], error: Failure["error"], extra: Partial<Failure> = {}): Failure => ({
   ok: false,
   status,
   error,
   ...extra,
 });
-const notFound = fail(404, "not_found");
+export const notFound = fail(404, "not_found");
 
-const admin = (actor: Actor | null) => requireSecondFactor(requireRole(actor, ADMIN_ROLE));
+export const admin = (actor: Actor | null) => requireSecondFactor(requireRole(actor, ADMIN_ROLE));
 
 // Slugs that must be unique per locale. Step slugs only need to exist.
 const UNIQUE_SLUG: Entity[] = ["categories", "lessons", "terms", "tracks"];
@@ -156,6 +161,8 @@ export async function setPublished(
   const { userId } = admin(actor);
   const before = await repo.get(entity, id);
   if (!before) return notFound;
+  // A lesson goes public only with a video whose processing finished.
+  if (entity === "lessons" && published && (await repo.videoStatus(id)) !== "ready") return fail(409, "video_not_ready");
   const status = published ? "published" : "draft";
   await repo.setStatus(entity, id, status, now);
   await repo.audit({

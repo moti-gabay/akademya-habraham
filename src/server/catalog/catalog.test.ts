@@ -13,7 +13,9 @@ import { seed } from "../db/seed";
 import { createTestDb } from "../db/testDb";
 import { SAMPLE_USER_ID } from "../mock/data";
 import { createMockRepos } from "../mock/repos";
-import { buildStore } from "../mock/store";
+import { buildStore, sampleVideo } from "../mock/store";
+import type { MediaRepo } from "../media/types";
+import { createDrizzleMediaRepo } from "../db/media";
 import type { CatalogRepo } from "../repos/types";
 import { canWatch } from "./access";
 import { translationCompleteness } from "./completeness";
@@ -32,7 +34,7 @@ const admin = actor("admin");
 const code = (expected: string) => (error: unknown) => error instanceof AuthError && error.code === expected;
 
 let db: Db;
-const storages: Record<string, { admin: AdminCatalogRepo; catalog: CatalogRepo; audits: () => Promise<string[]> }> = {};
+const storages: Record<string, { admin: AdminCatalogRepo; catalog: CatalogRepo; media: MediaRepo; audits: () => Promise<string[]> }> = {};
 
 before(async () => {
   db = await createTestDb();
@@ -40,11 +42,12 @@ before(async () => {
   storages.db = {
     admin: createDrizzleAdminCatalogRepo(() => db),
     catalog: createDrizzleCatalogRepo(() => db),
+    media: createDrizzleMediaRepo(() => db),
     audits: async () => (await db.select({ action: t.auditLog.action }).from(t.auditLog)).map((row) => row.action),
   };
   const store = buildStore();
   const mock = createMockRepos(store);
-  storages.mock = { admin: mock.adminCatalogRepo, catalog: mock.catalogRepo, audits: async () => store.audit.map((entry) => entry.action) };
+  storages.mock = { admin: mock.adminCatalogRepo, catalog: mock.catalogRepo, media: mock.mediaRepo, audits: async () => store.audit.map((entry) => entry.action) };
 });
 
 for (const name of ["db", "mock"]) {
@@ -116,8 +119,11 @@ for (const name of ["db", "mock"]) {
       assert.deepEqual([saved?.status, saved?.publishedAt], ["draft", null]);
       assert.deepEqual(translationCompleteness(saved?.translations ?? {}), { he: true, en: false, ru: false, es: false });
 
-      // A draft is not public. Once published, English readers get the Hebrew text.
+      // A draft is not public, and it cannot be published without a finished video.
       assert.equal((await catalog().getHolidayCategory("purim", "en"))?.lessons.length, 1);
+      assert.deepEqual(await setPublished(repo(), admin, "lessons", id, true), { ok: false, status: 409, error: "video_not_ready" });
+      await storages[name].media.saveVideo(id, sampleVideo("purim-gifts", 600));
+      // Once published, English readers get the Hebrew text.
       assert.ok((await setPublished(repo(), admin, "lessons", id, true)).ok);
       const preview = await findLessonPreview(catalog(), "purim", "purim-gifts", "en");
       assert.deepEqual(

@@ -156,10 +156,16 @@ test("without Clerk there is no sign-in, admin area or webhook", async ({ page, 
   await expect(page).toHaveURL(/\/he$/);
   expect((await page.goto("/he/admin"))?.status()).toBe(404);
   expect((await request.post("/api/webhooks/clerk", { data: {} })).status()).toBe(404);
+  // The Bunny webhook is reached with no session and no Origin (a 403 would mean the
+  // same-origin check stopped it); without the Bunny provider it does not exist.
+  expect((await request.post("/api/webhooks/bunny/any-secret", { data: { VideoGuid: "x", Status: 4 } })).status()).toBe(404);
   // The sample visitor is not an admin, and a production build ignores MOCK_ROLE.
   const own = { origin: "http://localhost:3100" };
   expect((await request.patch("/api/admin/users/x", { headers: own, data: { blocked: true } })).status()).toBe(404);
   expect((await request.post("/api/admin/catalog/teachers", { headers: own, data: {} })).status()).toBe(403);
+  expect((await request.post("/api/admin/media/lessons/shabbat-6/video", { headers: own })).status()).toBe(403);
+  expect((await request.put("/api/dev/media/video/fake-sample-shabbat-6", { headers: own, data: "x" })).status()).toBe(403);
+  expect((await request.put("/api/dev/media/files/thumbnails/x.png", { headers: own, data: "x" })).status()).toBe(403);
   const health = await (await request.get("/api/healthz")).json();
   expect([health.dataSource, health.auth]).toEqual(["mock", "stub"]);
 });

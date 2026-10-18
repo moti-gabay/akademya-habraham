@@ -1,5 +1,6 @@
 import type { AuditEntry } from "../auth/audit";
 import type { Locale } from "../i18n/locales";
+import type { VideoStatus } from "../media/types";
 import type { CatalogInput, Entity } from "./schemas";
 
 export type LessonStatus = "draft" | "processing" | "published" | "archived";
@@ -9,7 +10,7 @@ export type PublishStatus = "draft" | "published";
 type Managed = {
   categories: object;
   teachers: object;
-  lessons: { status: LessonStatus; publishedAt: Date | null };
+  lessons: { status: LessonStatus; publishedAt: Date | null; thumbnailKey: string | null };
   terms: object;
   tracks: { status: PublishStatus };
   steps: { sortOrder: number };
@@ -38,5 +39,7 @@ export interface AdminCatalogRepo {
   reorderSteps(trackId: string, stepIds: string[]): Promise<void>;
   lessonCount(by: "categories" | "teachers", id: string): Promise<number>;
   hasProgress(lessonId: string): Promise<boolean>;
+  // Status of the video of a lesson, or null when it has none.
+  videoStatus(lessonId: string): Promise<VideoStatus | null>;
   audit(entry: AuditEntry): Promise<void>;
 }

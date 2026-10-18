@@ -30,7 +30,10 @@ export type Lesson = {
   lessonNumber: number;
   lessonsInStep: number;
   videoUrl: string;
-  subtitles: { locale: Locale; url: string }[];
+  // Media facts; src/lib/media.ts turns them into addresses.
+  thumbnailKey: string | null;
+  videoThumbnailUrl: string | null;
+  captions: Locale[];
 };
 
 export type ContinueWatching = { lesson: Lesson; positionSec: number };
