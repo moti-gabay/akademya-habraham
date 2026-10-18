@@ -90,14 +90,7 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   expect((await request.get(`${media}/video`)).status()).toBe(404);
 });
 
-// fixme: on the e2e dev server this page sometimes reloads itself over and over (the
-// Create button keeps detaching), even with the dev server on its own distDir and after
-// the production build has finished. Every assertion passed in the one run where the
-// loop did not occur. To be investigated, one run each with the dev server's file-change
-// logging on: generated type files included by tsconfig (next-env.d.ts,
-// .next-e2e-dev/types), files under the project root changing during the run
-// (test-results/), and a full reload on a route's first compile.
-test.fixme("an admin uploads a video, captions and an image, and viewers get them", async ({ page }) => {
+test("an admin uploads a video, captions and an image, and viewers get them", async ({ page }) => {
   await withPrefs(page);
   const slug = `media-ui-${Date.now()}`;
   await page.goto("/en/admin/lessons/new");

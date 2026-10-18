@@ -26,6 +26,10 @@ export default defineConfig({
     {
       name: "admin",
       testMatch: /admin/,
+      // The dev server compiles each page and route on its first visit, from cold on every
+      // run (its output directory is emptied at start); on a slow or loaded disk that alone
+      // can use up the default 30 s.
+      timeout: 90_000,
       use: { baseURL: `http://localhost:${ADMIN_PORT}`, viewport: { width: 1280, height: 800 } },
     },
   ],
