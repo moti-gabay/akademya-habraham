@@ -6,8 +6,6 @@ export type R2Config = {
   accessKeyId: string;
   secretAccessKey: string;
   bucket: string;
-  // Public address of the bucket (custom domain or r2.dev), without a trailing slash.
-  publicUrl: string;
 };
 
 const UPLOAD_EXPIRES_SEC = 15 * 60;
@@ -51,6 +49,7 @@ export function createR2FileStorage(config: R2Config, fetchFn: typeof fetch = fe
     async delete(key) {
       await request("DELETE", key);
     },
-    publicUrl: (key) => `${config.publicUrl}/${key.split("/").map(encodeURIComponent).join("/")}`,
+    // The bucket stays private: thumbnails are served by the app (/api/thumbnails).
+    publicUrl: (key) => `/api/thumbnails/${key.split("/").map(encodeURIComponent).join("/")}`,
   };
 }

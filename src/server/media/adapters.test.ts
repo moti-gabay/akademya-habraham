@@ -83,7 +83,7 @@ test("presigned URLs match the example in the AWS Signature Version 4 documentat
 });
 
 test("R2 storage signs every request and never puts the secret in an address", async () => {
-  const config = { accountId: "acct", accessKeyId: "key-id", secretAccessKey: "very-secret", bucket: "media", publicUrl: "https://files.example.com" };
+  const config = { accountId: "acct", accessKeyId: "key-id", secretAccessKey: "very-secret", bucket: "media" };
   const { calls, fetchFn } = recorder((call) => new Response(call.method === "GET" ? "WEBVTT" : null, { status: call.url.includes("missing") ? 404 : 200 }));
   const storage = createR2FileStorage(config, fetchFn, () => new Date("2026-10-14T10:00:00Z"));
 
@@ -105,7 +105,7 @@ test("R2 storage signs every request and never puts the secret in an address", a
     assert.match(call.url, /X-Amz-Signature=[0-9a-f]{64}$/);
     assert.doesNotMatch(call.url, /very-secret/);
   }
-  assert.equal(storage.publicUrl("thumbnails/l1/a b.jpg"), "https://files.example.com/thumbnails/l1/a%20b.jpg");
+  assert.equal(storage.publicUrl("thumbnails/l1/a b.jpg"), "/api/thumbnails/thumbnails/l1/a%20b.jpg");
 
   const failing = createR2FileStorage(config, recorder(() => new Response("denied: very-secret", { status: 403 })).fetchFn);
   await assert.rejects(failing.put("x", new Uint8Array(), "text/vtt"), (error: Error) => error.message === "File storage PUT failed: 403");

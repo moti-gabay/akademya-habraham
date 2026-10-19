@@ -40,6 +40,5 @@ export function getFileStorage(env: Env = process.env): FileStorage {
     accessKeyId: required(env, "R2_ACCESS_KEY_ID"),
     secretAccessKey: required(env, "R2_SECRET_ACCESS_KEY"),
     bucket: required(env, "R2_BUCKET"),
-    publicUrl: required(env, "R2_PUBLIC_URL").replace(/\/+$/, ""),
   });
 }

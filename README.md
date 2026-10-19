@@ -73,7 +73,7 @@ Session token customization and dashboard path settings are not needed.
 
 Variables, in `.env` and never committed (names are in `.env.example`):
 - `MEDIA_PROVIDER=bunny` with `BUNNY_LIBRARY_ID`, `BUNNY_API_KEY`, `BUNNY_PULL_ZONE_HOST` and `BUNNY_WEBHOOK_SECRET`. `BUNNY_TOKEN_SECURITY_KEY` is for signed playback in Milestone 4.
-- `FILE_STORAGE=r2` with `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` and `R2_PUBLIC_URL`.
+- `FILE_STORAGE=r2` with `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`.
 
 Bunny Stream checklist:
 1. Create a video library; copy its library id and API key, and the pull zone host name.
@@ -82,7 +82,7 @@ Bunny Stream checklist:
 
 Cloudflare R2 checklist:
 1. Create a bucket and an API token with object read and write on that bucket only; copy the account id, access key id and secret.
-2. Give the bucket a public address (custom domain or r2.dev) and put it in `R2_PUBLIC_URL`. Only thumbnails are read through it; captions are served by the app.
+2. Keep the bucket private (no custom domain, r2.dev off). The app serves thumbnails (`/api/thumbnails/...`, cached as immutable) and captions (`/api/captions/...`) itself.
 3. **CORS** on the bucket: allow `PUT` from the app's origins (production, preview and `http://localhost:3000`) with the `Content-Type` header, so the browser can upload thumbnails with the presigned URL.
 
 **After this branch is merged:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
