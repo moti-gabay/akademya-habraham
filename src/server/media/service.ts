@@ -84,7 +84,9 @@ export async function startVideoUpload(
   try {
     created = await deps.provider.createVideo(media.title || lessonId);
     upload = await deps.provider.createUpload(created.videoId);
-  } catch {
+  } catch (error) {
+    // The adapter's message carries the operation and status only, never the key or the response.
+    console.error(`startVideoUpload ${lessonId}:`, error instanceof Error ? error.message : String(error));
     return providerFailed;
   }
   await deps.repo.saveVideo(lessonId, { ...created, status: "created", durationSec: null, thumbnailUrl: null, readyAt: null });
