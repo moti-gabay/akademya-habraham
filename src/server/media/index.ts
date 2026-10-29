@@ -30,6 +30,8 @@ export function getMediaProvider(env: Env = process.env): MediaProvider {
     libraryId: required(env, "BUNNY_LIBRARY_ID"),
     apiKey: required(env, "BUNNY_API_KEY"),
     pullZoneHost: required(env, "BUNNY_PULL_ZONE_HOST"),
+    // Optional here: checked when a playback address is signed, not at start-up.
+    tokenSecurityKey: env.BUNNY_TOKEN_SECURITY_KEY,
   });
 }
 

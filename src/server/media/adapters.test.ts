@@ -4,7 +4,15 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { createBunnyMediaProvider } from "./bunny";
-import { createFakeFileStorage, createFakeMediaProvider, createFakeMediaState, FAKE_VIDEO_PREFIX, type FakeMediaProvider } from "./fake";
+import {
+  createFakeFileStorage,
+  createFakeMediaProvider,
+  createFakeMediaState,
+  FAKE_VIDEO_PREFIX,
+  type FakeMediaProvider,
+  rewritePlaylist,
+  verifyFakePlaybackToken,
+} from "./fake";
 import { fileStorageName, getFileStorage, getMediaProvider, mediaProviderName } from "./index";
 import { createR2FileStorage } from "./r2";
 import { presignUrl } from "./sigv4";
@@ -47,6 +55,36 @@ test("the fake video goes created → processing → ready, and its ids are mark
   await provider.deleteVideo(videoId);
   assert.equal(await provider.getVideo(videoId), null);
   await assert.rejects(provider.putCaption(videoId, "he", "עברית", "WEBVTT"));
+});
+
+test("the fake signs a playback address per video and expiry, and refuses everything else", async () => {
+  const nowMs = 1_800_000_000_000;
+  const state = createFakeMediaState();
+  const provider = createFakeMediaProvider(state);
+  const expires = nowMs / 1000 + 7200;
+  const url = await provider.playbackUrl("fake-sample-shabbat-6", expires);
+  const parsed = new URL(url, "http://localhost");
+  assert.equal(parsed.pathname, "/api/dev/media/play/fake-sample-shabbat-6/playlist.m3u8");
+  assert.equal(parsed.searchParams.get("expires"), String(expires));
+  const token = parsed.searchParams.get("token")!;
+  assert.match(token, /^[A-Za-z0-9_-]{43}$/);
+
+  const verify = (videoId: string, exp: number, tok: string) => verifyFakePlaybackToken(state, videoId, exp, tok, () => nowMs);
+  assert.equal(verify("fake-sample-shabbat-6", expires, token), true);
+  assert.equal(verify("fake-sample-shabbat-6", expires, token.slice(0, -1) + (token.endsWith("A") ? "B" : "A")), false, "tampered");
+  assert.equal(verify("fake-sample-shabbat-6", expires + 1, token), false, "other expiry");
+  assert.equal(verify("fake-other", expires, token), false, "other video");
+  assert.equal(verify("fake-sample-shabbat-6", expires, ""), false, "missing");
+  assert.equal(verifyFakePlaybackToken(state, "fake-sample-shabbat-6", expires, token, () => (expires + 1) * 1000), false, "expired");
+  assert.equal(verify("fake-sample-shabbat-6", Number.NaN, token), false);
+  // Another process (secret) cannot mint a token for this one.
+  assert.equal(verifyFakePlaybackToken(createFakeMediaState(), "fake-sample-shabbat-6", expires, token, () => nowMs), false);
+  await assert.rejects(provider.playbackUrl("real-id", expires), /not a fake video/);
+
+  assert.equal(
+    rewritePlaylist("#EXTM3U\n#EXTINF:6.000000,\nseg-00.mpegts\n\n#EXT-X-ENDLIST\n", "expires=1&token=t"),
+    "#EXTM3U\n#EXTINF:6.000000,\nseg-00.mpegts?expires=1&token=t\n\n#EXT-X-ENDLIST\n",
+  );
 });
 
 test("the fake file storage keeps and returns small files", async () => {
@@ -163,6 +201,20 @@ test("the Bunny adapter sends the documented requests and keeps the API key on t
   await assert.rejects(failing.createVideo("x"), (error: Error) => error.message === "Video provider create failed: 401");
 });
 
+test("the Bunny adapter signs a playback address with a directory token (formula unverified against a real library)", async () => {
+  const config = { libraryId: "777", apiKey: "api-key", pullZoneHost: "vz-test.example.net", tokenSecurityKey: "token-key" };
+  const provider = createBunnyMediaProvider(config, recorder(() => new Response(null, { status: 500 })).fetchFn);
+  const expires = 1_800_007_200;
+  const url = await provider.playbackUrl("vid-1", expires);
+  const token = createHash("sha256").update(`token-key/vid-1/${expires}`).digest("base64url");
+  assert.equal(url, `https://vz-test.example.net/vid-1/playlist.m3u8?token=${token}&expires=${expires}&token_path=%2Fvid-1%2F`);
+  assert.doesNotMatch(url, /token-key|api-key/);
+
+  const unsigned = createBunnyMediaProvider({ libraryId: "777", apiKey: "api-key", pullZoneHost: "vz-test.example.net" });
+  await assert.rejects(unsigned.playbackUrl("vid-1", expires), /^Error: BUNNY_TOKEN_SECURITY_KEY is not set$/);
+  await assert.rejects(provider.playbackUrl("fake-sample-shabbat-6", expires), /not a provider video/);
+});
+
 test("the real services are opt-in, and a missing key is named without showing any value", () => {
   assert.deepEqual([mediaProviderName({}), fileStorageName({})], ["fake", "fake"]);
   // Keys alone select nothing.
@@ -176,6 +228,8 @@ test("the real services are opt-in, and a missing key is named without showing a
     (error: Error) => error.message === "R2_SECRET_ACCESS_KEY is not set" && !error.message.includes("id-value"),
   );
   assert.ok(getMediaProvider({}) && getFileStorage({}));
+  // The playback key is not needed to start; uploads work without it.
+  assert.ok(getMediaProvider({ MEDIA_PROVIDER: "bunny", BUNNY_LIBRARY_ID: "1", BUNNY_API_KEY: "k", BUNNY_PULL_ZONE_HOST: "h" }));
 });
 
 test("FAKE_MEDIA_PROCESSING_MS sets how long the fake encoding takes; anything else keeps the default", async () => {

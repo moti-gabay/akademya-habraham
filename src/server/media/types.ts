@@ -20,8 +20,8 @@ export type VideoState = {
   raw: unknown;
 };
 
-// Video hosting: upload, encoding status, captions. Playback is not part of this
-// interface; signed playback comes with /api/play (Milestone 4).
+// Video hosting: upload, encoding status, captions, and the signed address the player
+// loads. Who may play is decided by /api/play; this only signs.
 export interface MediaProvider {
   createVideo(title: string): Promise<{ videoId: string; libraryId: string }>;
   createUpload(videoId: string): Promise<UploadTarget>;
@@ -30,6 +30,9 @@ export interface MediaProvider {
   deleteVideo(videoId: string): Promise<void>;
   putCaption(videoId: string, locale: Locale, label: string, vtt: string): Promise<void>;
   deleteCaption(videoId: string, locale: Locale): Promise<void>;
+  // An address the player can load until `expiresAt` (unix seconds). The address is the
+  // credential: it is handed out by /api/play only and never rendered into a page.
+  playbackUrl(videoId: string, expiresAt: number): Promise<string>;
 }
 
 // What the database records about a lesson's media.
