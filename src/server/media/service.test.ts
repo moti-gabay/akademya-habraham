@@ -28,6 +28,7 @@ import {
   startThumbnailUpload,
   startVideoUpload,
   syncCaption,
+  thumbnailContentType,
   webhookSecretMatches,
   type MediaDeps,
 } from "./service";
@@ -178,6 +179,7 @@ for (const name of ["db", "mock"]) {
       const first = await startThumbnailUpload(deps, admin, id, "image/jpeg");
       assert.ok(first.ok);
       assert.match(first.key, new RegExp(`^thumbnails/${id}/[0-9a-f-]{36}\\.jpg$`));
+      assert.equal(thumbnailContentType(first.key), "image/jpeg");
 
       // Not confirmed before the file exists, and never with a key from somewhere else.
       assert.deepEqual(await confirmThumbnail(deps, admin, id, first.key), { ok: false, status: 400, error: "upload_missing" });
@@ -288,4 +290,22 @@ test("the webhook secret is compared exactly", () => {
   assert.equal(webhookSecretMatches("s3cret-longer", "s3cret"), false);
   assert.equal(webhookSecretMatches("", ""), false);
   assert.equal(webhookSecretMatches("anything", undefined), false);
+});
+
+test("the thumbnail route serves only thumbnail keys", () => {
+  const uuid = "0b7e2c4a-9f1d-4e3b-8a6c-5d2f1e0a9b8c";
+  assert.equal(thumbnailContentType(`thumbnails/lesson-1/${uuid}.jpg`), "image/jpeg");
+  assert.equal(thumbnailContentType(`thumbnails/lesson-1/${uuid}.png`), "image/png");
+  assert.equal(thumbnailContentType(`thumbnails/lesson-1/${uuid}.webp`), "image/webp");
+  for (const key of [
+    "captions/lesson-1/he.vtt",
+    `captions/lesson-1/${uuid}.jpg`,
+    `thumbnails/../${uuid}.jpg`,
+    `thumbnails/lesson-1/../${uuid}.jpg`,
+    `thumbnails/lesson-1/${uuid}.gif`,
+    `thumbnails/lesson-1/${uuid}.jpg.vtt`,
+    "thumbnails/lesson-1/a.jpg",
+  ]) {
+    assert.equal(thumbnailContentType(key), null, key);
+  }
 });

@@ -3,8 +3,8 @@ import { fakeRoutesEnabled } from "@/lib/media";
 import { admin } from "@/server/catalog/service";
 import { fakeMediaState } from "@/server/media/fake";
 
-// Fake media only: stands in for the public bucket. Thumbnails are the only files a
-// bucket serves; captions are never reachable here. Does not exist with real storage or
+// Fake media only: stands in for the bucket and /api/thumbnails. Thumbnails are the only
+// files served here; captions are never reachable. Does not exist with real storage or
 // on Vercel.
 const MAX_BYTES = 5 * 1024 * 1024;
 type Context = { params: Promise<{ key: string[] }> };

@@ -15,6 +15,15 @@ const MAX_CAPTION_BYTES = 1024 * 1024;
 const THUMBNAIL_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 
 export const captionKey = (lessonId: string, locale: Locale) => `captions/${lessonId}/${locale}.vtt`;
+
+// The content type of a thumbnail key as startThumbnailUpload makes them, or null for any
+// other key, so the public thumbnail route can never serve captions or anything else.
+const THUMBNAIL_KEY = /^thumbnails\/[\w-]+\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp)$/;
+export function thumbnailContentType(key: string): string | null {
+  const extension = THUMBNAIL_KEY.exec(key)?.[1];
+  return Object.entries(THUMBNAIL_TYPES).find(([, value]) => value === extension)?.[0] ?? null;
+}
+
 const isLocale = (value: string): value is Locale => LOCALES.includes(value as Locale);
 const providerFailed = fail(502, "provider_failed");
 
@@ -75,7 +84,9 @@ export async function startVideoUpload(
   try {
     created = await deps.provider.createVideo(media.title || lessonId);
     upload = await deps.provider.createUpload(created.videoId);
-  } catch {
+  } catch (error) {
+    // The adapter's message carries the operation and status only, never the key or the response.
+    console.error(`startVideoUpload ${lessonId}:`, error instanceof Error ? error.message : String(error));
     return providerFailed;
   }
   await deps.repo.saveVideo(lessonId, { ...created, status: "created", durationSec: null, thumbnailUrl: null, readyAt: null });

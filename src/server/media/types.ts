@@ -78,6 +78,6 @@ export interface FileStorage {
   get(key: string): Promise<Uint8Array | null>;
   exists(key: string): Promise<boolean>;
   delete(key: string): Promise<void>;
-  // Only for files anyone may see (thumbnails). Captions are served by the app.
+  // Address of a file anyone may see (thumbnails), served by the app. Captions have their own route.
   publicUrl(key: string): string;
 }
