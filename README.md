@@ -80,12 +80,20 @@ Bunny Stream checklist:
 2. **Webhook:** set the library's webhook URL to `https://<your-domain>/api/webhooks/bunny/<secret>`, where `<secret>` is a long random string you also put in `BUNNY_WEBHOOK_SECRET`. Bunny cannot reach localhost; locally the admin screen's polling picks up the status instead.
 3. Token authentication, allowed referrers and blocking direct file access are Milestone 4 (§1.4 in ARCHITECTURE.md); leave them off until signed playback exists.
 
+Verified against a real Bunny library (October 2026, not from the admin screen): create video, tus upload, status, captions and delete. Not verified, because the Bunny trial account ended before these were run and no second account will be opened during the MVP: the admin screen's upload flow in a browser (tus from `LessonMediaPanel` through the signed upload target), real webhook delivery from Bunny (it also needs a public URL), and playback of an uploaded video (Milestone 4).
+
 Cloudflare R2 checklist:
 1. Create a bucket and an API token with object read and write on that bucket only; copy the account id, access key id and secret.
 2. Keep the bucket private (no custom domain, r2.dev off). The app serves thumbnails (`/api/thumbnails/...`, cached as immutable) and captions (`/api/captions/...`) itself.
 3. **CORS** on the bucket: allow `PUT` from the app's origins (production, preview and `http://localhost:3000`) with the `Content-Type` header, so the browser can upload thumbnails with the presigned URL.
 
-**After this branch is merged:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
+Verified against a real R2 bucket (October 2026): the presigned `PUT` from the browser with the bucket's CORS rule, and the `/api/thumbnails/...` route reading the uploaded image back from the private bucket. Only the local origin was exercised; the CORS rule for the production and preview domains is not verified.
+
+**Before using the database with media:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
+
+**The seeded video is fake.** The seed (and mock mode) gives every sample lesson a `fake-sample-…` video id in a fake library; no such video exists in any Bunny library. With `MEDIA_PROVIDER=bunny`, opening a sample lesson's media in the admin refreshes its status from Bunny, which answers 404, so the video is recorded as `error` and the lesson can no longer be published until a real video is uploaded. Sample lessons are placeholders, not test material for the real provider.
+
+**`NODE_ENV` stays unset** for `pnpm dev`, `pnpm db:seed` and `pnpm test:e2e`: with `NODE_ENV=production` exported in the shell, `MOCK_ROLE=admin` is ignored (so the admin e2e project fails) and the seed refuses to run. `pnpm build` sets it itself.
 
 ## Folder structure
 
@@ -150,7 +158,7 @@ Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, ot
 - Without Clerk (mock mode) the user is always the sample user "Moshe".
 - The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
 - A lesson can be published only once its uploaded video is ready, but the player still streams the sample video until signed playback arrives (Milestone 4). Uploaded captions and the lesson image are used.
-- Not verified without keys: every Bunny call (create, tus upload from a browser, status, captions, delete, thumbnail URL), the Bunny webhook's real payload, and R2 from a browser (presigned PUT, which needs bucket CORS) and from the server. Only the R2 signing is checked, against AWS's published example. Migration `0004` is not applied anywhere yet.
+- Media, verified against real accounts (October 2026): Bunny create video, tus upload, status, captions and delete (not from the admin screen); R2 presigned browser `PUT` with bucket CORS and the `/api/thumbnails/...` route reading the file back, end to end. The R2 signing is also checked against AWS's published example. **Not verified:** the admin screen's upload flow in a browser against real Bunny (the trial account ended first), real webhook delivery from Bunny, Bunny playback (Milestone 4), and the CORS rule for the production and preview domains. Migration `0004` is not applied anywhere yet. See the checklists under "Media".
 - Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
 - Migration `0003` (lesson access `members`, key points) is applied to the Neon dev database. Any other database needs it before the app can read lessons with `DATA_SOURCE=db`.
 - Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
