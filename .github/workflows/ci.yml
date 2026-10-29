@@ -22,7 +22,7 @@ jobs:
       # Migrations, seed and Drizzle repos on an in-process Postgres. No database needed.
       - run: pnpm test:unit
       - run: pnpm exec playwright install --with-deps chromium
-      # Builds and starts the app itself. Needs network for the sample HLS stream.
+      # Builds and starts the app itself; no network needed.
       - run: pnpm test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

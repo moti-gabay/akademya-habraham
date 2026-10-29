@@ -1,7 +1,7 @@
 import type { LessonAccess } from "../repos/types";
 
-// Whether the player is shown. This is UI-level gating only: nothing here protects the
-// video itself. Real enforcement belongs in /api/play (Milestone 4).
+// Who may watch a lesson. Enforced in /api/play (the only way to a video address) and in
+// /api/captions; the lesson page uses it to show the preview card instead of the player.
 export function canWatch(actor: { userId: string } | null, lesson: { access: LessonAccess }): boolean {
   if (!actor) return false;
   if (lesson.access === "free") return true;

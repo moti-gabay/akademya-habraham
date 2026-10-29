@@ -41,13 +41,13 @@ The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled)
 
 `MOCK_ROLE=admin` works only on mock data: it is ignored with `DATA_SOURCE=db`, with Clerk, on Vercel and in production builds (`pnpm start` ignores it). Its changes live in server memory until restart; on a database the admin screens need a real admin signed in through Clerk. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
 
-**Media is opt-in too.** Only `MEDIA_PROVIDER=bunny` and `FILE_STORAGE=r2` select Bunny Stream and Cloudflare R2. Otherwise in-memory fakes stand in: uploads go to the app itself, a video is "ready" a few seconds after upload (`FAKE_MEDIA_PROCESSING_MS`), files are lost on restart, and the admin media section says so in a banner. The fake routes (`/api/dev/media/*`) are switched off on Vercel.
+**Media is opt-in too.** Only `MEDIA_PROVIDER=bunny` and `FILE_STORAGE=r2` select Bunny Stream and Cloudflare R2. Otherwise in-memory fakes stand in: uploads go to the app itself, a video is "ready" a few seconds after upload (`FAKE_MEDIA_PROCESSING_MS`), every video plays the same 60-second synthetic clip from `dev-assets/clip` through a signed address, files are lost on restart, and the admin media section says so in a banner. The fake routes (`/api/dev/media/*`) are switched off on Vercel.
 
 The e2e servers never use a real media account or database, even when `.env` selects one: Playwright sets `DATA_SOURCE=mock` and blanks `DATABASE_URL`, `MEDIA_PROVIDER` and `FILE_STORAGE` for them. The admin dev server writes to its own output directory, `.next-e2e-dev` (via `NEXT_DIST_DIR` in `next.config.ts`), which is emptied on every start: sharing `.next` with the production build, or a cache left by an interrupted run, made its pages reload in a loop.
 
 A build never fails because the catalog cannot be read: the holiday pages are then rendered on first request, with a `[build]` warning. `STRICT_STATIC_PARAMS=1` turns that into an error.
 
-First e2e run on a machine: `pnpm exec playwright install chromium`. The player test streams a public HLS sample, so it needs network.
+First e2e run on a machine: `pnpm exec playwright install chromium`. The suite needs no network: the player plays the fake provider's local clip.
 
 ## Sign-in (Clerk)
 
@@ -72,15 +72,17 @@ Session token customization and dashboard path settings are not needed.
 ## Media (Bunny Stream and R2)
 
 Variables, in `.env` and never committed (names are in `.env.example`):
-- `MEDIA_PROVIDER=bunny` with `BUNNY_LIBRARY_ID`, `BUNNY_API_KEY`, `BUNNY_PULL_ZONE_HOST` and `BUNNY_WEBHOOK_SECRET`. `BUNNY_TOKEN_SECURITY_KEY` is for signed playback in Milestone 4.
+- `MEDIA_PROVIDER=bunny` with `BUNNY_LIBRARY_ID`, `BUNNY_API_KEY`, `BUNNY_PULL_ZONE_HOST` and `BUNNY_WEBHOOK_SECRET`. `BUNNY_TOKEN_SECURITY_KEY` (the library's token-authentication key) is needed for playback: without it uploads work and `/api/play` answers 502.
 - `FILE_STORAGE=r2` with `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`.
 
 Bunny Stream checklist:
 1. Create a video library; copy its library id and API key, and the pull zone host name.
 2. **Webhook:** set the library's webhook URL to `https://<your-domain>/api/webhooks/bunny/<secret>`, where `<secret>` is a long random string you also put in `BUNNY_WEBHOOK_SECRET`. Bunny cannot reach localhost; locally the admin screen's polling picks up the status instead.
-3. Token authentication, allowed referrers and blocking direct file access are Milestone 4 (§1.4 in ARCHITECTURE.md); leave them off until signed playback exists.
+3. **Leave off until verified:** token authentication, allowed referrers and blocking direct file access. The app already signs addresses the way token authentication expects (§1.4 in ARCHITECTURE.md), but that has never been tried against a real library; turning the switches on before a real test would break playback with no way to tell why.
 
-Verified against a real Bunny library (October 2026, not from the admin screen): create video, tus upload, status, captions and delete. Not verified, because the Bunny trial account ended before these were run and no second account will be opened during the MVP: the admin screen's upload flow in a browser (tus from `LessonMediaPanel` through the signed upload target), real webhook delivery from Bunny (it also needs a public URL), and playback of an uploaded video (Milestone 4).
+Verified against a real Bunny library (October 2026, not from the admin screen): create video, tus upload, status, captions and delete. Not verified, because the Bunny trial account ended before these were run and no second account will be opened during the MVP: the admin screen's upload flow in a browser (tus from `LessonMediaPanel` through the signed upload target), real webhook delivery from Bunny (it also needs a public URL), and playback: the signed-address formula, the library switches above, iOS playback with in-manifest captions. Playback is built and tested on the fake provider only (Milestone 4 in ARCHITECTURE.md).
+
+The fake provider's clip lives in `dev-assets/clip` (not under `public/`, so it is never served without a token) and was generated once with ffmpeg; the command is in `dev-assets/clip/README.md`.
 
 Cloudflare R2 checklist:
 1. Create a bucket and an API token with object read and write on that bucket only; copy the account id, access key id and secret.
@@ -151,15 +153,15 @@ Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, ot
 
 ## Known limits
 
-- The sample video is a public test stream (10:34 long), while the sample lesson says 42:15 with a stop point at 12:40. The player shows the real stream length and starts from the beginning when the stop point is past the end.
-- Subtitles are loaded with `<track>`. On iOS they must come from the HLS manifest, which arrives with Bunny Stream in Milestone 4.
+- Without a real provider every lesson plays the same 60-second synthetic clip, while the sample lesson says 42:15 with a stop point at 12:40. The player shows the clip's length and starts from the beginning when the stop point is past the end.
+- Subtitles are loaded with `<track>`. On iOS they must come from the HLS manifest; Bunny adds synced captions to it, which has not been tried.
 - In mock mode progress is kept in server memory: it resets on restart and is not reliable on serverless hosting.
-- On the database every lesson still plays the same sample stream, a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
+- On the database a user has one name for all languages, and most seeded lessons are placeholders ("שבת · שיעור 3").
 - Without Clerk (mock mode) the user is always the sample user "Moshe".
 - The admin area manages the catalog only; users, payments and statistics come in Milestone 6. Rate limiting is not in place yet.
-- A lesson can be published only once its uploaded video is ready, but the player still streams the sample video until signed playback arrives (Milestone 4). Uploaded captions and the lesson image are used.
-- Media, verified against real accounts (October 2026): Bunny create video, tus upload, status, captions and delete (not from the admin screen); R2 presigned browser `PUT` with bucket CORS and the `/api/thumbnails/...` route reading the file back, end to end. The R2 signing is also checked against AWS's published example. **Not verified:** the admin screen's upload flow in a browser against real Bunny (the trial account ended first), real webhook delivery from Bunny, Bunny playback (Milestone 4), and the CORS rule for the production and preview domains. Migration `0004` is not applied anywhere yet. See the checklists under "Media".
-- Who can watch is decided in the page only (`canWatch`). Until `/api/play` exists (Milestone 4) nothing protects the stream itself, and until billing exists members-only lessons are open to every signed-in user.
+- A lesson can be published only once its uploaded video is ready. The player gets a signed address from `POST /api/play` that expires after two hours and is renewed on its own; uploaded captions and the lesson image are used.
+- Media, verified against real accounts (October 2026): Bunny create video, tus upload, status, captions and delete (not from the admin screen); R2 presigned browser `PUT` with bucket CORS and the `/api/thumbnails/...` route reading the file back, end to end. The R2 signing is also checked against AWS's published example. **Not verified:** the admin screen's upload flow in a browser against real Bunny (the trial account ended first), real webhook delivery from Bunny, Bunny playback (built on the fake only), and the CORS rule for the production and preview domains. Migration `0004` is not applied anywhere yet. See the checklists under "Media".
+- Who can watch (`canWatch`) is enforced in `/api/play` and `/api/captions`; the page uses it to show the preview instead of the player. Until billing exists members-only lessons are open to every signed-in user. There is no limit on simultaneous devices yet (Milestone 6).
 - Migration `0003` (lesson access `members`, key points) is applied to the Neon dev database. Any other database needs it before the app can read lessons with `DATA_SOURCE=db`.
 - Not verified without keys: the preview button's signed-in and signed-out states under Clerk, static rendering with `ClerkProvider`, the batch write path against Neon, and tag revalidation on a production build (the admin e2e runs in dev mode).
 - Not verified yet: an admin with an authenticator app actually entering `/admin` (the refusal without a second factor is verified), and real webhook delivery from Clerk.
