@@ -150,6 +150,38 @@ test("API rejects mutating calls from other origins", async ({ request }) => {
   expect(own.status()).toBe(204);
 });
 
+test("a playable address comes only from /api/play, from our own origin, and expires", async ({ request }) => {
+  const own = { origin: "http://localhost:3100" };
+  expect((await request.post("/api/play", { data: { lessonId: LESSON } })).status()).toBe(403);
+  expect((await request.post("/api/play", { headers: own, data: {} })).status()).toBe(400);
+  expect((await request.post("/api/play", { headers: own, data: { lessonId: "no-such-lesson" } })).status()).toBe(404);
+  const play = await request.post("/api/play", { headers: own, data: { lessonId: LESSON } });
+  expect(play.status()).toBe(200);
+  expect(play.headers()["cache-control"]).toBe("private, no-store");
+  const { url, expiresAt } = await play.json();
+  expect(new Date(expiresAt).getTime()).toBeGreaterThan(Date.now() + 60 * 60 * 1000);
+  expect(url).toMatch(/^\/api\/dev\/media\/play\/fake-sample-shabbat-6\/playlist\.m3u8\?expires=\d+&token=/);
+
+  // The address plays: the playlist, and its segments carry the same token.
+  const playlist = await request.get(url);
+  expect([playlist.status(), playlist.headers()["content-type"], playlist.headers()["cache-control"]]).toEqual([
+    200,
+    "application/vnd.apple.mpegurl",
+    "private, no-store",
+  ]);
+  const query = url.slice(url.indexOf("?"));
+  const segments = (await playlist.text()).split("\n").filter((line) => line && !line.startsWith("#"));
+  expect(segments.length).toBeGreaterThan(1);
+  for (const line of segments) expect(line).toMatch(new RegExp(`^seg-\\d{2}\\.mpegts\\${query}$`));
+  const segment = await request.get(url.replace(`playlist.m3u8${query}`, segments[0]));
+  expect([segment.status(), segment.headers()["content-type"]]).toEqual([200, "video/mp2t"]);
+
+  // A changed or expired token is refused, and nothing else is served from there.
+  expect((await request.get(`${url}x`)).status()).toBe(403);
+  expect((await request.get(url.replace(/expires=\d+/, "expires=1"))).status()).toBe(403);
+  expect((await request.get(url.replace("playlist.m3u8", "README.md"))).status()).toBe(404);
+});
+
 test("without Clerk there is no sign-in, admin area or webhook", async ({ page, request }) => {
   await withPrefs(page);
   await page.goto("/he/sign-in");

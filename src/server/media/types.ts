@@ -1,5 +1,6 @@
 import type { AuditEntry } from "../auth/audit";
 import type { Locale } from "../i18n/locales";
+import type { LessonAccess } from "../repos/types";
 
 // Media sits behind two interfaces, so the app runs with no external account: the
 // fakes in fake.ts are the default, and the real adapters are opt-in (see index.ts).
@@ -50,6 +51,7 @@ export type LessonMedia = {
   // Hebrew title, used to name the video at the provider.
   title: string;
   published: boolean;
+  access: LessonAccess;
   thumbnailKey: string | null;
   video: VideoAsset | null;
   captions: Caption[];

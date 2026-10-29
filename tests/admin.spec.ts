@@ -46,7 +46,11 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   // Writes need our own origin, like every other API.
   expect((await request.post(`${media}/video`)).status()).toBe(403);
   expect((await request.post(`/api/admin/catalog/lessons/${id}/publish`, { headers: own })).status()).toBe(409);
+  // A draft cannot be played, whoever asks.
+  const play = () => request.post("/api/play", { headers: own, data: { lessonId: id } });
+  expect((await play()).status()).toBe(404);
   await uploadVideo(request, id);
+  expect((await play()).status()).toBe(404);
   const { media: state } = await (await request.get(`${media}/video`)).json();
   expect(state.video.videoId).toMatch(/^fake-/);
   expect(state.video.durationSec).toBe(634);
@@ -72,6 +76,7 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   expect([saved.status(), (await saved.json()).synced]).toEqual([200, true]);
   expect((await request.get(`/api/captions/${id}/he`)).status()).toBe(404);
   expect((await request.post(`/api/admin/catalog/lessons/${id}/publish`, { headers: own })).status()).toBe(200);
+  expect((await play()).status()).toBe(200);
   const caption = await request.get(`/api/captions/${id}/he`);
   expect([caption.status(), await caption.text()]).toEqual([200, vtt]);
   expect(caption.headers()).toMatchObject({
@@ -83,6 +88,7 @@ test("the media API uploads a video and a thumbnail through the fake services", 
   expect((await request.get(`/api/captions/${id}/xx`)).status()).toBe(404);
   expect((await request.get("/api/captions/shabbat-6/he")).status()).toBe(404);
   expect((await request.post(`/api/admin/catalog/lessons/${id}/unpublish`, { headers: own })).status()).toBe(200);
+  expect((await play()).status()).toBe(404);
 
   // Deleting the lesson takes its media with it.
   expect((await request.delete(`/api/admin/catalog/lessons/${id}`, { headers: own })).status()).toBe(200);

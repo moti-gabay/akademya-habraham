@@ -14,7 +14,7 @@ export function createDrizzleMediaRepo(getDb: () => Db): MediaRepo {
       if (!isUuid(lessonId)) return null;
       const db = getDb();
       const [lesson] = await db
-        .select({ thumbnailKey: t.lessons.thumbnailKey, status: t.lessons.status, title: t.lessonTranslations.title })
+        .select({ thumbnailKey: t.lessons.thumbnailKey, status: t.lessons.status, access: t.lessons.access, title: t.lessonTranslations.title })
         .from(t.lessons)
         .leftJoin(t.lessonTranslations, and(eq(t.lessonTranslations.lessonId, t.lessons.id), eq(t.lessonTranslations.locale, "he")))
         .where(eq(t.lessons.id, lessonId))
@@ -30,6 +30,7 @@ export function createDrizzleMediaRepo(getDb: () => Db): MediaRepo {
         lessonId,
         title: lesson.title ?? "",
         published: lesson.status === "published",
+        access: lesson.access,
         thumbnailKey: lesson.thumbnailKey,
         video: video
           ? {
