@@ -71,11 +71,15 @@ test("glossary term opens and closes with the keyboard", async ({ page }) => {
   await expect(term).toBeFocused();
 });
 
-// Needs network: the sample video is a public HLS test stream until Bunny is wired in.
+// The page carries no video address: the player asks /api/play and gets the fake
+// provider's local clip through a signed address. No network needed.
 test("player controls work and the stop point reaches the home card", async ({ page, request }) => {
   await withPrefs(page);
   try {
+    const clip = page.waitForResponse((response) => response.url().includes("/api/dev/media/play/") && response.status() === 200);
     await page.goto(`/en/lessons/${LESSON}`);
+    expect(await page.content()).not.toContain(".m3u8");
+    await clip;
     const timeline = page.getByRole("slider", { name: "Position in the lesson" });
     await expect(timeline).not.toHaveAttribute("max", "0", { timeout: 30_000 });
     await expect(page.getByLabel("Subtitles")).toHaveValue("en");
@@ -208,6 +212,8 @@ for (const locale of LOCALES) {
       await withPrefs(page);
       await page.goto(`/${locale}${path}`);
       await page.evaluate(() => document.fonts.ready);
+      // The player's "loading" line is gone once the address has arrived.
+      await page.locator("[aria-busy='true']").waitFor({ state: "detached" });
 
       const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
       expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes[0]?.html}`)).toEqual([]);

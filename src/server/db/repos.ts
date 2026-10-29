@@ -3,7 +3,6 @@ import { alias } from "drizzle-orm/pg-core";
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import type { Locale } from "../i18n/locales";
-import { SAMPLE_HLS } from "../media/sample";
 import type {
   GlossaryRepo,
   HolidayRepo,
@@ -79,8 +78,6 @@ export function createDrizzleRepos(getDb: () => Db) {
       stepName: row.stepName ?? "",
       lessonNumber: row.lessonNumber ?? 0,
       lessonsInStep: row.lessonsInStep ?? 0,
-      // Until video_assets and lesson_subtitles exist (Milestones 3–4).
-      videoUrl: SAMPLE_HLS,
       thumbnailKey: row.thumbnailKey,
       videoThumbnailUrl: row.videoThumbnailUrl,
       captions: captions.map((caption) => caption.locale),

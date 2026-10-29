@@ -19,7 +19,7 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
   const actor = await getPageActor(locale);
   const lesson = await lessonRepo.getById(lessonId, locale);
   if (!lesson) notFound();
-  // UI gating only: the video itself is protected in /api/play (Milestone 4).
+  // Shows the preview instead of the player; the video itself is handed out by /api/play.
   if (!canWatch(actor, lesson)) {
     return (
       <main id="main" className="mx-auto max-w-2xl px-4 pt-4 pb-10">
@@ -39,10 +39,10 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
     <main id="main" className="mx-auto max-w-3xl pb-10 lg:px-12 lg:pt-4">
       <Player
         lessonId={lesson.id}
-        src={lesson.videoUrl}
         subtitles={subtitles}
         startAt={startAt}
         defaultSubtitle={subtitles.some((track) => track.locale === locale) ? locale : "off"}
+        mode={authMode}
       >
         <div>
           <p className="text-sm font-medium text-green">

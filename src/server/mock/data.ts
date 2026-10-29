@@ -1,5 +1,5 @@
 import type { Localized } from "../i18n/locales";
-import { SAMPLE_HLS, sampleSubtitles } from "../media/sample";
+import { sampleSubtitles } from "../media/sample";
 import type { LessonAccess, StepStatus } from "../repos/types";
 
 // Sample content that matches design/final-sketch.pdf. It feeds both the mock repos
@@ -69,7 +69,6 @@ export const lessons: Record<
     durationSec: number;
     stepId: string | null;
     lessonNumber: number;
-    videoUrl: string;
     subtitles: typeof sampleSubtitles;
     termIds: string[];
     // Catalog fields. Defaults: no category, members only, published.
@@ -91,7 +90,6 @@ export const lessons: Record<
     durationSec: 42 * 60 + 15,
     stepId: "shabbat",
     lessonNumber: 6,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: ["melachot", "halacha"],
   },
@@ -106,7 +104,6 @@ export const lessons: Record<
     durationSec: 33 * 60,
     stepId: "holidays",
     lessonNumber: 1,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
     categoryId: "hanukkah",
@@ -135,7 +132,6 @@ export const lessons: Record<
     durationSec: 27 * 60,
     stepId: "holidays",
     lessonNumber: 2,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
     categoryId: "hanukkah",
@@ -163,7 +159,6 @@ export const lessons: Record<
     durationSec: 31 * 60,
     stepId: "holidays",
     lessonNumber: 3,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
     categoryId: "purim",
@@ -192,7 +187,6 @@ export const lessons: Record<
     durationSec: 38 * 60,
     stepId: "holidays",
     lessonNumber: 4,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
     categoryId: "pesach",
@@ -222,7 +216,6 @@ export const lessons: Record<
     durationSec: 24 * 60,
     stepId: "holidays",
     lessonNumber: 5,
-    videoUrl: SAMPLE_HLS,
     subtitles: sampleSubtitles,
     termIds: [],
     categoryId: "pesach",
