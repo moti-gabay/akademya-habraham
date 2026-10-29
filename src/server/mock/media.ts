@@ -12,6 +12,7 @@ export function createMockMediaRepo(store: MockStore): MediaRepo {
         lessonId,
         title: lesson.translations.he.title,
         published: lesson.status === "published",
+        access: lesson.access,
         thumbnailKey: lesson.thumbnailKey,
         video: store.videos.get(lessonId) ?? null,
         captions: [...(store.captions.get(lessonId) ?? [])].sort((a, b) => byLocale(a.locale, b.locale)),

@@ -13,10 +13,11 @@ export const ADMIN_ROLE: Role = "admin";
 
 export type Failure = {
   ok: false;
-  status: 400 | 404 | 409 | 502;
+  status: 400 | 403 | 404 | 409 | 502;
   error:
     | "invalid_body"
     | "not_found"
+    | "members_only"
     | "unknown_reference"
     | "slug_taken"
     | "code_taken"
