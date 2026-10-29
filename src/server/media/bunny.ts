@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { FAKE_VIDEO_PREFIX } from "./fake";
 import type { MediaProvider, VideoStatus } from "./types";
 
 export type BunnyConfig = {
@@ -6,6 +7,9 @@ export type BunnyConfig = {
   apiKey: string;
   // CDN host of the library's pull zone, e.g. "vz-xxxx.b-cdn.net".
   pullZoneHost: string;
+  // The library's token authentication key. Needed for playback only, so it may be
+  // absent while uploads are being set up; playback then fails naming the variable.
+  tokenSecurityKey?: string;
 };
 
 const API = "https://video.bunnycdn.com";
@@ -85,6 +89,17 @@ export function createBunnyMediaProvider(
     },
     async deleteCaption(videoId, locale) {
       await call("caption delete", `${videos}/${videoId}/captions/${locale}`, { method: "DELETE" }, true);
+    },
+    // Bunny CDN token authentication with a directory token: one token covers the
+    // playlist, its segments and in-manifest captions under /<videoId>/. Written from
+    // Bunny's documentation and NOT yet verified against a real library (no account).
+    async playbackUrl(videoId, expiresAt) {
+      // A seeded sample id would make a dead CDN address; say so instead.
+      if (videoId.startsWith(FAKE_VIDEO_PREFIX)) throw new Error("Video provider playback failed: not a provider video");
+      if (!config.tokenSecurityKey) throw new Error("BUNNY_TOKEN_SECURITY_KEY is not set");
+      const tokenPath = `/${videoId}/`;
+      const token = createHash("sha256").update(`${config.tokenSecurityKey}${tokenPath}${expiresAt}`).digest("base64url");
+      return `https://${config.pullZoneHost}/${videoId}/playlist.m3u8?token=${token}&expires=${expiresAt}&token_path=${encodeURIComponent(tokenPath)}`;
     },
   };
 }
