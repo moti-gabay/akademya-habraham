@@ -79,7 +79,15 @@
     "subtitles": "Subtítulos",
     "subtitlesOff": "Sin subtítulos",
     "words": "Palabras de la clase",
-    "error": "No pudimos cargar el video. Inténtelo de nuevo en un momento."
+    "error": "No pudimos cargar el video. Inténtelo de nuevo en un momento.",
+    "loading": "Cargando el video…",
+    "retry": "Intentar de nuevo",
+    "signIn": "Iniciar sesión",
+    "errors": {
+      "signedOut": "Para ver la clase, inicie sesión.",
+      "membersOnly": "Esta clase es solo para suscriptores.",
+      "notReady": "El video todavía se está preparando. Inténtelo de nuevo en unos minutos."
+    }
   },
   "pages": {
     "path": {

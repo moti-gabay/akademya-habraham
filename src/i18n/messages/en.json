@@ -78,7 +78,15 @@
     "subtitles": "Subtitles",
     "subtitlesOff": "No subtitles",
     "words": "Words from the lesson",
-    "error": "We could not load the video. Please try again in a moment."
+    "error": "We could not load the video. Please try again in a moment.",
+    "loading": "Loading the video…",
+    "retry": "Try again",
+    "signIn": "Sign in",
+    "errors": {
+      "signedOut": "Please sign in to watch the lesson.",
+      "membersOnly": "This lesson is for members only.",
+      "notReady": "The video is still being prepared. Please try again in a few minutes."
+    }
   },
   "pages": {
     "path": {

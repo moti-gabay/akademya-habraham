@@ -29,7 +29,6 @@ export type Lesson = {
   stepName: string;
   lessonNumber: number;
   lessonsInStep: number;
-  videoUrl: string;
   // Media facts; src/lib/media.ts turns them into addresses.
   thumbnailKey: string | null;
   videoThumbnailUrl: string | null;
