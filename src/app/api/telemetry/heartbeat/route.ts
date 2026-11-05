@@ -6,6 +6,8 @@ import { progressRepo } from "@/server/repos";
 const Body = z.object({
   lessonId: z.string().min(1).max(64),
   positionSec: z.number().int().min(0).max(86_400),
+  // The video played to its end (sent by the player's "ended" event).
+  ended: z.boolean().optional(),
 });
 
 export async function POST(request: Request) {
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
     const actor = requireActor(await getActor());
     const body = Body.safeParse(await request.json().catch(() => null));
     if (!body.success) return Response.json({ error: "invalid_body" }, { status: 400 });
-    await progressRepo.save(actor.userId, body.data.lessonId, body.data.positionSec);
+    await progressRepo.save(actor.userId, body.data.lessonId, body.data.positionSec, body.data.ended);
     return new Response(null, { status: 204 });
   } catch (error) {
     return authErrorResponse(error);

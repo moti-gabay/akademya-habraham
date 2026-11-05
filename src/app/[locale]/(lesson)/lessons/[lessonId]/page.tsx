@@ -37,7 +37,9 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
 
   return (
     <main id="main" className="mx-auto max-w-3xl pb-10 lg:px-12 lg:pt-4">
+      {/* A new lesson gets a new player, so progress state never carries over. */}
       <Player
+        key={lesson.id}
         lessonId={lesson.id}
         subtitles={subtitles}
         startAt={startAt}

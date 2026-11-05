@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { localeNames, type Locale } from "@/i18n/routing";
+import { createProgressSaver } from "@/lib/progressSaver";
 import { formatTime } from "@/lib/time";
 import { SegmentedRadio } from "./SegmentedRadio";
 import { Timecode } from "./Timecode";
@@ -16,6 +17,9 @@ const SPEEDS = [
   [1.25, "fast"],
 ] as const;
 const HEARTBEAT_MS = 30_000;
+const HEARTBEAT_URL = "/api/telemetry/heartbeat";
+// "Back" waits this long at most for the save, so a slow network never makes it look dead.
+const BACK_WAIT_MS = 1500;
 // A playback address this close to expiry is renewed before playing on.
 const RENEW_BEFORE_MS = 5 * 60_000;
 
@@ -76,13 +80,38 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
   const resume = useRef<{ at: number; play: boolean } | null>(null);
   // One quiet renewal per address; a second failure is shown.
   const renewed = useRef(false);
+  // The last real position (one second in or more). Kept here because the video element
+  // is already gone when the player is unmounted.
+  const lastPosition = useRef<number | null>(null);
+  const [saver] = useState(() =>
+    createProgressSaver({
+      lessonId,
+      startAt,
+      post: async (body) => {
+        const response = await fetch(HEARTBEAT_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body,
+          keepalive: true,
+        });
+        return response.ok ? "ok" : response.status === 401 ? "unauthorized" : "failed";
+      },
+      // Sent as text: the route reads JSON whatever the content type.
+      beacon: (body) => typeof navigator.sendBeacon === "function" && navigator.sendBeacon(HEARTBEAT_URL, body),
+    }),
+  );
   const loading = !playback && !error;
 
-  const apply = useCallback((result: Playback | PlayError) => {
-    if (typeof result === "string") return setError(result);
-    setError(null);
-    setPlayback(result);
-  }, []);
+  const apply = useCallback(
+    (result: Playback | PlayError) => {
+      if (typeof result === "string") return setError(result);
+      setError(null);
+      setPlayback(result);
+      // A new address means the session is valid: saving may go on after a 401.
+      saver.resume();
+    },
+    [saver],
+  );
   const load = useCallback(() => requestPlayback(lessonId).then(apply), [lessonId, apply]);
   const retry = () => {
     setError(null);
@@ -137,28 +166,26 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
     };
   }, [playback, renew]);
 
-  const saveProgress = useCallback(() => {
-    const video = videoRef.current;
-    // Nothing watched yet: opening a lesson must not replace the stop point or mark it as started.
-    if (!video || !video.duration || video.currentTime < 1) return Promise.resolve();
-    return fetch("/api/telemetry/heartbeat", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ lessonId, positionSec: Math.floor(video.currentTime) }),
-      keepalive: true,
-    }).catch(() => {});
-  }, [lessonId]);
-
   useEffect(() => {
     if (!playing) return;
-    const timer = setInterval(saveProgress, HEARTBEAT_MS);
+    const timer = setInterval(() => saver.save(lastPosition.current), HEARTBEAT_MS);
     return () => clearInterval(timer);
-  }, [playing, saveProgress]);
+  }, [playing, saver]);
 
+  // Leaving: the tab is hidden or closed (a beacon, which outlives the page), or the
+  // player is unmounted by navigation inside the app. Not beforeunload: mobile browsers
+  // often skip it. In StrictMode's trial unmount nothing has been watched, so nothing is sent.
   useEffect(() => {
-    window.addEventListener("pagehide", saveProgress);
-    return () => window.removeEventListener("pagehide", saveProgress);
-  }, [saveProgress]);
+    const leave = () => saver.leave(lastPosition.current);
+    const onVisibility = () => document.visibilityState === "hidden" && leave();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", leave);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", leave);
+      leave();
+    };
+  }, [saver]);
 
   useEffect(() => {
     showSubtitles(videoRef.current!, subtitle);
@@ -168,6 +195,9 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
     const video = videoRef.current!;
     video.currentTime = Math.min(Math.max(0, seconds), video.duration || 0);
     setCurrent(video.currentTime);
+    // Kept at once: "timeupdate" comes only after the new segment has loaded, and a
+    // learner may leave right after seeking.
+    if (video.currentTime >= 1) lastPosition.current = video.currentTime;
   };
   const toggle = () => {
     const video = videoRef.current!;
@@ -183,7 +213,11 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
         type="button"
         className="tap inline-flex items-center gap-1 px-3 font-medium"
         // Save first, so the home page already shows the new stop point.
-        onClick={() => saveProgress().then(() => router.push("/"))}
+        onClick={() =>
+          Promise.race([saver.save(lastPosition.current), new Promise((resolve) => setTimeout(resolve, BACK_WAIT_MS))]).then(() =>
+            router.push("/"),
+          )
+        }
       >
         <ChevronLeft aria-hidden className="size-5 rtl:-scale-x-100" />
         {t("common.back")}
@@ -208,13 +242,21 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
         }}
         onPause={() => {
           setPlaying(false);
-          saveProgress();
+          saver.save(lastPosition.current);
         }}
+        // Finishes the lesson even when the stored length differs from the video's.
+        onEnded={() => saver.save(lastPosition.current, true)}
         onError={() => {
           // Native HLS reports a dead address here.
           if (!renew(playing)) setError("failed");
         }}
-        onTimeUpdate={(event) => setCurrent(event.currentTarget.currentTime)}
+        onTimeUpdate={(event) => {
+          const video = event.currentTarget;
+          setCurrent(video.currentTime);
+          // Seeking fires this too. While the address is renewed the video drops to 0,
+          // which must not replace the real position.
+          if (video.duration && video.currentTime >= 1) lastPosition.current = video.currentTime;
+        }}
         onLoadedMetadata={(event) => {
           const video = event.currentTarget;
           setDuration(video.duration);

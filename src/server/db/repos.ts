@@ -241,7 +241,7 @@ export function createDrizzleRepos(getDb: () => Db) {
         .limit(1);
       return row?.positionSec ?? 0;
     },
-    async save(userId, lessonId, positionSec) {
+    async save(userId, lessonId, positionSec, ended = false) {
       if (!isUuid(userId) || !isUuid(lessonId)) return;
       const db = getDb();
       const [lesson] = await db
@@ -251,7 +251,7 @@ export function createDrizzleRepos(getDb: () => Db) {
         .limit(1);
       if (!lesson) return;
 
-      const watchedPct = lesson.durationSec ? Math.min(100, Math.round((positionSec / lesson.durationSec) * 100)) : 0;
+      const watchedPct = ended ? 100 : lesson.durationSec ? Math.min(100, Math.round((positionSec / lesson.durationSec) * 100)) : 0;
       const completedAt = watchedPct >= COMPLETED_AT_PCT ? new Date() : null;
       await db
         .insert(t.userLessonProgress)
