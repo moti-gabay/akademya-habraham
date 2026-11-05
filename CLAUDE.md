@@ -26,6 +26,6 @@ Read `ARCHITECTURE.md` before changing anything; its decisions are binding. `REA
 ## Code
 - `src/server/` has no imports from `next/*` or Clerk. Route handlers stay thin.
 - Tailwind logical properties only (`ms-`, `pe-`, `start-`, `text-start`); `pnpm lint` enforces it.
-- No user-facing text in components: all four message files in `src/i18n/messages/` get every new string (ru/es are drafts awaiting review).
+- No user-facing text in components: every new string goes into `he.json` and `en.json` in `src/i18n/messages/`. `ru.json` and `es.json` are frozen (the site is served in he/en only; see "Site languages" in ARCHITECTURE.md).
 - Audience is older adults: tap targets at least 48px, WCAG AA contrast, every icon labelled, sizes in rem.
 - Do not add features that are not in the sketch; unsketched pages get a placeholder.

@@ -131,13 +131,16 @@ design/                      sketch, reference renders, earlier concepts
 - Timecodes go through `<Timecode>` so they stay left to right inside Hebrew.
 - No text in components: every string comes from the message files or from a repo.
 
-## Add a language
+## Languages
 
-1. Add the code to `LOCALES` in `src/server/i18n/locales.ts`.
-2. Add its name to `localeNames` in `src/i18n/routing.ts`. If it is right-to-left, extend `dirOf` there.
-3. Copy `src/i18n/messages/en.json` to `<code>.json` and translate it.
-4. Add the font subset in `src/app/[locale]/layout.tsx` if Rubik's current subsets do not cover the script.
-5. Content (lessons, steps, glossary) falls back to Hebrew until it is translated.
+The site is served in Hebrew and English (`SITE_LOCALES` in `src/server/i18n/locales.ts`). Russian and Spanish stay content languages (`LOCALES`: database, admin tabs, captions) but are not served: `/ru` and `/es` are 404, and their message files are frozen. New strings go into `he.json` and `en.json` only.
+
+Enable Russian or Spanish:
+1. Add the code to `SITE_LOCALES`.
+2. Translate the keys missing from its message file; `pnpm test:unit` (`src/i18n/messages.test.ts`) lists them.
+3. Have a native speaker review the file and the language's content, then update the welcome screenshots (`pnpm test:e2e --update-snapshots`).
+
+A language that is not in `LOCALES` yet also needs: the code in `LOCALES` (then `pnpm db:generate` for the database enum), its name in `localeNames` (and `dirOf` in `src/i18n/routing.ts` if it is right-to-left), a message file, its Clerk localization in `src/lib/clerkUi.ts`, and the font subset in `src/app/[locale]/layout.tsx` if Rubik's subsets do not cover the script. Content falls back to Hebrew until it is translated.
 
 `ru.json` and `es.json`, and the ru/es sample content in `src/server/mock/data.ts`, are machine drafts and need review by native speakers.
 

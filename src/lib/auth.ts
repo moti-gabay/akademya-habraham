@@ -3,10 +3,11 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { redirect } from "@/i18n/navigation";
-import { routing, type Locale } from "@/i18n/routing";
+import type { Locale } from "@/i18n/routing";
 import { AuthError, resolveActor, ROLES, type Actor } from "@/server/auth/actor";
 import { ADMIN_ROLE } from "@/server/catalog/service";
 import { getDb } from "@/server/db/client";
+import { siteLocaleOf } from "@/server/i18n/locales";
 import { SAMPLE_USER_ID } from "@/server/mock/data";
 import { authMode, mockRole } from "./authMode";
 
@@ -20,8 +21,8 @@ const SAMPLE_ACTOR: Actor = {
 };
 
 async function preferredLocale(): Promise<Locale | undefined> {
-  const value = (await cookies()).get("NEXT_LOCALE")?.value;
-  return routing.locales.find((locale) => locale === value);
+  // A cookie left from a language that is no longer served gives the default instead.
+  return siteLocaleOf((await cookies()).get("NEXT_LOCALE")?.value);
 }
 
 // Who is making this request, or null when signed out. Throws AuthError("account_blocked")
