@@ -4,7 +4,18 @@ import type { AdminRecord } from "../catalog/types";
 import { FAKE_LIBRARY_ID, FAKE_VIDEO_PREFIX } from "../media/fake";
 import type { Caption, VideoAsset } from "../media/types";
 import { LOCALES, type Locale, type Localized } from "../i18n/locales";
-import { glossary, holidayCategories, initialProgress, lessons, steps, teacher, track } from "./data";
+import {
+  glossary,
+  holidayCategories,
+  initialProgress,
+  lessons,
+  SAMPLE_USER_ID,
+  type SampleLesson,
+  sampleLessons,
+  steps,
+  teacher,
+  track,
+} from "./data";
 
 // Mock only: the one place in src/server that keeps state in memory. The catalog is
 // held as the admin sees it (every language), so the admin screens can edit it and the
@@ -17,9 +28,12 @@ export type MockStore = { [E in Entity]: Map<string, AdminRecord<E>> } & {
   videos: Map<string, VideoAsset>;
   captions: Map<string, Caption[]>;
   webhooks: Map<string, { processed: boolean }>;
-  progress: Map<string, Map<string, { lessonId: string; positionSec: number; updatedAt: number }>>;
+  // Progress by user, then by lesson. completedAt is set once and never cleared.
+  progress: Map<string, Map<string, MockProgress>>;
   audit: AuditEntry[];
 };
+
+export type MockProgress = { lessonId: string; positionSec: number; watchedPct: number; completedAt: number | null; updatedAt: number };
 
 // One row per locale the text exists in.
 const rows = <Row>(value: Localized, row: (text: string, locale: Locale) => Row) =>
@@ -28,6 +42,7 @@ const rows = <Row>(value: Localized, row: (text: string, locale: Locale) => Row)
   } & Partial<Record<Locale, Row>>;
 
 const PUBLISHED_AT = Date.parse("2026-10-01T00:00:00Z");
+const STOPPED_AT = Date.parse("2026-10-10T00:00:00Z");
 
 // Every sample lesson has a finished (fake) video, so it can be published. It has no
 // thumbnail: the home card keeps the sketch's placeholder until one is uploaded.
@@ -40,10 +55,25 @@ export const sampleVideo = (lessonKey: string, durationSec: number): VideoAsset 
   readyAt: new Date(PUBLISHED_AT),
 });
 
+// The sample user's progress, as in the seed: finished lessons, plus one stopped midway.
+function sampleProgress(all: SampleLesson[]): MockStore["progress"] {
+  const progress: MockStore["progress"] = new Map();
+  const add = (userId: string, entry: MockProgress) =>
+    progress.set(userId, (progress.get(userId) ?? new Map()).set(entry.lessonId, entry));
+  for (const { key, durationSec } of all.filter((lesson) => lesson.completed)) {
+    add(SAMPLE_USER_ID, { lessonId: key, positionSec: durationSec, watchedPct: 100, completedAt: PUBLISHED_AT, updatedAt: PUBLISHED_AT });
+  }
+  for (const [userId, lessonId, positionSec] of initialProgress) {
+    const watchedPct = Math.round((positionSec / lessons[lessonId].durationSec) * 100);
+    add(userId, { lessonId, positionSec, watchedPct, completedAt: null, updatedAt: STOPPED_AT });
+  }
+  return progress;
+}
+
 // The sample content of data.ts. Sample ids are readable keys ("shabbat-6"); rows
 // created in the admin screens get UUIDs.
 export function buildStore(): MockStore {
-  const lessonKeys = Object.keys(lessons);
+  const all = sampleLessons();
   return {
     categories: new Map(
       holidayCategories.map((category, index) => [
@@ -60,9 +90,8 @@ export function buildStore(): MockStore {
     ),
     teachers: new Map([[teacher.id, { id: teacher.id, translations: rows(teacher.name, (name) => ({ name })) }]]),
     lessons: new Map(
-      lessonKeys.map((key, index) => {
-        const lesson = lessons[key];
-        const status = lesson.status ?? "published";
+      all.map((lesson, index) => {
+        const { key, status } = lesson;
         return [
           key,
           {
@@ -70,7 +99,7 @@ export function buildStore(): MockStore {
             categoryId: lesson.categoryId ?? null,
             teacherId: teacher.id,
             durationSec: lesson.durationSec,
-            access: lesson.access ?? "members",
+            access: lesson.access,
             status,
             publishedAt: status === "published" ? new Date(PUBLISHED_AT + index * 1000) : null,
             thumbnailKey: null,
@@ -122,24 +151,13 @@ export function buildStore(): MockStore {
         },
       ]),
     ),
-    stepLessons: new Map(
-      steps.map((step) => [
-        step.id,
-        lessonKeys
-          .filter((key) => lessons[key].stepId === step.id)
-          .sort((a, b) => lessons[a].lessonNumber - lessons[b].lessonNumber),
-      ]),
-    ),
-    lessonTerms: new Map(lessonKeys.map((key) => [key, [...lessons[key].termIds]])),
-    videos: new Map(lessonKeys.map((key) => [key, sampleVideo(key, lessons[key].durationSec)])),
+    // Drafts included: this is the order the admin sees.
+    stepLessons: new Map(steps.map((step) => [step.id, all.filter((lesson) => lesson.stepId === step.id).map((lesson) => lesson.key)])),
+    lessonTerms: new Map(all.map((lesson) => [lesson.key, [...lesson.termIds]])),
+    videos: new Map(all.map((lesson) => [lesson.key, sampleVideo(lesson.key, lesson.durationSec)])),
     captions: new Map(),
     webhooks: new Map(),
-    progress: new Map(
-      initialProgress.map(([userId, lessonId, positionSec]) => [
-        userId,
-        new Map([[lessonId, { lessonId, positionSec, updatedAt: 0 }]]),
-      ]),
-    ),
+    progress: sampleProgress(all),
     audit: [],
   };
 }

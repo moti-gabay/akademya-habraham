@@ -1,4 +1,5 @@
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
+import { COMPLETED_AT_PCT, lessonAfter, NO_USER, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import { byLocale, LOCALES, localize, type Locale } from "../i18n/locales";
 import type {
@@ -16,7 +17,7 @@ import type {
 } from "../repos/types";
 import { createMockAdminCatalogRepo } from "./adminCatalog";
 import { createMockMediaRepo } from "./media";
-import { lessons as sampleLessons, steps as sampleSteps, users } from "./data";
+import { users } from "./data";
 import { mockStore, type MockStore } from "./store";
 
 // Mock implementations of the repo interfaces, reading the in-memory store.
@@ -39,6 +40,20 @@ export function createMockRepos(store: MockStore) {
     [...store.lessons.values()]
       .filter((lesson) => lesson.categoryId === categoryId && lesson.status === "published")
       .sort((a, b) => (a.publishedAt?.getTime() ?? 0) - (b.publishedAt?.getTime() ?? 0));
+  const ready = (id: string) => store.videos.get(id)?.status === "ready";
+  const progressOf = (userId: string, lessonId: string) => store.progress.get(userId)?.get(lessonId);
+  const bySortOrder = (a: { sortOrder: number }, b: { sortOrder: number }) => a.sortOrder - b.sortOrder;
+  // A step's published lessons, in order.
+  const publishedInStep = (stepId: string) => (store.stepLessons.get(stepId) ?? []).filter((id) => published(id));
+  // One track at launch: the first published one.
+  const trackSteps = () => {
+    const track = [...store.tracks.values()].sort(bySortOrder).find((item) => item.status === "published");
+    return [...store.steps.values()].filter((step) => step.trackId === track?.id).sort(bySortOrder);
+  };
+  const pathOf = (userId: string): PathEntry[] =>
+    trackSteps().flatMap((step) =>
+      publishedInStep(step.id).map((id) => ({ id, stepId: step.id, ready: ready(id), done: progressOf(userId, id)?.completedAt != null })),
+    );
   const teacherName = (teacherId: string | null, locale: Locale) => {
     const teacher = teacherId === null ? undefined : store.teachers.get(teacherId);
     return teacher ? text(teacher.translations, locale, "name") : "";
@@ -47,10 +62,9 @@ export function createMockRepos(store: MockStore) {
   function toLesson(id: string, locale: Locale): Lesson | null {
     const lesson = published(id);
     if (!lesson) return null;
-    const [stepId, stepLessons] = [...store.stepLessons].find(([, ids]) => ids.includes(id)) ?? [];
-    const step = stepId === undefined ? undefined : store.steps.get(stepId);
-    // The sample steps stand for more lessons than the few the sample data names.
-    const sampleStep = sampleSteps.find((item) => item.id === stepId);
+    // A lesson listed in two steps belongs to the first one.
+    const step = [...store.steps.values()].sort(bySortOrder).find((item) => store.stepLessons.get(item.id)?.includes(id));
+    const inStep = step ? publishedInStep(step.id) : [];
     return {
       id,
       title: text(lesson.translations, locale, "title"),
@@ -59,8 +73,9 @@ export function createMockRepos(store: MockStore) {
       access: lesson.access,
       stepNumber: step?.sortOrder ?? 0,
       stepName: step ? text(step.translations, locale, "name") : "",
-      lessonNumber: sampleLessons[id]?.lessonNumber ?? (stepLessons ? stepLessons.indexOf(id) + 1 : 0),
-      lessonsInStep: sampleStep?.lessonsTotal ?? stepLessons?.length ?? 0,
+      // Counted among published lessons only.
+      lessonNumber: inStep.indexOf(id) + 1,
+      lessonsInStep: inStep.length,
       thumbnailKey: lesson.thumbnailKey,
       videoThumbnailUrl: store.videos.get(id)?.thumbnailUrl ?? null,
       captions: (store.captions.get(id) ?? []).map((caption) => caption.locale).sort(byLocale),
@@ -105,24 +120,51 @@ export function createMockRepos(store: MockStore) {
   };
 
   const pathRepo: PathRepo = {
-    async getSteps(_userId, locale) {
-      // One track at launch: the first published one.
-      const track = [...store.tracks.values()].sort((a, b) => a.sortOrder - b.sortOrder).find((item) => item.status === "published");
-      return [...store.steps.values()]
-        .filter((step) => step.trackId === track?.id)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((step) => {
-          // Sample steps keep the progress drawn in the sketch; new ones are untouched.
-          const sample = sampleSteps.find((item) => item.id === step.id);
+    async getSteps(userId, locale) {
+      const steps = trackSteps();
+      const rows = steps.map((step) => {
+        const entries = publishedInStep(step.id).map((id) => progressOf(userId, id));
+        return {
+          total: entries.length,
+          started: entries.filter(Boolean).length,
+          done: entries.filter((entry) => entry?.completedAt != null).length,
+        };
+      });
+      const statuses = stepStatuses(rows);
+      return steps.map((step, index) => ({
+        id: step.id,
+        number: step.sortOrder,
+        name: text(step.translations, locale, "name"),
+        status: statuses[index],
+        lessonsDone: rows[index].done,
+        lessonsTotal: rows[index].total,
+        available: rows[index].total > 0,
+      }));
+    },
+    async getStep(userId, stepId, locale) {
+      return stepDetail(await pathRepo.getSteps(userId, locale), stepId, async (id) =>
+        publishedInStep(id).map((lessonId) => {
+          const lesson = store.lessons.get(lessonId)!;
+          const entry = progressOf(userId, lessonId);
           return {
-            id: step.id,
-            number: step.sortOrder,
-            name: text(step.translations, locale, "name"),
-            status: sample?.status ?? "later",
-            lessonsDone: sample?.lessonsDone ?? 0,
-            lessonsTotal: sample?.lessonsTotal ?? store.stepLessons.get(step.id)?.length ?? 0,
+            id: lessonId,
+            title: text(lesson.translations, locale, "title"),
+            durationSec: lesson.durationSec ?? 0,
+            state: !entry ? "not_started" : entry.completedAt != null ? "done" : "in_progress",
+            positionSec: entry?.positionSec ?? 0,
+            ready: ready(lessonId),
           };
-        });
+        }),
+      );
+    },
+    async getStartLesson(userId, locale) {
+      const id = startLessonId(pathOf(userId));
+      return id ? toLesson(id, locale) : null;
+    },
+    async getLessonAfter(lessonId, locale) {
+      const next = lessonAfter(pathOf(NO_USER), lessonId);
+      const lesson = next && toLesson(next.id, locale);
+      return lesson ? { lesson, newStep: next.newStep } : null;
     },
   };
 
@@ -134,18 +176,31 @@ export function createMockRepos(store: MockStore) {
 
   const progressRepo: ProgressRepo = {
     async getContinueWatching(userId, locale) {
-      const entries = [...(store.progress.get(userId)?.values() ?? [])];
-      const latest = entries.sort((a, b) => b.updatedAt - a.updatedAt)[0];
+      // The latest unfinished lesson that is still published.
+      const latest = [...(store.progress.get(userId)?.values() ?? [])]
+        .filter((entry) => entry.completedAt === null && published(entry.lessonId))
+        .sort((a, b) => b.updatedAt - a.updatedAt)[0];
       const lesson = latest && toLesson(latest.lessonId, locale);
       return lesson ? { lesson, positionSec: latest.positionSec } : null;
     },
     async getPosition(userId, lessonId) {
-      return store.progress.get(userId)?.get(lessonId)?.positionSec ?? 0;
+      return progressOf(userId, lessonId)?.positionSec ?? 0;
     },
     async save(userId, lessonId, positionSec) {
-      if (!published(lessonId)) return;
+      const lesson = published(lessonId);
+      if (!lesson) return;
+      // As in the database: finished once, never un-finished, and the share never goes down.
+      const previous = progressOf(userId, lessonId);
+      const pct = lesson.durationSec ? Math.min(100, Math.round((positionSec / lesson.durationSec) * 100)) : 0;
+      const now = Date.now();
       const byLesson = store.progress.get(userId) ?? new Map();
-      byLesson.set(lessonId, { lessonId, positionSec, updatedAt: Date.now() });
+      byLesson.set(lessonId, {
+        lessonId,
+        positionSec,
+        watchedPct: Math.max(previous?.watchedPct ?? 0, pct),
+        completedAt: previous?.completedAt ?? (pct >= COMPLETED_AT_PCT ? now : null),
+        updatedAt: now,
+      });
       store.progress.set(userId, byLesson);
     },
   };

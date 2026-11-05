@@ -7,7 +7,9 @@ import {
   holidayCategories,
   initialProgress,
   lessons,
+  NEW_USER_ID,
   SAMPLE_USER_ID,
+  sampleLessons,
   steps,
   teacher,
   track,
@@ -29,9 +31,6 @@ const seedId = (key: string) => {
 // Database id of a lesson from the sample data, e.g. lessonSeedId("shabbat-6").
 export const lessonSeedId = (key: string) => seedId(`lesson:${key}`);
 
-const PLACEHOLDER_MINUTES = 30;
-const lessonWord: Localized = { he: "שיעור", en: "Lesson", ru: "Урок", es: "Clase" };
-
 const translations = <Row>(value: Localized, row: (locale: (typeof LOCALES)[number], text: string) => Row) =>
   LOCALES.flatMap((locale) => (value[locale] ? [row(locale, value[locale])] : []));
 
@@ -43,35 +42,9 @@ async function upsert<T extends PgTable>(db: Db, table: T, target: PgColumn[], r
   await db.insert(table).values(rows).onConflictDoUpdate({ target, set });
 }
 
-// Every step gets its full number of lessons. The few lessons the sketch names keep
-// their real titles; the rest are placeholders such as "שבת · שיעור 3".
+// The sample lessons of data.ts, with database ids.
 function buildLessons() {
-  return steps.flatMap((step) =>
-    Array.from({ length: step.lessonsTotal }, (_, index) => {
-      const number = index + 1;
-      const named = Object.entries(lessons).find(([, l]) => l.stepId === step.id && l.lessonNumber === number);
-      const key = named?.[0] ?? `${step.id}-${number}`;
-      const title: Localized = named?.[1].title ?? {
-        he: `${step.name.he} · ${lessonWord.he} ${number}`,
-        ...Object.fromEntries(translations(step.name, (locale, name) => [locale, `${name} · ${lessonWord[locale]} ${number}`])),
-      };
-      return {
-        key,
-        id: lessonSeedId(key),
-        stepId: seedId(`step:${step.id}`),
-        number,
-        title,
-        durationSec: named?.[1].durationSec ?? PLACEHOLDER_MINUTES * 60,
-        termIds: named?.[1].termIds ?? [],
-        categoryId: named?.[1].categoryId,
-        access: named?.[1].access ?? ("members" as const),
-        status: named?.[1].status ?? ("published" as const),
-        description: named?.[1].description,
-        keyPoints: named?.[1].keyPoints,
-        completed: number <= step.lessonsDone,
-      };
-    }),
-  );
+  return sampleLessons().map((lesson) => ({ ...lesson, id: lessonSeedId(lesson.key), stepId: seedId(`step:${lesson.stepId}`) }));
 }
 
 export async function seed(db: Db) {
@@ -92,6 +65,13 @@ export async function seed(db: Db) {
       clerkUserId: "seed_sample_user",
       email: users[SAMPLE_USER_ID].email,
       name: users[SAMPLE_USER_ID].name.he,
+    },
+    // No progress: the first-run screens.
+    {
+      id: NEW_USER_ID,
+      clerkUserId: "seed_new_user",
+      email: users[NEW_USER_ID].email,
+      name: users[NEW_USER_ID].name.he,
     },
   ]);
 

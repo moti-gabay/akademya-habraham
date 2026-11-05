@@ -1,6 +1,6 @@
-import type { Localized } from "../i18n/locales";
+import { LOCALES, type Locale, type Localized } from "../i18n/locales";
 import { sampleSubtitles } from "../media/sample";
-import type { LessonAccess, StepStatus } from "../repos/types";
+import type { LessonAccess } from "../repos/types";
 
 // Sample content that matches design/final-sketch.pdf. It feeds both the mock repos
 // and the database seed (src/server/db/seed.ts), so the two cannot drift.
@@ -8,9 +8,12 @@ import type { LessonAccess, StepStatus } from "../repos/types";
 
 // Fixed id of the sample user, the same in mock mode and in a seeded database.
 export const SAMPLE_USER_ID = "5a3b1c2d-0000-4000-8000-000000000001";
+// A second sample user who has not watched anything yet (the first-run screens).
+export const NEW_USER_ID = "5a3b1c2d-0000-4000-8000-000000000002";
 
 export const users: Record<string, { name: Localized; email: string }> = {
   [SAMPLE_USER_ID]: { name: { he: "משה", en: "Moshe", ru: "Моше", es: "Moshé" }, email: "moshe@example.com" },
+  [NEW_USER_ID]: { name: { he: "דוד", en: "David", ru: "Давид", es: "David" }, email: "david@example.com" },
 };
 
 export const track = {
@@ -23,39 +26,37 @@ export const teacher = {
   name: { he: "הרב אברהם", en: "Rav Avraham", ru: "Рав Авраам", es: "Rav Abraham" } as Localized,
 };
 
-export const steps: { id: string; name: Localized; status: StepStatus; lessonsDone: number; lessonsTotal: number }[] = [
+// lessonsTotal: how many lessons the step has; lessonsDone: how many of the first ones the
+// sample user has finished. The step states (completed, in progress, ...) follow from that.
+export const steps: { id: string; name: Localized; lessonsDone: number; lessonsTotal: number }[] = [
   {
     id: "faith",
     name: { he: "יסודות האמונה", en: "Foundations of faith", ru: "Основы веры", es: "Fundamentos de la fe" },
-    status: "completed",
     lessonsDone: 8,
     lessonsTotal: 8,
   },
   {
     id: "shabbat",
     name: { he: "שבת", en: "Shabbat", ru: "Шаббат", es: "Shabat" },
-    status: "in_progress",
     lessonsDone: 5,
     lessonsTotal: 12,
   },
   {
     id: "kashrut",
     name: { he: "כשרות", en: "Kashrut", ru: "Кашрут", es: "Kashrut" },
-    status: "up_next",
     lessonsDone: 0,
-    lessonsTotal: 10,
+    // One of them is a draft, so the learner sees 10.
+    lessonsTotal: 11,
   },
   {
     id: "prayer",
     name: { he: "תפילה וברכות", en: "Prayer and blessings", ru: "Молитва и благословения", es: "Oración y bendiciones" },
-    status: "later",
     lessonsDone: 0,
     lessonsTotal: 10,
   },
   {
     id: "holidays",
     name: { he: "חגי ישראל", en: "The Jewish holidays", ru: "Еврейские праздники", es: "Las fiestas judías" },
-    status: "later",
     lessonsDone: 0,
     lessonsTotal: 9,
   },
@@ -221,7 +222,73 @@ export const lessons: Record<
     categoryId: "pesach",
     status: "draft",
   },
+  // A draft inside the path: the learner never sees it, and the lessons after it are
+  // numbered as if it were not there.
+  "kashrut-meat-milk": {
+    title: {
+      he: "כשרות: בשר וחלב",
+      en: "Kashrut: meat and milk",
+      ru: "Кашрут: мясное и молочное",
+      es: "Kashrut: carne y leche",
+    },
+    teacher: teacher.name,
+    durationSec: 29 * 60,
+    stepId: "kashrut",
+    lessonNumber: 4,
+    subtitles: sampleSubtitles,
+    termIds: [],
+    status: "draft",
+  },
 };
+
+const PLACEHOLDER_MINUTES = 30;
+const lessonWord: Record<Locale, string> = { he: "שיעור", en: "Lesson", ru: "Урок", es: "Clase" };
+
+export type SampleLesson = {
+  key: string;
+  stepId: string;
+  number: number;
+  title: Localized;
+  durationSec: number;
+  termIds: string[];
+  categoryId?: string;
+  access: LessonAccess;
+  status: "draft" | "published";
+  description?: Localized;
+  keyPoints?: Localized<string[]>;
+  // Finished by the sample user.
+  completed: boolean;
+};
+
+// Every step gets its full number of lessons, in path order. The few lessons the sketch
+// names keep their real titles; the rest are placeholders such as "שבת · שיעור 3".
+// Used by both the mock store and the seed.
+export function sampleLessons(): SampleLesson[] {
+  return steps.flatMap((step) =>
+    Array.from({ length: step.lessonsTotal }, (_, index) => {
+      const number = index + 1;
+      const named = Object.entries(lessons).find(([, l]) => l.stepId === step.id && l.lessonNumber === number);
+      const title: Localized = named?.[1].title ?? {
+        he: `${step.name.he} · ${lessonWord.he} ${number}`,
+        ...Object.fromEntries(LOCALES.flatMap((l) => (step.name[l] ? [[l, `${step.name[l]} · ${lessonWord[l]} ${number}`]] : []))),
+      };
+      return {
+        key: named?.[0] ?? `${step.id}-${number}`,
+        stepId: step.id,
+        number,
+        title,
+        durationSec: named?.[1].durationSec ?? PLACEHOLDER_MINUTES * 60,
+        termIds: named?.[1].termIds ?? [],
+        categoryId: named?.[1].categoryId,
+        access: named?.[1].access ?? "members",
+        status: named?.[1].status ?? "published",
+        description: named?.[1].description,
+        keyPoints: named?.[1].keyPoints,
+        completed: number <= step.lessonsDone,
+      };
+    }),
+  );
+}
 
 export const glossary: { id: string; term: Localized; definition: Localized }[] = [
   {
