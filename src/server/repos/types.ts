@@ -11,9 +11,39 @@ export type PathStep = {
   number: number;
   name: string;
   status: StepStatus;
+  // Published lessons only.
   lessonsDone: number;
   lessonsTotal: number;
+  // False while the step has no published lesson: shown as "coming soon", without a link.
+  available: boolean;
 };
+
+export type StepLessonState = "done" | "in_progress" | "not_started";
+export type StepLesson = {
+  id: string;
+  // Position among the step's published lessons.
+  number: number;
+  title: string;
+  durationSec: number;
+  state: StepLessonState;
+  positionSec: number;
+  // The video can be played; a lesson whose video is not ready is shown as "being prepared".
+  ready: boolean;
+  // The one lesson the step page points to: the first ready lesson not done yet.
+  isNext: boolean;
+};
+export type StepDetail = {
+  id: string;
+  number: number;
+  name: string;
+  lessonsDone: number;
+  lessonsTotal: number;
+  lessons: StepLesson[];
+  // The next step that has a published lesson.
+  nextStep: { id: string; name: string } | null;
+};
+// The lesson after another one in path order, and whether it starts a new step.
+export type LessonAfter = { lesson: Lesson; newStep: boolean };
 
 export type GlossaryTerm = { id: string; term: string; definition: string };
 
@@ -51,6 +81,13 @@ export interface UserRepo {
 }
 export interface PathRepo {
   getSteps(userId: string, locale: Locale): Promise<PathStep[]>;
+  // Null for an unknown step or one outside the published track.
+  getStep(userId: string, stepId: string, locale: Locale): Promise<StepDetail | null>;
+  // The first ready lesson in path order that the user has not finished: home's "Start".
+  getStartLesson(userId: string, locale: Locale): Promise<Lesson | null>;
+  // The next ready lesson in path order. Null at the end of the path, or for a lesson
+  // that is not in it.
+  getLessonAfter(lessonId: string, locale: Locale): Promise<LessonAfter | null>;
 }
 export interface LessonRepo {
   getById(lessonId: string, locale: Locale): Promise<Lesson | null>;

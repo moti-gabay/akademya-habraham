@@ -75,10 +75,10 @@ test("every sample lesson has a finished sample video in both sources", async ()
   assert.equal(await repos.mediaRepo.getLessonMedia("not-a-uuid"), null);
 });
 
-test("the sample user is fictional and has one name for every locale", async () => {
+test("the sample users are fictional and have one name for every locale", async () => {
   assert.deepEqual(await repos.userRepo.getById(SAMPLE_USER_ID, "en"), { id: SAMPLE_USER_ID, name: "משה" });
-  const [row] = await db.select({ email: t.users.email }).from(t.users);
-  assert.equal(row.email, "moshe@example.com");
+  const rows = await db.select({ email: t.users.email }).from(t.users).orderBy(t.users.email);
+  assert.deepEqual(rows.map((row) => row.email), ["david@example.com", "moshe@example.com"]);
 });
 
 test("ids that are not UUIDs match nothing instead of failing", async () => {

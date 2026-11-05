@@ -122,7 +122,7 @@ Learning path and glossary (proposed 2026-10-11, **approved 2026-10-12**; in `sr
 - `glossary_terms` — id, code unique, sort_order
 - `glossary_term_translations` — pk(term_id, locale), term, short_definition, slug. Unique (locale, slug).
 - `lesson_glossary_terms` — pk(lesson_id, term_id), sort_order. Drives "Words from the lesson"; a term is underlined in a lesson title when its translated `term` appears there literally.
-- No new progress table. Step status is derived: completed = every lesson of the step has `user_lesson_progress.completed_at`; in progress = some do; "up next" = the first step after the current one. "Continue watching" = the latest `user_lesson_progress.updated_at` without `completed_at`.
+- No new progress table. Step status is derived, from **published** lessons only (drafts neither count nor carry progress; lesson numbers are positions among published lessons): completed = every published lesson of the step has `user_lesson_progress.completed_at`; in progress = some have progress; "up next" = the first untouched step that has a published lesson; a step with none is "coming soon". "Continue watching" = the latest `user_lesson_progress.updated_at` without `completed_at` whose lesson is still published. "Start" (when nothing is under way) = the first lesson in path order with a ready video and no `completed_at`. The rules live in `src/server/catalog/path.ts`, shared by the database and mock repos (decided 2026-11-05).
 - Same fallback chain as the catalog (requested locale → `he`); `he` rows are required.
 
 Telemetry

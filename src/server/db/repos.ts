@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
+import { COMPLETED_AT_PCT, lessonAfter, NO_USER, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import type { Locale } from "../i18n/locales";
 import type {
@@ -9,7 +10,6 @@ import type {
   Lesson,
   LessonRepo,
   PathRepo,
-  PathStep,
   ProgressRepo,
   UserRepo,
 } from "../repos/types";
@@ -23,8 +23,14 @@ import { isUuid, uuidOrNil } from "./uuid";
 // Drizzle implementations of the repo interfaces. Content is localized in SQL: each
 // query joins the Hebrew row (required) and the requested-locale row (optional).
 
-const COMPLETED_AT_PCT = 95;
 export function createDrizzleRepos(getDb: () => Db) {
+  // One track at launch: the first published one.
+  const publishedTrackId = () =>
+    sql`(select ${t.tracks.id} from ${t.tracks} where ${t.tracks.status} = 'published' order by ${t.tracks.sortOrder} limit 1)`;
+  const publishedLesson = (lessonId: AnyPgColumn) =>
+    and(eq(t.lessons.id, lessonId), eq(t.lessons.status, "published"));
+
+
   async function lessonById(lessonId: string, locale: Locale): Promise<Lesson | null> {
     if (!isUuid(lessonId)) return null;
     const lessonHe = alias(t.lessonTranslations, "lesson_he");
@@ -34,6 +40,9 @@ export function createDrizzleRepos(getDb: () => Db) {
     const stepHe = alias(t.trackStepTranslations, "step_he");
     const stepLoc = alias(t.trackStepTranslations, "step_loc");
     const siblings = alias(t.trackStepLessons, "siblings");
+    const siblingLesson = alias(t.lessons, "sibling_lesson");
+    // The step's published lessons: numbers and counts skip drafts.
+    const publishedSiblings = sql`from ${t.trackStepLessons} as ${siblings} join ${t.lessons} as ${siblingLesson} on ${siblingLesson.id} = ${siblings.lessonId} and ${siblingLesson.status} = 'published' where ${siblings.stepId} = ${t.trackSteps.id}`;
 
     const [row] = await getDb()
       .select({
@@ -46,8 +55,8 @@ export function createDrizzleRepos(getDb: () => Db) {
         teacher: sql<string | null>`coalesce(${teacherLoc.name}, ${teacherHe.name})`,
         stepNumber: t.trackSteps.sortOrder,
         stepName: sql<string | null>`coalesce(${stepLoc.name}, ${stepHe.name})`,
-        lessonNumber: t.trackStepLessons.sortOrder,
-        lessonsInStep: sql<number>`(select count(*)::int from ${t.trackStepLessons} as ${siblings} where ${siblings.stepId} = ${t.trackSteps.id})`,
+        lessonNumber: sql<number>`(select count(*)::int ${publishedSiblings} and ${siblings.sortOrder} <= ${t.trackStepLessons.sortOrder})`,
+        lessonsInStep: sql<number>`(select count(*)::int ${publishedSiblings})`,
       })
       .from(t.lessons)
       .innerJoin(lessonHe, and(eq(lessonHe.lessonId, t.lessons.id), eq(lessonHe.locale, "he")))
@@ -60,6 +69,8 @@ export function createDrizzleRepos(getDb: () => Db) {
       .leftJoin(stepHe, and(eq(stepHe.stepId, t.trackSteps.id), eq(stepHe.locale, "he")))
       .leftJoin(stepLoc, and(eq(stepLoc.stepId, t.trackSteps.id), eq(stepLoc.locale, locale)))
       .where(and(eq(t.lessons.id, lessonId), eq(t.lessons.status, "published")))
+      // A lesson listed in two steps belongs to the first one.
+      .orderBy(asc(t.trackSteps.sortOrder))
       .limit(1);
     if (!row) return null;
     const captions = await getDb()
@@ -95,6 +106,28 @@ export function createDrizzleRepos(getDb: () => Db) {
     },
   };
 
+  // The published lessons of the published track in path order, with this user's progress.
+  async function pathOf(userId: string): Promise<PathEntry[]> {
+    const rows = await getDb()
+      .select({
+        id: t.trackStepLessons.lessonId,
+        stepId: t.trackStepLessons.stepId,
+        videoStatus: t.videoAssets.status,
+        completedAt: t.userLessonProgress.completedAt,
+      })
+      .from(t.trackStepLessons)
+      .innerJoin(t.trackSteps, eq(t.trackSteps.id, t.trackStepLessons.stepId))
+      .innerJoin(t.lessons, publishedLesson(t.trackStepLessons.lessonId))
+      .leftJoin(t.videoAssets, eq(t.videoAssets.lessonId, t.lessons.id))
+      .leftJoin(
+        t.userLessonProgress,
+        and(eq(t.userLessonProgress.lessonId, t.lessons.id), eq(t.userLessonProgress.userId, uuidOrNil(userId))),
+      )
+      .where(eq(t.trackSteps.trackId, publishedTrackId()))
+      .orderBy(asc(t.trackSteps.sortOrder), asc(t.trackStepLessons.sortOrder));
+    return rows.map((row) => ({ id: row.id, stepId: row.stepId, ready: row.videoStatus === "ready", done: row.completedAt !== null }));
+  }
+
   const pathRepo: PathRepo = {
     async getSteps(userId, locale) {
       const stepHe = alias(t.trackStepTranslations, "step_he");
@@ -104,7 +137,7 @@ export function createDrizzleRepos(getDb: () => Db) {
           id: t.trackSteps.id,
           number: t.trackSteps.sortOrder,
           name: sql<string>`coalesce(${stepLoc.name}, ${stepHe.name})`,
-          total: sql<number>`count(${t.trackStepLessons.lessonId})::int`,
+          total: sql<number>`count(${t.lessons.id})::int`,
           started: sql<number>`count(${t.userLessonProgress.lessonId})::int`,
           done: sql<number>`count(${t.userLessonProgress.completedAt})::int`,
         })
@@ -112,36 +145,71 @@ export function createDrizzleRepos(getDb: () => Db) {
         .innerJoin(stepHe, and(eq(stepHe.stepId, t.trackSteps.id), eq(stepHe.locale, "he")))
         .leftJoin(stepLoc, and(eq(stepLoc.stepId, t.trackSteps.id), eq(stepLoc.locale, locale)))
         .leftJoin(t.trackStepLessons, eq(t.trackStepLessons.stepId, t.trackSteps.id))
+        // Published lessons only: a draft neither counts nor carries progress.
+        .leftJoin(t.lessons, publishedLesson(t.trackStepLessons.lessonId))
         .leftJoin(
           t.userLessonProgress,
-          and(
-            eq(t.userLessonProgress.lessonId, t.trackStepLessons.lessonId),
-            eq(t.userLessonProgress.userId, uuidOrNil(userId)),
-          ),
+          and(eq(t.userLessonProgress.lessonId, t.lessons.id), eq(t.userLessonProgress.userId, uuidOrNil(userId))),
         )
-        // One track at launch: the first published one.
-        .where(
-          eq(
-            t.trackSteps.trackId,
-            sql`(select ${t.tracks.id} from ${t.tracks} where ${t.tracks.status} = 'published' order by ${t.tracks.sortOrder} limit 1)`,
-          ),
-        )
+        .where(eq(t.trackSteps.trackId, publishedTrackId()))
         .groupBy(t.trackSteps.id, stepLoc.name, stepHe.name)
         .orderBy(asc(t.trackSteps.sortOrder));
 
-      // Completed = every lesson done; in progress = some watched; the first untouched
-      // step is "up next" and the ones after it come later.
-      let upNextGiven = false;
-      return rows.map((row): PathStep => {
-        let status: PathStep["status"];
-        if (row.total > 0 && row.done === row.total) status = "completed";
-        else if (row.started > 0) status = "in_progress";
-        else if (!upNextGiven) {
-          status = "up_next";
-          upNextGiven = true;
-        } else status = "later";
-        return { id: row.id, number: row.number, name: row.name, status, lessonsDone: row.done, lessonsTotal: row.total };
+      const statuses = stepStatuses(rows);
+      return rows.map((row, index) => ({
+        id: row.id,
+        number: row.number,
+        name: row.name,
+        status: statuses[index],
+        lessonsDone: row.done,
+        lessonsTotal: row.total,
+        available: row.total > 0,
+      }));
+    },
+    async getStep(userId, stepId, locale) {
+      if (!isUuid(stepId)) return null;
+      return stepDetail(await pathRepo.getSteps(userId, locale), stepId, async (id) => {
+        const lessonHe = alias(t.lessonTranslations, "lesson_he");
+        const lessonLoc = alias(t.lessonTranslations, "lesson_loc");
+        const rows = await getDb()
+          .select({
+            id: t.lessons.id,
+            title: sql<string>`coalesce(${lessonLoc.title}, ${lessonHe.title})`,
+            durationSec: t.lessons.durationSec,
+            videoStatus: t.videoAssets.status,
+            started: t.userLessonProgress.lessonId,
+            positionSec: t.userLessonProgress.lastPositionSec,
+            completedAt: t.userLessonProgress.completedAt,
+          })
+          .from(t.trackStepLessons)
+          .innerJoin(t.lessons, publishedLesson(t.trackStepLessons.lessonId))
+          .innerJoin(lessonHe, and(eq(lessonHe.lessonId, t.lessons.id), eq(lessonHe.locale, "he")))
+          .leftJoin(lessonLoc, and(eq(lessonLoc.lessonId, t.lessons.id), eq(lessonLoc.locale, locale)))
+          .leftJoin(t.videoAssets, eq(t.videoAssets.lessonId, t.lessons.id))
+          .leftJoin(
+            t.userLessonProgress,
+            and(eq(t.userLessonProgress.lessonId, t.lessons.id), eq(t.userLessonProgress.userId, uuidOrNil(userId))),
+          )
+          .where(eq(t.trackStepLessons.stepId, id))
+          .orderBy(asc(t.trackStepLessons.sortOrder));
+        return rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          durationSec: row.durationSec ?? 0,
+          state: row.completedAt !== null ? "done" : row.started !== null ? "in_progress" : "not_started",
+          positionSec: row.positionSec ?? 0,
+          ready: row.videoStatus === "ready",
+        }));
       });
+    },
+    async getStartLesson(userId, locale) {
+      const id = startLessonId(await pathOf(userId));
+      return id ? lessonById(id, locale) : null;
+    },
+    async getLessonAfter(lessonId, locale) {
+      const next = lessonAfter(await pathOf(NO_USER), lessonId);
+      const lesson = next && (await lessonById(next.id, locale));
+      return lesson ? { lesson, newStep: next.newStep } : null;
     },
   };
 
@@ -152,6 +220,8 @@ export function createDrizzleRepos(getDb: () => Db) {
       const [latest] = await getDb()
         .select({ lessonId: t.userLessonProgress.lessonId, positionSec: t.userLessonProgress.lastPositionSec })
         .from(t.userLessonProgress)
+        // Skips a lesson that was unpublished since, instead of hiding the card.
+        .innerJoin(t.lessons, publishedLesson(t.userLessonProgress.lessonId))
         .where(and(eq(t.userLessonProgress.userId, uuidOrNil(userId)), isNull(t.userLessonProgress.completedAt)))
         .orderBy(desc(t.userLessonProgress.updatedAt))
         .limit(1);
