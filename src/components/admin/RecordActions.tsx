@@ -63,7 +63,15 @@ export function RecordActions({
           disabled={working}
           className={`${outlineBtn} ms-auto border-red-700 text-red-700 disabled:opacity-60`}
           onClick={() => {
-            if (window.confirm(t("actions.confirmDelete", { name }))) run("DELETE", `${entity}/${id}`, () => router.replace(listHref));
+            if (window.confirm(t("actions.confirmDelete", { name })))
+              run("DELETE", `${entity}/${id}`, () => {
+                router.replace(listHref);
+                // As after every other admin change: about 1 in 13 deletes on the dev server
+                // left the deleted row on the list, with the router's fetch aborted and no
+                // reload. The cause in the router is not pinned down; a refresh re-renders the
+                // list from the server.
+                router.refresh();
+              });
           }}
         >
           {t("actions.delete")}
