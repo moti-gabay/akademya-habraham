@@ -88,7 +88,10 @@ for (const name of ["db", "mock"]) {
       ]);
       assert.equal(found?.lessons[0].description, "Introduction: the miracle of the oil");
       assert.equal(await catalog().getHolidayCategory("shavuot", "he"), null);
-      assert.equal((await listPublicParams(catalog())).length, 4 * 4);
+      // Four lessons, in the site languages only (he, en): no ru/es pages are prerendered.
+      const params = await listPublicParams(catalog());
+      assert.equal(params.length, 4 * 2);
+      assert.deepEqual([...new Set(params.map((param) => param.locale))], ["he", "en"]);
     });
 
     test("only admins with a second factor may change the catalog", async () => {

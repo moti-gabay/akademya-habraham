@@ -1,4 +1,4 @@
-import { LOCALES, type Locale } from "../i18n/locales";
+import { type Locale, SITE_LOCALES } from "../i18n/locales";
 import type { CatalogLesson, CatalogRepo, HolidayCategory } from "../repos/types";
 
 // A lesson preview by the slugs in its address. The slugs may be in another language
@@ -22,7 +22,7 @@ export async function findLessonPreview(
 // Every public catalog address, for prerendering.
 export async function listPublicParams(repo: CatalogRepo) {
   const params: { locale: Locale; slug: string; lessonSlug: string }[] = [];
-  for (const locale of LOCALES) {
+  for (const locale of SITE_LOCALES) {
     for (const { slug } of await repo.listHolidayCategories(locale)) {
       const found = await repo.getHolidayCategory(slug, locale);
       for (const lesson of found?.lessons ?? []) params.push({ locale, slug, lessonSlug: lesson.slug });

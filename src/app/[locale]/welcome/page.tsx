@@ -28,13 +28,23 @@ export default async function WelcomePage() {
       <div className="text-center">
         <BrandMark />
         <p className="mt-2 text-sm text-muted">
-          {[greetings.slice(0, 2), greetings.slice(2)].map((pair) => (
-            <span key={pair[0].locale} className="block">
-              <bdi lang={pair[0].locale}>{pair[0].text}</bdi>
-              <span aria-hidden> · </span>
-              <bdi lang={pair[1].locale}>{pair[1].text}</bdi>
-            </span>
-          ))}
+          {/* Two greetings per line, as many lines as there are site languages. */}
+          {greetings
+            .filter((_, index) => index % 2 === 0)
+            .map((first, line) => {
+              const second = greetings[line * 2 + 1];
+              return (
+                <span key={first.locale} className="block">
+                  <bdi lang={first.locale}>{first.text}</bdi>
+                  {second && (
+                    <>
+                      <span aria-hidden> · </span>
+                      <bdi lang={second.locale}>{second.text}</bdi>
+                    </>
+                  )}
+                </span>
+              );
+            })}
         </p>
         <h2 id="choose-language" className="mt-8 mb-2 font-medium">
           {bilingual("chooseLanguage")}

@@ -52,6 +52,33 @@ test("language switch stays on the same page and flips direction", async ({ page
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Glossary");
 });
 
+test("only Hebrew and English are served, and other language settings fall back to Hebrew", async ({ page, browser, baseURL }) => {
+  await withPrefs(page);
+  for (const path of ["/ru", "/es", "/ru/holidays", "/es/lessons/shabbat-6"]) {
+    expect((await page.goto(path))?.status(), path).toBe(404);
+  }
+
+  // The welcome screen and the language menu offer exactly the two.
+  await page.goto("/he/welcome");
+  await expect(page.locator("ul[aria-labelledby='choose-language']").getByRole("link")).toHaveText(["עברית", "English"]);
+  await page.goto("/he/glossary");
+  await page.getByRole("button", { name: /עברית/ }).click();
+  await expect(page.locator("ul[aria-labelledby='language-menu-title']").getByRole("link")).toHaveText(["עברית", "English"]);
+
+  // A Russian browser with a Russian language cookie (as left by an earlier visit) lands on
+  // Hebrew in one go: no error and no redirect loop.
+  const russian = await browser.newContext({ baseURL, locale: "ru-RU", extraHTTPHeaders: { "accept-language": "ru-RU,ru;q=0.9" } });
+  await russian.addCookies([
+    { name: "ah_text_size", value: "m", url: "http://localhost:3100" },
+    { name: "NEXT_LOCALE", value: "ru", url: "http://localhost:3100" },
+  ]);
+  const visit = await russian.newPage();
+  expect((await visit.goto("/"))?.status()).toBe(200);
+  await expect(visit).toHaveURL(/\/he$/);
+  await expect(visit.locator("html")).toHaveAttribute("lang", "he");
+  await russian.close();
+});
+
 test("timecodes stay left to right inside Hebrew text", async ({ page }) => {
   await withPrefs(page);
   await page.goto("/he");
