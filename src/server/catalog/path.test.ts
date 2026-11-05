@@ -129,6 +129,30 @@ for (const [name, create] of [
       assert.deepEqual([after?.id, after?.lessonNumber, after?.lessonsInStep], [s.id("kashrut-6"), 5, 10]);
     });
 
+    test("a malformed step id is simply not found, without a database error", async () => {
+      const s = await storage();
+      for (const id of ["", "not-a-uuid", "'; drop table track_steps; --", "../shabbat", "5a3b1c2d-0000-4000-8000", "%00"]) {
+        assert.equal(await s.path.getStep(SAMPLE_USER_ID, id, "he"), null, JSON.stringify(id));
+      }
+    });
+
+    test("known limitation: Start points to the first open lesson even if a later one is under way", async () => {
+      const s = await create();
+      const [faith] = await stepIds(s);
+      await s.progress.save(NEW_USER_ID, s.id("faith-1"), 60, true);
+      // Lesson 2 skipped; lesson 3 half watched.
+      await s.progress.save(NEW_USER_ID, s.id("faith-3"), 600);
+      const step = await s.path.getStep(NEW_USER_ID, faith, "he");
+      assert.deepEqual(
+        step?.lessons.slice(0, 3).map((lesson) => [lesson.id, lesson.state, lesson.positionSec, lesson.isNext]),
+        [
+          [s.id("faith-1"), "done", 60, false],
+          [s.id("faith-2"), "not_started", 0, true],
+          [s.id("faith-3"), "in_progress", 600, false],
+        ],
+      );
+    });
+
     test("an unknown step is not found", async () => {
       const s = await storage();
       assert.equal(await s.path.getStep(SAMPLE_USER_ID, "not-a-step", "he"), null);

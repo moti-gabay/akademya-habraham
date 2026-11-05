@@ -44,7 +44,8 @@
       "completed": "Completed",
       "inProgress": "In progress · {done} of {total} lessons",
       "inProgressShort": "{done} of {total} lessons",
-      "upNext": "Up next"
+      "upNext": "Up next",
+      "comingSoon": "Coming soon"
     },
     "nextHoliday": "Next holiday · {date}",
     "holidayMeta": "{description} · {minutes} minutes",
@@ -107,6 +108,27 @@
       "whatsapp": "WhatsApp",
       "noContacts": "Contact details will appear here soon."
     }
+  },
+  "pathStep": {
+    "back": "Back to my path",
+    "stepLabel": "Step {n}",
+    "doneCount": "{done} of {total} lessons completed",
+    "progress": "Progress in this step",
+    "start": "Start: {title}",
+    "continue": "Continue: {title}",
+    "stoppedAt": "Stopped at <tc></tc>",
+    "lessonNumber": "Lesson {n}",
+    "minutes": "{minutes} minutes",
+    "upNext": "Up next",
+    "completed": "Completed",
+    "notReady": "Being prepared",
+    "stepDone": "You finished this step",
+    "nextStep": "Next step: {step}"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The link may be old or mistyped.",
+    "home": "Go to the home page"
   },
   "catalog": {
     "lessonCount": "Lessons: {count}",
