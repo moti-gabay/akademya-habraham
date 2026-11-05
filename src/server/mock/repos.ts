@@ -186,12 +186,12 @@ export function createMockRepos(store: MockStore) {
     async getPosition(userId, lessonId) {
       return progressOf(userId, lessonId)?.positionSec ?? 0;
     },
-    async save(userId, lessonId, positionSec) {
+    async save(userId, lessonId, positionSec, ended = false) {
       const lesson = published(lessonId);
       if (!lesson) return;
       // As in the database: finished once, never un-finished, and the share never goes down.
       const previous = progressOf(userId, lessonId);
-      const pct = lesson.durationSec ? Math.min(100, Math.round((positionSec / lesson.durationSec) * 100)) : 0;
+      const pct = ended ? 100 : lesson.durationSec ? Math.min(100, Math.round((positionSec / lesson.durationSec) * 100)) : 0;
       const now = Date.now();
       const byLesson = store.progress.get(userId) ?? new Map();
       byLesson.set(lessonId, {

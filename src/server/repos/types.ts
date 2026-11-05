@@ -95,7 +95,8 @@ export interface LessonRepo {
 export interface ProgressRepo {
   getContinueWatching(userId: string, locale: Locale): Promise<ContinueWatching | null>;
   getPosition(userId: string, lessonId: string): Promise<number>;
-  save(userId: string, lessonId: string, positionSec: number): Promise<void>;
+  // ended: the video played to its end, which finishes the lesson whatever its stored length.
+  save(userId: string, lessonId: string, positionSec: number, ended?: boolean): Promise<void>;
 }
 export interface GlossaryRepo {
   list(locale: Locale, limit?: number): Promise<GlossaryTerm[]>;

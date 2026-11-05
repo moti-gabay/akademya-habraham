@@ -237,6 +237,29 @@ for (const [name, create] of [
       assert.ok((await s.path.getSteps(NEW_USER_ID, "he")).every((step) => step.status === "completed"));
     });
 
+    test("the end of the video finishes a lesson whatever its length, for published lessons only", async () => {
+      const s = await create();
+      const prayer = (await stepIds(s))[3];
+      const state = async (key: string) =>
+        (await s.path.getStep(NEW_USER_ID, prayer, "he"))?.lessons.find((lesson) => lesson.id === s.id(key))?.state;
+
+      // 60 s of a 30-minute placeholder: far below 95%, but the video ended.
+      await s.progress.save(NEW_USER_ID, s.id("prayer-1"), 60, true);
+      assert.equal(await state("prayer-1"), "done");
+      // A later save without "ended" (rewinding, watching again) moves the stop point only.
+      await s.progress.save(NEW_USER_ID, s.id("prayer-1"), 10);
+      assert.equal(await state("prayer-1"), "done");
+      assert.equal(await s.progress.getPosition(NEW_USER_ID, s.id("prayer-1")), 10);
+      // The same share without "ended" does not finish a lesson.
+      await s.progress.save(NEW_USER_ID, s.id("prayer-3"), 60);
+      assert.equal(await state("prayer-3"), "in_progress");
+
+      await s.setLessons(["prayer-2"], "draft");
+      await s.progress.save(NEW_USER_ID, s.id("prayer-2"), 60, true);
+      await s.setLessons(["prayer-2"], "published");
+      assert.equal(await state("prayer-2"), "not_started");
+    });
+
     test("without a published track there is no path at all", async () => {
       const s = await create();
       const [, shabbat] = await stepIds(s);

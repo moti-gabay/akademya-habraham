@@ -21,14 +21,22 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, browserName: "chromium", locale: "he-IL" },
   expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
   projects: [
-    { name: "mobile", testIgnore: /admin/, use: { viewport: { width: 375, height: 812 } } },
-    { name: "desktop", testIgnore: /admin/, use: { viewport: { width: 1280, height: 800 } } },
+    { name: "mobile", testIgnore: /admin|progress/, use: { viewport: { width: 375, height: 812 } } },
+    { name: "desktop", testIgnore: /admin|progress/, use: { viewport: { width: 1280, height: 800 } } },
     {
       name: "admin",
       testMatch: /admin/,
       // The dev server compiles each page and route on its first visit, from cold on every
       // run (its output directory is emptied at start); on a slow or loaded disk that alone
       // can use up the default 30 s.
+      timeout: 90_000,
+      use: { baseURL: `http://localhost:${ADMIN_PORT}`, viewport: { width: 1280, height: 800 } },
+    },
+    {
+      // Saving progress finishes lessons, which cannot be undone; on the dev server that
+      // leaves the screenshot server's sample state untouched.
+      name: "progress",
+      testMatch: /progress/,
       timeout: 90_000,
       use: { baseURL: `http://localhost:${ADMIN_PORT}`, viewport: { width: 1280, height: 800 } },
     },
