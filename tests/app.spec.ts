@@ -234,9 +234,13 @@ for (const locale of LOCALES) {
       expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes[0]?.html}`)).toEqual([]);
 
       // Baselines are rendered locally; text antialiasing differs on the CI runner, so
-      // the comparison is local only. The video frame comes from the network, so it is masked.
+      // the comparison is local only. Masked: the video frame, and the home page's
+      // next-holiday card, whose holiday and date follow the real calendar.
       if (!process.env.CI) {
-        await expect(page).toHaveScreenshot(`${name}-${locale}.png`, { fullPage: true, mask: [page.locator("video")] });
+        const nextHoliday = page.locator("section").filter({ hasText: /^(Next holiday|החג הקרוב) · / });
+        // A mask that matches nothing would hide nothing: on home the card must be there.
+        await expect(nextHoliday).toHaveCount(name === "home" ? 1 : 0);
+        await expect(page).toHaveScreenshot(`${name}-${locale}.png`, { fullPage: true, mask: [page.locator("video"), nextHoliday] });
       }
 
       await page.evaluate(() => (document.documentElement.dataset.textSize = "l"));
