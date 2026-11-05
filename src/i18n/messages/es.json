@@ -10,7 +10,6 @@
     "label": "Navegación principal",
     "home": "Inicio",
     "path": "Mi camino",
-    "search": "Buscar",
     "holidays": "Fiestas",
     "glossary": "Glosario",
     "help": "Ayuda"
@@ -93,10 +92,6 @@
     "path": {
       "title": "Mi camino",
       "intro": "Las cinco etapas de su camino, en orden."
-    },
-    "search": {
-      "title": "Buscar",
-      "intro": "Aquí podrá buscar una clase por tema o palabra."
     },
     "holidays": {
       "title": "Fiestas",

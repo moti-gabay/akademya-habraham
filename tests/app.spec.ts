@@ -107,6 +107,21 @@ test("player controls work and the stop point reaches the home card", async ({ p
   }
 });
 
+test("the navigation leads to the holidays on every screen size, and there is no search page", async ({ page }) => {
+  await withPrefs(page);
+  expect((await page.goto("/en/search"))?.status()).toBe(404);
+
+  await page.goto("/en");
+  const wide = (page.viewportSize()?.width ?? 0) >= 1024;
+  const nav = page.getByRole("navigation", { name: "Main navigation" });
+  await expect(nav.getByRole("link")).toHaveText(
+    wide ? ["Home", "My path", "Holidays", "Glossary", "Help"] : ["Home", "My path", "Holidays", "Help"],
+  );
+  await nav.getByRole("link", { name: "Holidays" }).click();
+  await expect(page).toHaveURL(/\/en\/holidays$/);
+  await expect(nav.getByRole("link", { name: "Holidays" })).toHaveAttribute("aria-current", "page");
+});
+
 test("the holiday catalog opens without the welcome screen and shows previews, not the player", async ({ page }) => {
   // No preferences cookie: a shared link lands on the page itself.
   await page.goto("/en/holidays");

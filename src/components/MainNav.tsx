@@ -1,13 +1,12 @@
 "use client";
 
-import { CircleHelp, Flag, House, Search } from "lucide-react";
+import { CalendarDays, CircleHelp, Flag, House } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 
 const hrefs = {
   home: "/",
   path: "/path",
-  search: "/search",
   holidays: "/holidays",
   glossary: "/glossary",
   help: "/help",
@@ -17,7 +16,7 @@ const topItems = ["home", "path", "holidays", "glossary", "help"] as const;
 const bottomItems = [
   ["home", House],
   ["path", Flag],
-  ["search", Search],
+  ["holidays", CalendarDays],
   ["help", CircleHelp],
 ] as const;
 
