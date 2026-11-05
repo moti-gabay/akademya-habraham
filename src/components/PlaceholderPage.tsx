@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { card } from "./ui";
 
-type Page = "path" | "search" | "holidays" | "glossary" | "help";
+type Page = "path" | "holidays" | "glossary" | "help";
 
 // Pages that are in the navigation but not in the sketch yet: title, one line, same cards.
 export async function PlaceholderPage({ page, children }: { page: Page; children?: React.ReactNode }) {

@@ -9,7 +9,6 @@
     "label": "Main navigation",
     "home": "Home",
     "path": "My path",
-    "search": "Search",
     "holidays": "Holidays",
     "glossary": "Glossary",
     "help": "Help"
@@ -92,10 +91,6 @@
     "path": {
       "title": "My path",
       "intro": "The five steps of your path, in order."
-    },
-    "search": {
-      "title": "Search",
-      "intro": "Here you will be able to find a lesson by topic or word."
     },
     "holidays": {
       "title": "Holidays",

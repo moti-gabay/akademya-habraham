@@ -8,6 +8,8 @@ Decided 2026-10-07. Update this file when a decision changes.
 
 Decision 2026-10-11: Milestone 0 is closed. The UI follows `design/final-sketch.pdf`, which replaces the five concepts and is the visual source of truth. The audience is older adults, so tap targets are ≥ 48 px, contrast is WCAG AA or better, and every icon has a text label.
 
+Decision 2026-11-05: search is not in the first version. The `/search` placeholder and its strings are removed; on phones the bottom navigation shows Holidays in its place (home, path, holidays, help), so the holiday catalog has a way in on every screen size. Search (3c) comes back as a feature when the owner decides.
+
 ## Decisions
 
 | Area | Choice | Why |

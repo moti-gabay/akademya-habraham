@@ -102,7 +102,7 @@ Verified against a real R2 bucket (October 2026): the presigned `PUT` from the b
 ```
 src/app/[locale]/            layout sets <html lang dir data-text-size>
   welcome/                   first visit: language + text size
-  (app)/                     header + bottom navigation: home, path, search, glossary, help
+  (app)/                     header + bottom navigation (phone: home, path, holidays, help; desktop adds glossary)
     admin/                   admin catalog: lists, and one form per entity with a tab per language
   (public)/holidays/         holiday catalog and lesson previews: static, open to signed-out visitors
   blocked/, sign-in/, sign-up/
