@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import type { PathStep } from "@/server/repos";
@@ -28,21 +28,20 @@ export async function PathSteps({ steps }: { steps: PathStep[] }) {
   );
 }
 
-export async function PathStepList({ steps }: { steps: PathStep[] }) {
+// `linked` (the path page): each step with published lessons opens its page, and one
+// with none yet says "coming soon". Home shows the same list without links.
+export async function PathStepList({ steps, linked = false }: { steps: PathStep[]; linked?: boolean }) {
   const t = await getTranslations("home");
   return (
       <ol className="divide-y divide-line rounded-card border border-line bg-card px-4 lg:grid lg:grid-cols-5 lg:gap-3 lg:divide-y-0 lg:border-0 lg:bg-transparent lg:px-0">
         {steps.map((step) => {
           const current = step.status === "in_progress";
           const counts = { done: step.lessonsDone, total: step.lessonsTotal };
-          return (
-            <li
-              key={step.id}
-              aria-current={current ? "step" : undefined}
-              className={`flex items-center gap-3 py-3 lg:flex-col lg:items-start lg:gap-2 lg:rounded-card lg:border lg:bg-card lg:p-4 ${
-                current ? "lg:border-green lg:ring-1 lg:ring-green" : "lg:border-line"
-              }`}
-            >
+          const row = `flex items-center gap-3 py-3 lg:flex-col lg:items-start lg:gap-2 lg:rounded-card lg:border lg:bg-card lg:p-4 ${
+            current ? "lg:border-green lg:ring-1 lg:ring-green" : "lg:border-line"
+          }`;
+          const content = (
+            <>
               <span aria-hidden className={`grid size-8 shrink-0 place-items-center rounded-full ${badge[step.status]}`}>
                 {step.status === "completed" ? <Check className="size-4" strokeWidth={3} /> : step.number}
               </span>
@@ -56,7 +55,23 @@ export async function PathStepList({ steps }: { steps: PathStep[] }) {
                     <span className="hidden text-sm text-muted lg:block">{t("status.inProgressShort", counts)}</span>
                   </>
                 )}
+                {linked && !step.available && <span className="block text-sm text-muted">{t("status.comingSoon")}</span>}
               </span>
+            </>
+          );
+          if (linked && step.available) {
+            return (
+              <li key={step.id}>
+                <Link href={`/path/${step.id}`} aria-current={current ? "step" : undefined} className={`tap ${row} hover:bg-green-tint/50`}>
+                  {content}
+                  <ChevronRight aria-hidden className="ms-auto size-5 shrink-0 text-muted lg:hidden rtl:-scale-x-100" />
+                </Link>
+              </li>
+            );
+          }
+          return (
+            <li key={step.id} aria-current={current ? "step" : undefined} className={row}>
+              {content}
             </li>
           );
         })}

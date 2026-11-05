@@ -212,6 +212,27 @@ test("deleting a teacher who still has lessons is refused with an explanation", 
   await expect(page.getByRole("main").getByRole("alert")).toContainText("Move or unpublish them first.");
 });
 
+test("a step with nothing published is shown as coming soon and has no page", async ({ page, request }) => {
+  await withPrefs(page);
+  // Kashrut's published lessons (kashrut-meat-milk is already a draft).
+  const kashrut = [1, 2, 3, 5, 6, 7, 8, 9, 10, 11].map((n) => `kashrut-${n}`);
+  try {
+    for (const id of kashrut) {
+      expect((await request.post(`/api/admin/catalog/lessons/${id}/unpublish`, { headers: own })).status()).toBe(200);
+    }
+    await page.goto("/en/path");
+    const row = page.getByRole("main").getByRole("listitem").filter({ hasText: "Kashrut" });
+    await expect(row).toContainText("Coming soon");
+    await expect(row.getByRole("link")).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Prayer and blessings/ })).toBeVisible();
+
+    expect((await page.goto("/en/path/kashrut"))?.status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page not found");
+  } finally {
+    for (const id of kashrut) await request.post(`/api/admin/catalog/lessons/${id}/publish`, { headers: own });
+  }
+});
+
 test("a lesson appears on the public holiday page when published and leaves it when unpublished", async ({ page }) => {
   await withPrefs(page);
   const slug = `megillah-reading-${Date.now()}`;

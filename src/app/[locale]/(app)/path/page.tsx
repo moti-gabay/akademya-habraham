@@ -10,7 +10,7 @@ export default async function PathPage() {
   const steps = await pathRepo.getSteps((await getPageActor(locale)).userId, locale);
   return (
     <PlaceholderPage page="path">
-      <PathStepList steps={steps} />
+      <PathStepList steps={steps} linked />
     </PlaceholderPage>
   );
 }

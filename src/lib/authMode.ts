@@ -19,13 +19,24 @@ export const authMode: "clerk" | "stub" = usesDatabase && hasClerkKeys ? "clerk"
 // builds; anywhere else it is ignored, so it can never write to a database. The sample
 // actor then counts as an admin with a second factor.
 export function resolveMockRole(env: Record<string, string | undefined>, mode: typeof authMode): "admin" | null {
-  if (!env.MOCK_ROLE) return null;
+  return localStandIn(env, mode, "MOCK_ROLE") && env.MOCK_ROLE === "admin" ? "admin" : null;
+}
+
+// Local stand-in for a learner who has not watched anything yet (the fictional sample
+// user David), so the first-run screens can be used and tested. Same conditions as
+// MOCK_ROLE; never widen them.
+export function resolveMockUser(env: Record<string, string | undefined>, mode: typeof authMode): "new" | null {
+  return localStandIn(env, mode, "MOCK_USER") && env.MOCK_USER === "new" ? "new" : null;
+}
+
+function localStandIn(env: Record<string, string | undefined>, mode: typeof authMode, name: string): boolean {
+  if (!env[name]) return false;
   if (mode === "clerk") {
-    console.warn("MOCK_ROLE is ignored while Clerk sign-in is active.");
-    return null;
+    console.warn(`${name} is ignored while Clerk sign-in is active.`);
+    return false;
   }
-  const local = env.DATA_SOURCE !== "db" && !env.VERCEL && env.NODE_ENV !== "production";
-  return env.MOCK_ROLE === "admin" && local ? "admin" : null;
+  return env.DATA_SOURCE !== "db" && !env.VERCEL && env.NODE_ENV !== "production";
 }
 
 export const mockRole = resolveMockRole(process.env, authMode);
+export const mockUser = resolveMockUser(process.env, authMode);

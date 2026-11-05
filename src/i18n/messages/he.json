@@ -44,7 +44,8 @@
       "completed": "הושלם",
       "inProgress": "באמצע · {done} מתוך {total} שיעורים",
       "inProgressShort": "{done} מתוך {total} שיעורים",
-      "upNext": "הבא בתור"
+      "upNext": "הבא בתור",
+      "comingSoon": "בקרוב"
     },
     "nextHoliday": "החג הקרוב · {date}",
     "holidayMeta": "{description} · {minutes} דקות",
@@ -107,6 +108,27 @@
       "whatsapp": "וואטסאפ",
       "noContacts": "פרטי הקשר יופיעו כאן בקרוב."
     }
+  },
+  "pathStep": {
+    "back": "חזרה למסלול",
+    "stepLabel": "שלב {n}",
+    "doneCount": "{done} מתוך {total} שיעורים הושלמו",
+    "progress": "התקדמות בשלב",
+    "start": "להתחיל: {title}",
+    "continue": "להמשיך: {title}",
+    "stoppedAt": "נעצרת בדקה <tc></tc>",
+    "lessonNumber": "שיעור {n}",
+    "minutes": "{minutes} דקות",
+    "upNext": "הבא בתור",
+    "completed": "הושלם",
+    "notReady": "בהכנה",
+    "stepDone": "סיימת את השלב הזה",
+    "nextStep": "לשלב הבא: {step}"
+  },
+  "notFound": {
+    "title": "הדף לא נמצא",
+    "text": "ייתכן שהקישור ישן או שהוקלד לא נכון.",
+    "home": "לדף הבית"
   },
   "catalog": {
     "lessonCount": "שיעורים: {count}",
