@@ -19,7 +19,12 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   // A Hebrew browser, so the first visit lands on the default locale.
   use: { baseURL: `http://localhost:${PORT}`, browserName: "chromium", locale: "he-IL" },
-  expect: { toHaveScreenshot: { maxDiffPixelRatio: 0.002 } },
+  // An absolute limit, so it does not grow with the page's height (a ratio of 0.2 %
+  // let a whole changed navigation item through). Calibrated 2026-11-05: 24 screens ×
+  // 5 runs differed by 0 px; regenerating baselines on a new build once differed by
+  // 19 px of anti-aliasing. 60 px is about three times that, and below one changed
+  // character (about 75 px), so a single-letter change still fails.
+  expect: { toHaveScreenshot: { maxDiffPixels: 60 } },
   projects: [
     { name: "mobile", testIgnore: /admin|progress/, use: { viewport: { width: 375, height: 812 } } },
     { name: "desktop", testIgnore: /admin|progress/, use: { viewport: { width: 1280, height: 800 } } },
