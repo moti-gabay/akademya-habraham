@@ -12,6 +12,7 @@ import { NEW_USER_ID, SAMPLE_USER_ID } from "../mock/data";
 import { createMockRepos } from "../mock/repos";
 import { buildStore } from "../mock/store";
 import type { PathRepo, ProgressRepo } from "../repos/types";
+import { homeState } from "./path";
 
 // Sample lessons are addressed by their key ("shabbat-6"); each storage maps it to its id.
 type Storage = {
@@ -282,6 +283,81 @@ for (const [name, create] of [
       await s.progress.save(NEW_USER_ID, s.id("prayer-2"), 60, true);
       await s.setLessons(["prayer-2"], "published");
       assert.equal(await state("prayer-2"), "not_started");
+    });
+
+    // Home's state from the same repo calls the page makes; asks counts the Start queries.
+    async function home(s: Storage, userId: string) {
+      let asks = 0;
+      const state = await homeState(
+        await s.path.getSteps(userId, "he"),
+        await s.progress.getContinueWatching(userId, "he"),
+        () => (asks++, s.path.getStartLesson(userId, "he")),
+      );
+      const lesson = state.kind === "continue" ? state.item.lesson : state.kind === "start" ? state.lesson : null;
+      return { kind: state.kind, lessonId: lesson?.id, first: state.kind === "start" ? state.first : undefined, asks };
+    }
+    const finishPath = async (s: Storage, userId: string) => {
+      for (const { id } of await s.path.getSteps(userId, "he")) {
+        for (const lesson of (await s.path.getStep(userId, id, "he"))?.lessons ?? []) {
+          await s.progress.save(userId, lesson.id, lesson.durationSec, true);
+        }
+      }
+    };
+
+    test("home: a lesson under way is continued, without asking for Start", async () => {
+      assert.deepEqual(await home(await storage(), SAMPLE_USER_ID), {
+        kind: "continue",
+        lessonId: (await storage()).id("shabbat-6"),
+        first: undefined,
+        asks: 0,
+      });
+    });
+
+    test("home: a new learner starts at the first lesson, as a first start", async () => {
+      const s = await storage();
+      assert.deepEqual(await home(s, NEW_USER_ID), { kind: "start", lessonId: s.id("faith-1"), first: true, asks: 1 });
+    });
+
+    test("home: a returning learner with nothing under way starts the next lesson, not as a first start", async () => {
+      const s = await create();
+      await s.progress.save(NEW_USER_ID, s.id("faith-1"), 60, true);
+      assert.deepEqual(await home(s, NEW_USER_ID), { kind: "start", lessonId: s.id("faith-2"), first: false, asks: 1 });
+    });
+
+    test("home: progress only on lessons unpublished since counts as no progress", async () => {
+      const s = await create();
+      await s.progress.save(NEW_USER_ID, s.id("faith-1"), 60, true);
+      await s.progress.save(NEW_USER_ID, s.id("faith-2"), 300);
+      await s.setLessons(["faith-1", "faith-2"], "draft");
+      assert.deepEqual(await home(s, NEW_USER_ID), { kind: "start", lessonId: s.id("faith-3"), first: true, asks: 1 });
+    });
+
+    test("home: a learner who finished every lesson gets Finished, never Continue", async () => {
+      const s = await create();
+      // The sample user has a lesson under way (shabbat-6); finishing it must not leave it as Continue.
+      await finishPath(s, SAMPLE_USER_ID);
+      assert.equal(await s.progress.getContinueWatching(SAMPLE_USER_ID, "he"), null);
+      assert.deepEqual(await home(s, SAMPLE_USER_ID), { kind: "finished", lessonId: undefined, first: undefined, asks: 0 });
+    });
+
+    test("home: a lesson published after the path was finished is the next start, or Empty until its video is ready", async () => {
+      const s = await create();
+      await finishPath(s, NEW_USER_ID);
+      await s.setLessons(["kashrut-meat-milk"], "published");
+      assert.deepEqual(await home(s, NEW_USER_ID), {
+        kind: "start",
+        lessonId: s.id("kashrut-meat-milk"),
+        first: false,
+        asks: 1,
+      });
+      await s.setVideo("kashrut-meat-milk", "processing");
+      assert.deepEqual(await home(s, NEW_USER_ID), { kind: "empty", lessonId: undefined, first: undefined, asks: 1 });
+    });
+
+    test("home: with nothing published the state is Empty, without asking for Start", async () => {
+      const s = await create();
+      await s.setTrack("draft");
+      assert.deepEqual(await home(s, NEW_USER_ID), { kind: "empty", lessonId: undefined, first: undefined, asks: 0 });
     });
 
     test("without a published track there is no path at all", async () => {

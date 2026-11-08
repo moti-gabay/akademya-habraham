@@ -5,7 +5,7 @@ import { Timecode } from "@/components/Timecode";
 import { TitleWithTerms } from "@/components/TitleWithTerms";
 import { card, primaryBtn } from "@/components/ui";
 import { Link } from "@/i18n/navigation";
-import type { ContinueWatching, GlossaryTerm } from "@/server/repos";
+import type { ContinueWatching, GlossaryTerm, Lesson } from "@/server/repos";
 
 const chip = "w-fit rounded-full bg-green-tint px-3 py-1 text-sm font-medium text-green";
 
@@ -14,20 +14,23 @@ export async function ContinueCard({
   terms,
   thumbnailUrl,
 }: {
-  item: ContinueWatching;
+  // A lesson under way, or one to start (first: the learner has finished none yet).
+  item: ContinueWatching | { lesson: Lesson; first: boolean };
   terms: GlossaryTerm[];
   // The lesson's image; without one the card keeps its plain placeholder.
   thumbnailUrl: string | null;
 }) {
   const t = await getTranslations("home");
-  const { lesson, positionSec } = item;
+  const { lesson } = item;
+  const start = "first" in item ? item : null;
+  const positionSec = "positionSec" in item ? item.positionSec : 0;
   const href = `/lessons/${lesson.id}`;
   const step = { n: lesson.stepNumber, step: lesson.stepName, lesson: lesson.lessonNumber, total: lesson.lessonsInStep };
   const tc = () => <Timecode seconds={positionSec} />;
 
   return (
     <section className={`${card} flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:gap-6 lg:p-5`}>
-      <p className={`${chip} lg:hidden`}>{t("stepChip", step)}</p>
+      <p className={`${chip} lg:hidden`}>{start ? t(start.first ? "firstLesson" : "nextLesson") : t("stepChip", step)}</p>
       {/* Decorative: the button below is the one real link to the lesson. */}
       <Link
         href={href}
@@ -41,17 +44,30 @@ export async function ContinueCard({
         </span>
       </Link>
       <div className="flex flex-col gap-3 lg:w-1/2">
-        <p className={`${chip} hidden lg:block`}>{t("stepChipLesson", step)}</p>
+        <p className={`${chip} hidden lg:block`}>
+          {start ? t(start.first ? "firstLesson" : "nextLesson") : t("stepChipLesson", step)}
+        </p>
         <h2 className="text-xl leading-snug font-medium lg:text-2xl">
           <TitleWithTerms title={lesson.title} terms={terms} />
         </h2>
-        <p className="text-sm text-muted lg:hidden">{t.rich("lessonMeta", { ...step, tc })}</p>
-        <p className="hidden text-muted lg:block">{t.rich("teacherMeta", { teacher: lesson.teacher, tc })}</p>
-        <ProgressBar value={positionSec} max={lesson.durationSec} label={t("progress")} />
+        {start ? (
+          <>
+            <p className="text-muted">{t("stepChipLesson", step)}</p>
+            <p className="text-muted">
+              {t("startMeta", { teacher: lesson.teacher, minutes: Math.round(lesson.durationSec / 60) })}
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted lg:hidden">{t.rich("lessonMeta", { ...step, tc })}</p>
+            <p className="hidden text-muted lg:block">{t.rich("teacherMeta", { teacher: lesson.teacher, tc })}</p>
+            <ProgressBar value={positionSec} max={lesson.durationSec} label={t("progress")} />
+          </>
+        )}
         <Link href={href} className={`${primaryBtn} mt-1 lg:w-fit lg:px-7`}>
           {/* Play is not a directional icon: it stays on the left, as in the sketch. */}
           <Play aria-hidden className="size-4 fill-current rtl:order-last" />
-          {t("continueWatching")}
+          {t(start ? "startLesson" : "continueWatching")}
         </Link>
       </div>
     </section>
