@@ -1,4 +1,4 @@
-import type { PathStep, StepDetail, StepLesson, StepStatus } from "../repos/types";
+import type { ContinueWatching, Lesson, PathStep, StepDetail, StepLesson, StepStatus } from "../repos/types";
 
 // The learning path's rules, shared by the database and mock repos so the two cannot
 // disagree. Only published lessons count; drafts are invisible to the learner.
@@ -54,6 +54,30 @@ export type PathEntry = { id: string; stepId: string; ready: boolean; done: bool
 // Home's "Start": the first ready lesson the user has not finished. Earlier steps are
 // complete by definition, so this is also the first open lesson of the current step.
 export const startLessonId = (path: PathEntry[]) => path.find((entry) => entry.ready && !entry.done)?.id ?? null;
+
+export type HomeState =
+  | { kind: "continue"; item: ContinueWatching }
+  // first: the learner has not finished any published lesson yet.
+  | { kind: "start"; lesson: Lesson; first: boolean }
+  | { kind: "finished" }
+  // Nothing published, or the next lesson's video is not ready yet.
+  | { kind: "empty" };
+
+// Home's main card, in this order: a lesson under way, the whole path finished, the
+// lesson to start, or nothing to offer yet. startOf is called only when Start decides.
+export async function homeState(
+  steps: Pick<PathStep, "lessonsDone" | "lessonsTotal">[],
+  continueWatching: ContinueWatching | null,
+  startOf: () => Promise<Lesson | null>,
+): Promise<HomeState> {
+  if (continueWatching) return { kind: "continue", item: continueWatching };
+  const total = steps.reduce((sum, step) => sum + step.lessonsTotal, 0);
+  const done = steps.reduce((sum, step) => sum + step.lessonsDone, 0);
+  if (total === 0) return { kind: "empty" };
+  if (done === total) return { kind: "finished" };
+  const lesson = await startOf();
+  return lesson ? { kind: "start", lesson, first: done === 0 } : { kind: "empty" };
+}
 
 // The next ready lesson after this one. A lesson listed in two steps counts from the first.
 export function lessonAfter(path: PathEntry[], lessonId: string): { id: string; newStep: boolean } | null {

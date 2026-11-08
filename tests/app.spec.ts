@@ -151,6 +151,14 @@ test("the navigation leads to the holidays on every screen size, and there is no
   await expect(nav.getByRole("link", { name: "Holidays" })).toHaveAttribute("aria-current", "page");
 });
 
+test("home offers a learner with a lesson under way Continue, not Start", async ({ page }) => {
+  await withPrefs(page);
+  await page.goto("/en");
+  await expect(page.getByText("Good to see you again. Here is your next lesson.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue watching" })).toHaveAttribute("href", `/en/lessons/${LESSON}`);
+  await expect(page.getByRole("link", { name: "Start the lesson" })).toHaveCount(0);
+});
+
 test("a learner with progress sees the step and continues where they stopped", async ({ page }) => {
   await withPrefs(page);
   await page.goto("/en/path");
