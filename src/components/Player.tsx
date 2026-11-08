@@ -7,6 +7,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { localeNames, type Locale } from "@/i18n/routing";
 import { createProgressSaver } from "@/lib/progressSaver";
 import { formatTime } from "@/lib/time";
+import { LessonEndCard, type LessonEnding } from "./LessonEndCard";
 import { SegmentedRadio } from "./SegmentedRadio";
 import { Timecode } from "./Timecode";
 import { card, outlineBtn, primaryBtn } from "./ui";
@@ -32,6 +33,13 @@ function showSubtitles(video: HTMLVideoElement, language: string) {
 // The video address comes from /api/play and is never in the page itself.
 type Playback = { url: string; expiresAt: number };
 type PlayError = "signed_out" | "members_only" | "video_not_ready" | "failed";
+
+// The end card lives outside the video, so a fullscreen video would hide it. iOS shows
+// its own fullscreen player (webkitDisplayingFullscreen), which cannot show our UI at all.
+async function leaveFullscreen(video: HTMLVideoElement & { webkitDisplayingFullscreen?: boolean; webkitExitFullscreen?: () => void }) {
+  if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+  else if (video.webkitDisplayingFullscreen) video.webkitExitFullscreen?.();
+}
 
 async function requestPlayback(lessonId: string): Promise<Playback | PlayError> {
   try {
@@ -63,12 +71,19 @@ type Props = {
   mode: "clerk" | "stub";
   // Lesson meta and title, shown between the video and the controls.
   children: React.ReactNode;
+  // Where "Back" goes: the lesson's step page, or home for a lesson outside the path.
+  backHref: string;
+  // What the card at the end of the video offers.
+  ending: LessonEnding;
 };
 
-export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, children }: Props) {
+export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, children, backHref, ending }: Props) {
   const t = useTranslations();
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playButton = useRef<HTMLButtonElement>(null);
+  // The video has played to its end; cleared when it plays again.
+  const [ended, setEnded] = useState(false);
   const [playback, setPlayback] = useState<Playback | null>(null);
   const [error, setError] = useState<PlayError | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -212,10 +227,10 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
       <button
         type="button"
         className="tap inline-flex items-center gap-1 px-3 font-medium"
-        // Save first, so the home page already shows the new stop point.
+        // Save first, so the page behind already shows the new stop point.
         onClick={() =>
           Promise.race([saver.save(lastPosition.current), new Promise((resolve) => setTimeout(resolve, BACK_WAIT_MS))]).then(() =>
-            router.push("/"),
+            router.push(backHref),
           )
         }
       >
@@ -232,6 +247,7 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
         className="aspect-video w-full bg-black lg:rounded-card"
         onClick={toggle}
         onPlay={(event) => {
+          setEnded(false);
           // About to expire: renew first, then play on from here.
           if (playback && playback.expiresAt - Date.now() < RENEW_BEFORE_MS && !renewed.current) {
             event.currentTarget.pause();
@@ -244,8 +260,12 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
           setPlaying(false);
           saver.save(lastPosition.current);
         }}
-        // Finishes the lesson even when the stored length differs from the video's.
-        onEnded={() => saver.save(lastPosition.current, true)}
+        // Finishes the lesson even when the stored length differs from the video's. The card
+        // does not wait for the save: it shows whether or not the save gets through.
+        onEnded={(event) => {
+          saver.save(lastPosition.current, true);
+          leaveFullscreen(event.currentTarget).then(() => setEnded(true));
+        }}
         onError={() => {
           // Native HLS reports a dead address here.
           if (!renew(playing)) setError("failed");
@@ -277,6 +297,18 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
       </video>
 
       <div className="space-y-4 px-4 pt-3 lg:px-0">
+        {ended && (
+          <LessonEndCard
+            ending={ending}
+            onAgain={() => {
+              const video = videoRef.current!;
+              video.currentTime = 0;
+              setCurrent(0);
+              video.play().catch(() => {});
+              playButton.current?.focus();
+            }}
+          />
+        )}
         {children}
         {loading && (
           <p aria-live="polite" className="font-medium text-muted">
@@ -334,6 +366,7 @@ export function Player({ lessonId, subtitles, startAt, defaultSubtitle, mode, ch
             {t("player.back10")}
           </button>
           <button
+            ref={playButton}
             type="button"
             onClick={toggle}
             aria-label={t(playing ? "player.pause" : "player.play")}

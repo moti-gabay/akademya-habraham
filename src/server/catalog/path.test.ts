@@ -1,4 +1,4 @@
-// pnpm test:unit — the learning path (steps, a step's lessons, Start, the lesson after),
+// pnpm test:unit — the learning path (steps, a step's lessons, Start, the end of a lesson),
 // run against both storages: Drizzle on PGlite (seeded) and the in-memory mock.
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
@@ -126,7 +126,7 @@ for (const [name, create] of [
       assert.deepEqual(step.lessons.map((lesson) => lesson.number), numbers(1, 10));
       assert.equal(step.lessons[0].isNext, true);
 
-      const after = (await s.path.getLessonAfter(s.id("kashrut-5"), "he"))?.lesson;
+      const after = (await s.path.getLessonEnd(SAMPLE_USER_ID, s.id("kashrut-5"), "he"))?.next?.lesson;
       assert.deepEqual([after?.id, after?.lessonNumber, after?.lessonsInStep], [s.id("kashrut-6"), 5, 10]);
     });
 
@@ -186,8 +186,8 @@ for (const [name, create] of [
     test("the lesson after one follows path order, across steps, and ends with the path", async () => {
       const s = await storage();
       const after = async (key: string) => {
-        const next = await s.path.getLessonAfter(s.id(key), "he");
-        return next && [next.lesson.id, next.newStep];
+        const next = (await s.path.getLessonEnd(SAMPLE_USER_ID, s.id(key), "he"))?.next;
+        return next ? [next.lesson.id, next.newStep] : null;
       };
       assert.deepEqual(await after("shabbat-6"), [s.id("shabbat-7"), false]);
       assert.deepEqual(await after("shabbat-12"), [s.id("kashrut-1"), true]);
@@ -212,7 +212,7 @@ for (const [name, create] of [
           [s.id("shabbat-8"), true, false],
         ],
       );
-      assert.equal((await s.path.getLessonAfter(s.id("shabbat-6"), "he"))?.lesson.id, s.id("shabbat-8"));
+      assert.equal((await s.path.getLessonEnd(SAMPLE_USER_ID, s.id("shabbat-6"), "he"))?.next?.lesson.id, s.id("shabbat-8"));
       assert.equal((await s.path.getStartLesson(NEW_USER_ID, "he"))?.id, s.id("faith-2"));
       const first = await s.path.getStep(NEW_USER_ID, faith, "he");
       assert.deepEqual(first?.lessons.slice(0, 2).map((lesson) => lesson.isNext), [false, true]);
@@ -228,7 +228,7 @@ for (const [name, create] of [
       assert.equal((await s.progress.getContinueWatching(SAMPLE_USER_ID, "he"))?.lesson.id, s.id("shabbat-6"));
       const shabbat = (await s.path.getSteps(SAMPLE_USER_ID, "he"))[1];
       assert.deepEqual([shabbat.lessonsDone, shabbat.lessonsTotal], [5, 11]);
-      const lesson = await s.path.getLessonAfter(s.id("shabbat-7"), "he");
+      const lesson = (await s.path.getLessonEnd(SAMPLE_USER_ID, s.id("shabbat-7"), "he"))?.next;
       assert.deepEqual([lesson?.lesson.id, lesson?.lesson.lessonNumber], [s.id("shabbat-9"), 8]);
     });
 
@@ -246,7 +246,7 @@ for (const [name, create] of [
       );
       assert.equal(await s.path.getStep(SAMPLE_USER_ID, steps[2].id, "he"), null);
       assert.equal((await s.path.getStep(SAMPLE_USER_ID, steps[1].id, "he"))?.nextStep?.id, steps[3].id);
-      assert.equal((await s.path.getLessonAfter(s.id("shabbat-12"), "he"))?.lesson.id, s.id("prayer-1"));
+      assert.equal((await s.path.getLessonEnd(SAMPLE_USER_ID, s.id("shabbat-12"), "he"))?.next?.lesson.id, s.id("prayer-1"));
     });
 
     test("after the whole path is finished there is nothing to start", async () => {
@@ -296,10 +296,10 @@ for (const [name, create] of [
       const lesson = state.kind === "continue" ? state.item.lesson : state.kind === "start" ? state.lesson : null;
       return { kind: state.kind, lessonId: lesson?.id, first: state.kind === "start" ? state.first : undefined, asks };
     }
-    const finishPath = async (s: Storage, userId: string) => {
+    const finishPath = async (s: Storage, userId: string, except: string[] = []) => {
       for (const { id } of await s.path.getSteps(userId, "he")) {
         for (const lesson of (await s.path.getStep(userId, id, "he"))?.lessons ?? []) {
-          await s.progress.save(userId, lesson.id, lesson.durationSec, true);
+          if (!except.includes(lesson.id)) await s.progress.save(userId, lesson.id, lesson.durationSec, true);
         }
       }
     };
@@ -360,6 +360,33 @@ for (const [name, create] of [
       assert.deepEqual(await home(s, NEW_USER_ID), { kind: "empty", lessonId: undefined, first: undefined, asks: 0 });
     });
 
+    test("lesson end: Back goes to the lesson's step, and the next lesson is in the same step or starts the next one", async () => {
+      const s = await storage();
+      const [faith, shabbat] = await stepIds(s);
+      const end = async (key: string) => {
+        const result = await s.path.getLessonEnd(SAMPLE_USER_ID, s.id(key), "he");
+        return result && [result.stepId, result.next?.lesson.id, result.next?.newStep, result.pathFinished];
+      };
+      assert.deepEqual(await end("shabbat-6"), [shabbat, s.id("shabbat-7"), false, false]);
+      assert.deepEqual(await end("faith-8"), [faith, s.id("shabbat-1"), true, false]);
+      // A draft is not in the path: Back goes home and the card offers the home page.
+      assert.equal(await end("kashrut-meat-milk"), null);
+    });
+
+    test("lesson end: the last lesson offers no next one, and the path counts as finished only when nothing else is open", async () => {
+      const s = await create();
+      const holidays = (await stepIds(s))[4];
+      const last = () => s.path.getLessonEnd(NEW_USER_ID, s.id("holidays-9"), "he");
+      assert.deepEqual(await last(), { stepId: holidays, next: null, pathFinished: false });
+
+      // Everything but this lesson and one skipped earlier: the end of the path, not finished.
+      await finishPath(s, NEW_USER_ID, [s.id("holidays-9"), s.id("prayer-4")]);
+      assert.equal((await last())?.pathFinished, false);
+      // The skipped lesson done too: this one has just ended, so the path is finished.
+      await s.progress.save(NEW_USER_ID, s.id("prayer-4"), 60, true);
+      assert.deepEqual(await last(), { stepId: holidays, next: null, pathFinished: true });
+    });
+
     test("without a published track there is no path at all", async () => {
       const s = await create();
       const [, shabbat] = await stepIds(s);
@@ -367,7 +394,7 @@ for (const [name, create] of [
       assert.deepEqual(await s.path.getSteps(SAMPLE_USER_ID, "he"), []);
       assert.equal(await s.path.getStep(SAMPLE_USER_ID, shabbat, "he"), null);
       assert.equal(await s.path.getStartLesson(NEW_USER_ID, "he"), null);
-      assert.equal(await s.path.getLessonAfter(s.id("shabbat-6"), "he"), null);
+      assert.equal(await s.path.getLessonEnd(SAMPLE_USER_ID, s.id("shabbat-6"), "he"), null);
     });
   });
 }

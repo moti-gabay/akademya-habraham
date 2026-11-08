@@ -102,7 +102,7 @@ test("glossary term opens and closes with the keyboard", async ({ page }) => {
 
 // The page carries no video address: the player asks /api/play and gets the fake
 // provider's local clip through a signed address. No network needed.
-test("player controls work and the stop point reaches the home card", async ({ page, request }) => {
+test("player controls work and the stop point reaches the step page", async ({ page, request }) => {
   await withPrefs(page);
   try {
     const clip = page.waitForResponse((response) => response.url().includes("/api/dev/media/play/") && response.status() === 200);
@@ -123,9 +123,10 @@ test("player controls work and the stop point reaches the home card", async ({ p
     await page.getByRole("button", { name: "10 seconds back" }).click();
     await expect(timeline).toHaveValue("20");
 
+    // Back goes to the lesson's step, where its row shows the new stop point.
     await page.getByRole("button", { name: "Back", exact: true }).click();
-    await expect(page).toHaveURL(/\/en$/);
-    await expect(page.getByText("You stopped at 0:20").filter({ visible: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/en\/path\/shabbat$/);
+    await expect(page.getByRole("main").getByRole("listitem").nth(5)).toContainText("Stopped at 0:20");
   } finally {
     // Put the mock stop point back so later tests see the sketch state.
     // The API only accepts mutating calls from the app's own origin.

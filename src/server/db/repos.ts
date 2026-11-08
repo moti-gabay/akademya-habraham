@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { alias, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
-import { COMPLETED_AT_PCT, lessonAfter, NO_USER, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
+import { COMPLETED_AT_PCT, lessonEnd, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import type { Locale } from "../i18n/locales";
 import type {
@@ -206,10 +206,11 @@ export function createDrizzleRepos(getDb: () => Db) {
       const id = startLessonId(await pathOf(userId));
       return id ? lessonById(id, locale) : null;
     },
-    async getLessonAfter(lessonId, locale) {
-      const next = lessonAfter(await pathOf(NO_USER), lessonId);
-      const lesson = next && (await lessonById(next.id, locale));
-      return lesson ? { lesson, newStep: next.newStep } : null;
+    async getLessonEnd(userId, lessonId, locale) {
+      const end = lessonEnd(await pathOf(userId), lessonId);
+      if (!end) return null;
+      const lesson = end.next && (await lessonById(end.next.id, locale));
+      return { stepId: end.stepId, next: lesson ? { lesson, newStep: end.next!.newStep } : null, pathFinished: end.pathFinished };
     },
   };
 

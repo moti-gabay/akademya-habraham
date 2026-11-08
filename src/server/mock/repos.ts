@@ -1,5 +1,5 @@
 import { nextHolidayOccurrence } from "../catalog/holidayCalendar";
-import { COMPLETED_AT_PCT, lessonAfter, NO_USER, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
+import { COMPLETED_AT_PCT, lessonEnd, type PathEntry, startLessonId, stepDetail, stepStatuses } from "../catalog/path";
 import { formatHebrewDate } from "../i18n/hebrewDate";
 import { byLocale, LOCALES, localize, type Locale } from "../i18n/locales";
 import type {
@@ -161,10 +161,11 @@ export function createMockRepos(store: MockStore) {
       const id = startLessonId(pathOf(userId));
       return id ? toLesson(id, locale) : null;
     },
-    async getLessonAfter(lessonId, locale) {
-      const next = lessonAfter(pathOf(NO_USER), lessonId);
-      const lesson = next && toLesson(next.id, locale);
-      return lesson ? { lesson, newStep: next.newStep } : null;
+    async getLessonEnd(userId, lessonId, locale) {
+      const end = lessonEnd(pathOf(userId), lessonId);
+      if (!end) return null;
+      const lesson = end.next && toLesson(end.next.id, locale);
+      return { stepId: end.stepId, next: lesson ? { lesson, newStep: end.next!.newStep } : null, pathFinished: end.pathFinished };
     },
   };
 

@@ -97,6 +97,15 @@
       "signedOut": "Please sign in to watch the lesson.",
       "membersOnly": "This lesson is for members only.",
       "notReady": "The video is still being prepared. Please try again in a few minutes."
+    },
+    "end": {
+      "done": "Lesson finished",
+      "newStep": "A new step begins: {step}",
+      "next": "Next lesson: {title}",
+      "lastForNow": "This is the last available lesson for now.",
+      "toPath": "Back to my path",
+      "toHome": "Back to the home page",
+      "again": "Watch again"
     }
   },
   "pages": {
