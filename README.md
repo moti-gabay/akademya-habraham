@@ -98,6 +98,19 @@ Verified against a real R2 bucket (October 2026): the presigned `PUT` from the b
 
 **`NODE_ENV` stays unset** for `pnpm dev`, `pnpm db:seed` and `pnpm test:e2e`: with `NODE_ENV=production` exported in the shell, `MOCK_ROLE=admin` is ignored (so the admin e2e project fails) and the seed refuses to run. `pnpm build` sets it itself.
 
+## Security headers
+
+Every route sends HSTS (one week for now), `nosniff`, `Referrer-Policy`, `X-Frame-Options: DENY`, `Cross-Origin-Opener-Policy` and `Permissions-Policy`, and a Content-Security-Policy in **report-only** mode: nothing is blocked, and violations appear in the browser console as `[Report Only] Refused to ...`. The policy is built in `src/lib/csp.ts`; see ARCHITECTURE.md §1.6. `CSP_MODE=enforce` sends it as an enforcing policy (`CSP_MODE=enforce pnpm test:e2e` runs the suite that way).
+
+On a Vercel Preview deployment the Vercel Toolbar (`vercel.live`) is not allowed by the policy, so its report-only violations in the console are expected there and only there.
+
+Launch checklist, before the CSP is enforced (with the owner's go-ahead for each service):
+- [ ] On a Preview with real Clerk: sign-in and sign-up (including the Turnstile check), sign-out, avatars. No `Refused to` lines in the console except the Vercel Toolbar.
+- [ ] With real Bunny: playback with hls.js (desktop and Android) and native HLS (iOS Safari), thumbnails from the pull zone, and the admin upload over tus, noting any host it redirects to.
+- [ ] With real R2: the admin image upload (presigned `PUT`) and `/api/thumbnails`.
+- [ ] Then set `CSP_MODE=enforce` on Production (or make enforcing the default) and repeat the checks once.
+- [ ] When the production domain is final: raise HSTS as described in ARCHITECTURE.md §1.6.
+
 ## Folder structure
 
 ```
