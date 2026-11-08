@@ -133,7 +133,7 @@ test("the end of the video finishes the lesson, even though the stored length is
   await expect(prayer.getByText("1 of 10 lessons", { exact: true })).toBeVisible();
 });
 
-test("Back waits at most a moment for the save, then goes home anyway", async ({ page }) => {
+test("Back waits at most a moment for the save, then goes to the lesson's step anyway", async ({ page }) => {
   await openLesson(page, "prayer-5");
   await forward(page).click();
   await expect(timeline(page)).toHaveValue("10");
@@ -143,5 +143,5 @@ test("Back waits at most a moment for the save, then goes home anyway", async ({
     await route.continue().catch(() => {});
   });
   await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(page).toHaveURL(/\/en$/, { timeout: 4000 });
+  await expect(page).toHaveURL(/\/en\/path\/prayer$/, { timeout: 4000 });
 });

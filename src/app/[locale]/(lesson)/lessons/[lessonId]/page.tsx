@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { LessonCta } from "@/components/catalog/LessonCta";
 import { LessonPreviewCard } from "@/components/catalog/LessonPreviewCard";
+import type { LessonEnding } from "@/components/LessonEndCard";
 import { Player } from "@/components/Player";
 import { TermList } from "@/components/TermList";
 import { card } from "@/components/ui";
@@ -10,7 +11,7 @@ import { getPageActor } from "@/lib/auth";
 import { authMode } from "@/lib/authMode";
 import { lessonSubtitles } from "@/lib/media";
 import { canWatch } from "@/server/catalog/access";
-import { glossaryRepo, lessonRepo, progressRepo } from "@/server/repos";
+import { glossaryRepo, lessonRepo, pathRepo, progressRepo } from "@/server/repos";
 
 export default async function LessonPage({ params }: { params: Promise<{ lessonId: string }> }) {
   const { lessonId } = await params;
@@ -30,10 +31,22 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
     );
   }
   const subtitles = lessonSubtitles(lesson);
-  const [startAt, terms] = await Promise.all([
+  // Only with a player: the preview above needs none of this.
+  const [startAt, terms, end] = await Promise.all([
     progressRepo.getPosition(actor.userId, lessonId),
     glossaryRepo.forLesson(lessonId, locale),
+    pathRepo.getLessonEnd(actor.userId, lessonId, locale),
   ]);
+  const ending: LessonEnding = !end
+    ? { kind: "home" }
+    : end.next
+      ? {
+          kind: "next",
+          lessonId: end.next.lesson.id,
+          title: end.next.lesson.title,
+          newStep: end.next.newStep ? end.next.lesson.stepName : null,
+        }
+      : { kind: end.pathFinished ? "pathFinished" : "lastForNow" };
 
   return (
     <main id="main" className="mx-auto max-w-3xl pb-10 lg:px-12 lg:pt-4">
@@ -45,6 +58,8 @@ export default async function LessonPage({ params }: { params: Promise<{ lessonI
         startAt={startAt}
         defaultSubtitle={subtitles.some((track) => track.locale === locale) ? locale : "off"}
         mode={authMode}
+        backHref={end ? `/path/${end.stepId}` : "/"}
+        ending={ending}
       >
         <div>
           <p className="text-sm font-medium text-green">

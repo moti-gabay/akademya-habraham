@@ -42,8 +42,9 @@ export type StepDetail = {
   // The next step that has a published lesson.
   nextStep: { id: string; name: string } | null;
 };
-// The lesson after another one in path order, and whether it starts a new step.
-export type LessonAfter = { lesson: Lesson; newStep: boolean };
+// The end of a path lesson: its step, the next ready lesson in path order (and whether it
+// starts a new step), and whether the learner has now finished every published lesson.
+export type LessonEnd = { stepId: string; next: { lesson: Lesson; newStep: boolean } | null; pathFinished: boolean };
 
 export type GlossaryTerm = { id: string; term: string; definition: string };
 
@@ -85,9 +86,8 @@ export interface PathRepo {
   getStep(userId: string, stepId: string, locale: Locale): Promise<StepDetail | null>;
   // The first ready lesson in path order that the user has not finished: home's "Start".
   getStartLesson(userId: string, locale: Locale): Promise<Lesson | null>;
-  // The next ready lesson in path order. Null at the end of the path, or for a lesson
-  // that is not in it.
-  getLessonAfter(lessonId: string, locale: Locale): Promise<LessonAfter | null>;
+  // What the end of a lesson offers. Null for a lesson that is not in the path.
+  getLessonEnd(userId: string, lessonId: string, locale: Locale): Promise<LessonEnd | null>;
 }
 export interface LessonRepo {
   getById(lessonId: string, locale: Locale): Promise<Lesson | null>;

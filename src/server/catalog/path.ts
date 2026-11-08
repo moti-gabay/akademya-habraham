@@ -47,8 +47,6 @@ export async function stepDetail(
 }
 
 // The published lessons of the published track in path order (step, then lesson).
-// The order is the same for everyone; NO_USER reads it without anyone's progress.
-export const NO_USER = "";
 export type PathEntry = { id: string; stepId: string; ready: boolean; done: boolean };
 
 // Home's "Start": the first ready lesson the user has not finished. Earlier steps are
@@ -85,4 +83,19 @@ export function lessonAfter(path: PathEntry[], lessonId: string): { id: string; 
   if (index < 0) return null;
   const next = path.slice(index + 1).find((entry) => entry.ready && entry.id !== lessonId);
   return next ? { id: next.id, newStep: next.stepId !== path[index].stepId } : null;
+}
+
+// The end of a lesson: its step (where Back goes), the next ready lesson, and whether
+// every other published lesson is done (this one has just ended). Null outside the path.
+export function lessonEnd(
+  path: PathEntry[],
+  lessonId: string,
+): { stepId: string; next: { id: string; newStep: boolean } | null; pathFinished: boolean } | null {
+  const entry = path.find((item) => item.id === lessonId);
+  if (!entry) return null;
+  return {
+    stepId: entry.stepId,
+    next: lessonAfter(path, lessonId),
+    pathFinished: path.every((item) => item.id === lessonId || item.done),
+  };
 }
