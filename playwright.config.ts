@@ -4,6 +4,9 @@ const PORT = 3100;
 // The admin screens are tested on a dev server: the local admin stand-in (MOCK_ROLE) is
 // ignored in production builds by design.
 const ADMIN_PORT = 3101;
+// A learner with no progress (MOCK_USER=new, the fictional David) gets a dev server of its
+// own, so its in-memory progress never mixes with the sample user's on the other servers.
+const NEW_USER_PORT = 3102;
 // e2e always runs on mock data and the fake media services, and never opens the database
 // or a real media account, even when a local .env selects one (Next keeps a variable that
 // is already set, even to ""). The fake "encoding" is kept short.
@@ -26,8 +29,8 @@ export default defineConfig({
   // character (about 75 px), so a single-letter change still fails.
   expect: { toHaveScreenshot: { maxDiffPixels: 60 } },
   projects: [
-    { name: "mobile", testIgnore: /admin|progress/, use: { viewport: { width: 375, height: 812 } } },
-    { name: "desktop", testIgnore: /admin|progress/, use: { viewport: { width: 1280, height: 800 } } },
+    { name: "mobile", testIgnore: /admin|progress|new-user/, use: { viewport: { width: 375, height: 812 } } },
+    { name: "desktop", testIgnore: /admin|progress|new-user/, use: { viewport: { width: 1280, height: 800 } } },
     {
       name: "admin",
       testMatch: /admin/,
@@ -44,6 +47,12 @@ export default defineConfig({
       testMatch: /progress/,
       timeout: 90_000,
       use: { baseURL: `http://localhost:${ADMIN_PORT}`, viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: "newuser",
+      testMatch: /new-user/,
+      timeout: 90_000,
+      use: { baseURL: `http://localhost:${NEW_USER_PORT}`, viewport: { width: 375, height: 812 } },
     },
   ],
   webServer: [
@@ -62,6 +71,13 @@ export default defineConfig({
       // Its own output directory: sharing .next with the production build made the two
       // overwrite each other's files, and the dev server's pages reloaded in a loop.
       env: { ...env, MOCK_ROLE: "admin", NEXT_DIST_DIR: ".next-e2e-dev" },
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+    },
+    {
+      command: `rm -rf .next-e2e-newuser && pnpm dev -p ${NEW_USER_PORT}`,
+      url: `http://localhost:${NEW_USER_PORT}/api/healthz`,
+      env: { ...env, MOCK_USER: "new", NEXT_DIST_DIR: ".next-e2e-newuser" },
       reuseExistingServer: !process.env.CI,
       timeout: 180_000,
     },

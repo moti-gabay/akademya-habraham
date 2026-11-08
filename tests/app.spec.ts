@@ -21,6 +21,8 @@ const screens = [
   ["holidays", "/holidays"],
   ["holiday", "/holidays/hanukkah"],
   ["preview", "/holidays/hanukkah/hanukkah-intro"],
+  ["path", "/path"],
+  ["step", "/path/shabbat"],
 ] as const;
 
 test("first visit goes through language and text size, and remembers both", async ({ page }) => {
@@ -147,6 +149,45 @@ test("the navigation leads to the holidays on every screen size, and there is no
   await nav.getByRole("link", { name: "Holidays" }).click();
   await expect(page).toHaveURL(/\/en\/holidays$/);
   await expect(nav.getByRole("link", { name: "Holidays" })).toHaveAttribute("aria-current", "page");
+});
+
+test("a learner with progress sees the step and continues where they stopped", async ({ page }) => {
+  await withPrefs(page);
+  await page.goto("/en/path");
+  await page.getByRole("link", { name: /Shabbat/ }).click();
+  await expect(page).toHaveURL(/\/en\/path\/shabbat$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Shabbat");
+  await expect(page.getByText("5 of 12 lessons completed")).toBeVisible();
+
+  const rows = page.getByRole("main").getByRole("listitem");
+  await expect(rows).toHaveCount(12);
+  for (let i = 0; i < 5; i++) await expect(rows.nth(i)).toContainText("Completed");
+  await expect(rows.nth(5)).toContainText("Stopped at 12:40");
+  await expect(rows.nth(5)).toContainText("Up next");
+  await expect(rows.nth(6)).not.toContainText(/Completed|Stopped|Up next/);
+
+  await page.getByRole("link", { name: "Continue: Laws of Shabbat: the 39 Melachot, part 1" }).click();
+  await expect(page).toHaveURL(/\/en\/lessons\/shabbat-6$/);
+});
+
+test("unknown addresses and steps get a 404 page in the visitor's language", async ({ page }) => {
+  await withPrefs(page);
+  const cases = [
+    ["/he/search", "he"],
+    ["/en/search", "en"],
+    ["/he/anything-unknown", "he"],
+    ["/en/anything/deeper", "en"],
+    ["/he/path/no-such-step", "he"],
+    ["/en/path/no-such-step", "en"],
+    ["/en/holidays/no-such-holiday", "en"],
+  ] as const;
+  const text = { he: ["הדף לא נמצא", "לדף הבית"], en: ["Page not found", "Go to the home page"] };
+  for (const [path, locale] of cases) {
+    expect((await page.goto(path))?.status(), path).toBe(404);
+    await expect(page.locator("html")).toHaveAttribute("lang", locale);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(text[locale][0]);
+    await expect(page.getByRole("link", { name: text[locale][1] })).toHaveAttribute("href", `/${locale}`);
+  }
 });
 
 test("the holiday catalog opens without the welcome screen and shows previews, not the player", async ({ page }) => {

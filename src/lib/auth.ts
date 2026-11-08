@@ -8,13 +8,14 @@ import { AuthError, resolveActor, ROLES, type Actor } from "@/server/auth/actor"
 import { ADMIN_ROLE } from "@/server/catalog/service";
 import { getDb } from "@/server/db/client";
 import { siteLocaleOf } from "@/server/i18n/locales";
-import { SAMPLE_USER_ID } from "@/server/mock/data";
-import { authMode, mockRole } from "./authMode";
+import { NEW_USER_ID, SAMPLE_USER_ID } from "@/server/mock/data";
+import { authMode, mockRole, mockUser } from "./authMode";
 
 // The only module that talks to Clerk's session API. Everything else works with Actor.
 
 const SAMPLE_ACTOR: Actor = {
-  userId: SAMPLE_USER_ID,
+  // MOCK_USER=new (local only): the sample learner with no progress.
+  userId: mockUser === "new" ? NEW_USER_ID : SAMPLE_USER_ID,
   role: mockRole ?? "user",
   locale: "he",
   secondFactorVerified: mockRole !== null,

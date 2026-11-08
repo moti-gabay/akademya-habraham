@@ -13,6 +13,7 @@ Current state: the UI from the sketch (language selection, home, lesson player),
 pnpm install
 pnpm dev              # http://localhost:3000
 MOCK_ROLE=admin pnpm dev   # the same, with the sample visitor as an admin: open /he/admin
+MOCK_USER=new pnpm dev     # the same, as a learner who has not watched anything yet
 ```
 
 Optional: copy `.env.example` to `.env.local`. `NEXT_PUBLIC_HELP_PHONE` and `NEXT_PUBLIC_HELP_WHATSAPP` fill the "Need help?" card. Everything else is unused until its milestone.
@@ -39,7 +40,7 @@ The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled)
 
 **The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Without Clerk keys every visitor is the sample user, so a database deployment needs sign-in configured first; on Vercel the app refuses to start with `DATA_SOURCE=db` and no Clerk keys. Vercel currently stays on mock (`DATA_SOURCE` unset).
 
-`MOCK_ROLE=admin` works only on mock data: it is ignored with `DATA_SOURCE=db`, with Clerk, on Vercel and in production builds (`pnpm start` ignores it). Its changes live in server memory until restart; on a database the admin screens need a real admin signed in through Clerk. The e2e suite therefore starts two servers: a production build on port 3100, and a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens. Neither opens the database.
+`MOCK_ROLE=admin` works only on mock data: it is ignored with `DATA_SOURCE=db`, with Clerk, on Vercel and in production builds (`pnpm start` ignores it). Its changes live in server memory until restart; on a database the admin screens need a real admin signed in through Clerk. `MOCK_USER=new` (a learner with no progress, the fictional David) follows the same rules. The e2e suite therefore starts three servers: a production build on port 3100, a dev server with `MOCK_ROLE=admin` on port 3101 for the admin screens, and a dev server with `MOCK_USER=new` on port 3102 for the first-run screens. None opens the database.
 
 **Media is opt-in too.** Only `MEDIA_PROVIDER=bunny` and `FILE_STORAGE=r2` select Bunny Stream and Cloudflare R2. Otherwise in-memory fakes stand in: uploads go to the app itself, a video is "ready" a few seconds after upload (`FAKE_MEDIA_PROCESSING_MS`), every video plays the same 60-second synthetic clip from `dev-assets/clip` through a signed address, files are lost on restart, and the admin media section says so in a banner. The fake routes (`/api/dev/media/*`) are switched off on Vercel.
 
