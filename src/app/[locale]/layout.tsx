@@ -2,15 +2,13 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Rubik } from "next/font/google";
 import { notFound } from "next/navigation";
 import { dirOf, routing } from "@/i18n/routing";
 import { authMode } from "@/lib/authMode";
 import { clerkAppearance, clerkLocalization } from "@/lib/clerkUi";
+import { rubik } from "@/lib/font";
 import { DEFAULT_TEXT_SIZE, TEXT_SIZE_SCRIPT } from "@/lib/prefs";
 import "../globals.css";
-
-const rubik = Rubik({ subsets: ["hebrew", "latin", "latin-ext", "cyrillic"], variable: "--font-rubik" });
 
 type Props = { children: React.ReactNode; params: Promise<{ locale: string }> };
 

@@ -150,6 +150,19 @@
     "text": "The link may be old or mistyped.",
     "home": "Go to the home page"
   },
+  "error": {
+    "title": "Something went wrong",
+    "text": "The page did not load. Please try again in a moment.",
+    "retry": "Try again",
+    "home": "Back to the home page",
+    "reference": "Reference: <ref>{digest}</ref>"
+  },
+  "globalError": {
+    "title": "Something went wrong",
+    "text": "The site did not load. Please load it again.",
+    "reload": "Load again",
+    "reference": "Reference: {digest}"
+  },
   "catalog": {
     "lessonCount": "Lessons: {count}",
     "free": "Free lesson",

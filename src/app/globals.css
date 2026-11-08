@@ -42,6 +42,11 @@ body {
   outline: 3px solid var(--color-green);
   outline-offset: 2px;
 }
+/* A heading that receives focus from a script (the error pages) is a reading position,
+   not a control: no ring around the title. */
+:is(h1, h2)[tabindex="-1"]:focus-visible {
+  outline: none;
+}
 
 /* Minimum tap target: 48px at the base size, grows with the text size. */
 @utility tap {
