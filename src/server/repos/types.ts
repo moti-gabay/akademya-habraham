@@ -127,3 +127,25 @@ export interface CatalogRepo {
   // Id of a published lesson by its slug in any language.
   findLessonBySlug(slug: string): Promise<string | null>;
 }
+
+// A learner's own data, for a data subject access request (README, "Data subject
+// requests"). Dates are ISO strings. Lesson titles are in the user's locale, with he
+// as fallback. accountChanges are admin changes to the account, without who made them.
+export type UserExport = {
+  account: { id: string; email: string; name: string; locale: Locale; role: string; status: string; createdAt: string };
+  progress: {
+    lessonId: string;
+    lessonTitle: string;
+    lastPositionSec: number;
+    watchedPct: number;
+    completedAt: string | null;
+    updatedAt: string;
+  }[];
+  accountChanges: { action: string; at: string; change: unknown }[];
+};
+export interface UserDataRepo {
+  // Id of the user with this email, ignoring deleted users.
+  findIdByEmail(email: string): Promise<string | null>;
+  // Null for an unknown or deleted user. Progress is ordered by updatedAt, latest first.
+  buildExport(userId: string): Promise<UserExport | null>;
+}

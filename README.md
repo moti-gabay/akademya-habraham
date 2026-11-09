@@ -111,6 +111,23 @@ Launch checklist, before the CSP is enforced (with the owner's go-ahead for each
 - [ ] Then set `CSP_MODE=enforce` on Production (or make enforcing the default) and repeat the checks once.
 - [ ] When the production domain is final: raise HSTS as described in ARCHITECTURE.md §1.6.
 
+## Data subject requests
+
+Learners ask by email for a copy of their data, a correction or deletion. Handle each request from your own machine; nothing here is in the app. Keep personal data out of tickets, chat and commit messages: refer to a request by date, never by the learner's email or name.
+
+1. **Check who is asking.** Act only on a request sent from the email address of the account. Otherwise, reply to that address and ask the learner to confirm from it.
+2. **Correction.** Learners change their name and email themselves under the account menu (Clerk's "Manage account"). The change reaches the database through the webhook. Anything else: change it in the Clerk dashboard.
+3. **Export (access).** On the command line, with the production database in `.env`:
+   ```
+   DATA_SOURCE=db pnpm -s user:export <email>
+   ```
+   `DATA_SOURCE=db` must be set on the command line (a value in `.env` does not count), and `-s` stops pnpm from echoing the email. The script prints only the file's path and counts. The file is written to `~/akademya-habraham-exports/`, outside the repository, readable by you only (0600), and is never overwritten. It holds the account (email, name, language, role, status, created), progress per lesson (title, last position, watched %, completed, last watched) and admin changes to the account (without who made them). Send it to the learner's address, then delete the file.
+4. **Deletion.** Delete the user in the Clerk dashboard (Users → the user → Delete). Clerk sends `user.deleted`, and the webhook erases the user's progress, name and email in one transaction (ARCHITECTURE.md §1.6, "Data subject requests"). Then check that it happened:
+   - Clerk dashboard → Webhooks → the endpoint → the `user.deleted` attempt succeeded. A failed attempt is retried by Clerk; you can also resend it from there.
+   - In the database, the event has no error: `select processed_at, error from webhook_events where provider = 'clerk' and type = 'user.deleted' order by received_at desc limit 5;`
+   - Reply to the learner that the account is deleted.
+5. Answer within the time the privacy policy promises.
+
 ## Folder structure
 
 ```

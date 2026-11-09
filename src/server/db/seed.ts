@@ -65,6 +65,7 @@ export async function seed(db: Db) {
       clerkUserId: "seed_sample_user",
       email: users[SAMPLE_USER_ID].email,
       name: users[SAMPLE_USER_ID].name.he,
+      createdAt: new Date(users[SAMPLE_USER_ID].createdAt),
     },
     // No progress: the first-run screens.
     {
@@ -72,6 +73,7 @@ export async function seed(db: Db) {
       clerkUserId: "seed_new_user",
       email: users[NEW_USER_ID].email,
       name: users[NEW_USER_ID].name.he,
+      createdAt: new Date(users[NEW_USER_ID].createdAt),
     },
   ]);
 
