@@ -1,4 +1,4 @@
-import { and, DrizzleQueryError, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { atomic } from "../db/atomic";
 import type { Db } from "../db/client";
 import { userLessonProgress, users, webhookEvents } from "../db/schema";
@@ -110,11 +110,8 @@ export async function handleClerkEvent(db: Db, eventId: string, event: ClerkEven
     await db.update(webhookEvents).set({ processedAt: new Date(), error: null }).where(key);
     return "processed";
   } catch (error) {
-    // Drizzle's own message lists the query parameters (a user's email and name), so only
-    // the database's message is stored and passed on to the log.
-    const cause = error instanceof DrizzleQueryError ? error.cause : error;
-    const message = cause instanceof Error ? cause.message : String(cause);
-    await db.update(webhookEvents).set({ error: message }).where(key);
-    throw new Error(`Clerk ${event.type} failed: ${message}`);
+    // Database errors arrive without query parameters (src/server/db/safeErrors.ts).
+    await db.update(webhookEvents).set({ error: error instanceof Error ? error.message : String(error) }).where(key);
+    throw error;
   }
 }

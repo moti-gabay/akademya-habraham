@@ -2,6 +2,7 @@
 // that the erase is all-or-nothing and idempotent.
 import assert from "node:assert/strict";
 import { before, test } from "node:test";
+import { inspect } from "node:util";
 import { and, count, eq, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { auditLog, lessons, userLessonProgress, users, webhookEvents } from "../db/schema";
@@ -76,7 +77,7 @@ test("a failing statement rolls the whole erase back, and redelivery completes i
       for each row when (old.payload is distinct from new.payload) execute function fail_payload_scrub()`),
   );
   // Only the database's message is stored and thrown, never the query's parameters.
-  await assert.rejects(handleClerkEvent(db, "evt_delete", deleted), { message: "Clerk user.deleted failed: payload scrub failed" });
+  await assert.rejects(handleClerkEvent(db, "evt_delete", deleted), { name: "DatabaseError", message: "payload scrub failed" });
 
   const kept = await row(GONE);
   assert.deepEqual([kept.status, kept.email, kept.name], ["active", "returned@example.com", "Returned"]);
@@ -146,8 +147,9 @@ test("a failed user event keeps the user's email and name out of the stored erro
   await db.execute(sql.raw("create trigger fail_mirror before insert on users for each row execute function fail_mirror()"));
   const event = { type: "user.created", data: clerkUser("user_failing", 1_000) };
   await assert.rejects(handleClerkEvent(db, "evt_failing", event), (error: Error) => {
-    assert.equal(error.message, "Clerk user.created failed: mirror write failed");
+    assert.equal(error.message, "mirror write failed");
     assert.equal(error.cause, undefined);
+    assert.doesNotMatch(inspect(error), /returned@example\.com|Returned/);
     return true;
   });
   const failed = await stored("evt_failing");

@@ -1,15 +1,14 @@
 // DATA_SOURCE=db pnpm -s user:export <email> — writes one learner's data (README, "Data
 // subject requests") to a 0600 JSON file outside the repository. Prints only the path and
 // counts: never the email, the name or anything exported.
-import { DrizzleQueryError } from "drizzle-orm";
 import { getDb } from "../src/server/db/client";
 import { createDrizzleUserDataRepo } from "../src/server/db/userData";
 import { EXPORT_DIR, requireExplicitDb, writeExportFile } from "../src/server/privacy/exportFile";
 
-// Errors may carry query parameters (the email) or a connection string.
+// Database errors arrive without query parameters (src/server/db/safeErrors.ts); a
+// connection string is still cut out.
 function safeMessage(error: unknown) {
-  const cause = error instanceof DrizzleQueryError ? error.cause : error;
-  const message = cause instanceof Error ? cause.message : String(cause);
+  const message = error instanceof Error ? error.message : String(error);
   return message.replace(/postgres(ql)?:\/\/\S+/gi, "[redacted]");
 }
 
