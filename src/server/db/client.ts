@@ -1,6 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+// Database errors leave this layer without query parameters.
+import "./safeErrors";
 
 // Any Drizzle Postgres database: Neon over HTTP in the app, PGlite in tests.
 export type Db = PgDatabase<PgQueryResultHKT>;

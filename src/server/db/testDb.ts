@@ -4,6 +4,7 @@ import { citext } from "@electric-sql/pglite/contrib/citext";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import type { Db } from "./client";
+import "./safeErrors";
 
 export async function createTestDb(): Promise<Db> {
   const db = drizzle(new PGlite({ extensions: { citext } }));

@@ -11,9 +11,17 @@ export const SAMPLE_USER_ID = "5a3b1c2d-0000-4000-8000-000000000001";
 // A second sample user who has not watched anything yet (the first-run screens).
 export const NEW_USER_ID = "5a3b1c2d-0000-4000-8000-000000000002";
 
-export const users: Record<string, { name: Localized; email: string }> = {
-  [SAMPLE_USER_ID]: { name: { he: "משה", en: "Moshe", ru: "Моше", es: "Moshé" }, email: "moshe@example.com" },
-  [NEW_USER_ID]: { name: { he: "דוד", en: "David", ru: "Давид", es: "David" }, email: "david@example.com" },
+export const users: Record<string, { name: Localized; email: string; createdAt: string }> = {
+  [SAMPLE_USER_ID]: {
+    name: { he: "משה", en: "Moshe", ru: "Моше", es: "Moshé" },
+    email: "moshe@example.com",
+    createdAt: "2026-09-01T00:00:00.000Z",
+  },
+  [NEW_USER_ID]: {
+    name: { he: "דוד", en: "David", ru: "Давид", es: "David" },
+    email: "david@example.com",
+    createdAt: "2026-11-01T00:00:00.000Z",
+  },
 };
 
 export const track = {
