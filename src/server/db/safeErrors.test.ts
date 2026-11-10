@@ -4,6 +4,9 @@ import assert from "node:assert/strict";
 import { before, test } from "node:test";
 import { inspect } from "node:util";
 import { eq, sql } from "drizzle-orm";
+import { NeonHttpPreparedQuery } from "drizzle-orm/neon-http";
+import { PgPreparedQuery } from "drizzle-orm/pg-core";
+import { PglitePreparedQuery } from "drizzle-orm/pglite";
 import { isUniqueViolation } from "../catalog/errors";
 import { atomic } from "./atomic";
 import type { Db } from "./client";
@@ -32,6 +35,20 @@ async function failure(run: () => Promise<unknown>): Promise<DatabaseError> {
   }
   assert.fail("the statement did not fail");
 }
+
+// The wrapper sits on an internal Drizzle method (ARCHITECTURE.md, "Upgrading Drizzle").
+// These fail when an upgrade renames it, changes its arguments or makes a driver bypass it;
+// without them the app would run with nothing wrapped.
+test("Drizzle's internal query method is wrapped, with the signature the wrapper expects", () => {
+  type Wrapped = { queryWithCache?: { safe?: true; original?: (...args: unknown[]) => unknown } };
+  const base = (PgPreparedQuery.prototype as unknown as Wrapped).queryWithCache;
+  assert.equal(base?.safe, true, "PgPreparedQuery.queryWithCache is not wrapped");
+  // (queryString, params, query)
+  assert.equal(base.original?.length, 3, "PgPreparedQuery.queryWithCache changed its arguments");
+  for (const driver of [NeonHttpPreparedQuery, PglitePreparedQuery]) {
+    assert.equal((driver.prototype as unknown as Wrapped).queryWithCache, base, `${driver.name} has its own queryWithCache`);
+  }
+});
 
 test("a failing insert does not carry the email or name it was given", async () => {
   await db.execute(sql.raw(`create function fail_insert() returns trigger language plpgsql as $$ begin raise exception 'insert refused'; end $$`));
