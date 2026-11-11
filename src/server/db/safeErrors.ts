@@ -34,14 +34,17 @@ export function toSafeDbError(error: unknown): Error {
 // Every statement Drizzle runs on Postgres (Neon over HTTP, PGlite in tests) goes through
 // this internal method, which is where Drizzle wraps a failure. Neon's batch does not, so
 // `atomic()` applies toSafeDbError itself.
+// drizzle-orm is pinned to an exact version because of this: see "Upgrading Drizzle" in
+// ARCHITECTURE.md before changing it.
 type Query = (this: unknown, ...args: unknown[]) => Promise<unknown>;
-const prototype = PgPreparedQuery.prototype as unknown as { queryWithCache?: Query & { safe?: true } };
+type SafeQuery = Query & { safe?: true; original?: Query };
+const prototype = PgPreparedQuery.prototype as unknown as { queryWithCache?: SafeQuery };
 const original = prototype.queryWithCache;
 if (typeof original !== "function") {
   throw new Error("drizzle-orm no longer has PgPreparedQuery.queryWithCache: update src/server/db/safeErrors.ts.");
 }
 if (!original.safe) {
-  const safeQuery: Query & { safe?: true } = async function (this: unknown, ...args: unknown[]) {
+  const safeQuery: SafeQuery = async function (this: unknown, ...args: unknown[]) {
     try {
       return await original.apply(this, args);
     } catch (error) {
@@ -49,5 +52,7 @@ if (!original.safe) {
     }
   };
   safeQuery.safe = true;
+  // Kept for safeErrors.test.ts, which checks the wrapped method's signature.
+  safeQuery.original = original;
   prototype.queryWithCache = safeQuery;
 }
