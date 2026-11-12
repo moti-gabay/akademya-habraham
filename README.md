@@ -31,12 +31,14 @@ Database (optional; the app defaults to mock data):
 ```bash
 pnpm db:generate      # after editing src/server/db/schema.ts: writes a migration into drizzle/
 pnpm db:migrate       # applies migrations to DATABASE_URL_UNPOOLED (Neon; the driver does not reach a local Postgres)
-pnpm db:seed          # upserts the fictional sample content into DATABASE_URL; refuses when NODE_ENV=production
+DATA_SOURCE=db pnpm db:seed   # upserts the fictional sample content into DATABASE_URL; see below for what it refuses
 pnpm test:unit        # migrations, seed, Drizzle repos, auth and the Clerk webhook on an in-process Postgres (PGlite)
 DATA_SOURCE=db pnpm dev   # run the app on the database instead of mock data
 ```
 
 The scripts read `.env.local` and `.env` themselves. Put `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` there and never commit them.
+
+The seed refuses to run unless `DATA_SOURCE=db` is set on the command line (a value in `.env` does not count), when `NODE_ENV=production` or `VERCEL` is set, and, before writing anything, when the database holds a user whose Clerk id does not start with `seed_` or a lesson the seed did not write. That last check is what keeps it off production from a laptop; the refusal names counts only.
 
 **The database is opt-in.** Only `DATA_SOURCE=db` selects it; a `DATABASE_URL` alone does not. Without Clerk keys every visitor is the sample user, so a database deployment needs sign-in configured first; on Vercel the app refuses to start with `DATA_SOURCE=db` and no Clerk keys. Vercel currently stays on mock (`DATA_SOURCE` unset).
 
@@ -92,7 +94,7 @@ Cloudflare R2 checklist:
 
 Verified against a real R2 bucket (October 2026): the presigned `PUT` from the browser with the bucket's CORS rule, and the `/api/thumbnails/...` route reading the uploaded image back from the private bucket. Only the local origin was exercised; the CORS rule for the production and preview domains is not verified.
 
-**Before using the database with media:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
+**Before using the database with media:** migration `0004` (video and caption tables) must be applied (`pnpm db:migrate`) and the seed re-run (`DATA_SOURCE=db pnpm db:seed`) on any database used with `DATA_SOURCE=db`; it gives the sample lessons a ready video so they stay publishable. That is the owner's step; nothing here applies it.
 
 **The seeded video is fake.** The seed (and mock mode) gives every sample lesson a `fake-sample-…` video id in a fake library; no such video exists in any Bunny library. With `MEDIA_PROVIDER=bunny`, opening a sample lesson's media in the admin refreshes its status from Bunny, which answers 404, so the video is recorded as `error` and the lesson can no longer be published until a real video is uploaded. Sample lessons are placeholders, not test material for the real provider.
 
@@ -181,7 +183,7 @@ Edit `src/server/mock/data.ts` (the mock repos and `pnpm db:seed` both read it):
 
 1. Add an entry to `lessons` with a new id: title and teacher per locale (`he` is required), `durationSec`, `stepId`, `lessonNumber`, `videoUrl` (HLS) and `subtitles` (VTT files in `public/samples/`).
 2. List glossary term ids in `termIds`. They appear under "Words from the lesson", and a term is underlined in the title when its name appears there literally. New terms go in `glossary` in the same file.
-3. Open `/he/lessons/<id>` in mock mode. On the database, run `pnpm db:seed` again; lesson ids there are UUIDs, so follow the link from the home page.
+3. Open `/he/lessons/<id>` in mock mode. On the database, run `DATA_SOURCE=db pnpm db:seed` again; lesson ids there are UUIDs, so follow the link from the home page.
 
 Real lessons are added in the admin screens (`/admin/lessons`): Hebrew first, other languages in their tabs, then Publish. A lesson in a holiday category appears under `/holidays` once published.
 

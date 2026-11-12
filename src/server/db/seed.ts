@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { getTableColumns, sql } from "drizzle-orm";
+import { count, getTableColumns, notInArray, sql } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
 import { LOCALES, type Localized } from "../i18n/locales";
 import {
@@ -45,6 +45,37 @@ async function upsert<T extends PgTable>(db: Db, table: T, target: PgColumn[], r
 // The sample lessons of data.ts, with database ids.
 function buildLessons() {
   return sampleLessons().map((lesson) => ({ ...lesson, id: lessonSeedId(lesson.key), stepId: seedId(`step:${lesson.stepId}`) }));
+}
+
+// The checks of `pnpm db:seed` (scripts/seed.ts). Not part of seed(): the tests call it on
+// PGlite with no env. The env is read before any env file loads, so only the command line counts.
+export function requireSeedEnv(env: { DATA_SOURCE?: string; NODE_ENV?: string; VERCEL?: string }) {
+  if (env.DATA_SOURCE !== "db") throw new Error("Run with DATA_SOURCE=db set on the command line.");
+  if (env.NODE_ENV === "production") throw new Error("Refusing to seed sample data when NODE_ENV=production.");
+  if (env.VERCEL) throw new Error("Refusing to seed sample data on Vercel.");
+}
+
+// The env does not identify production when run from a laptop; the data does. Any user the
+// seed did not write, or any lesson it does not know, means a real database: nothing is written.
+export async function readSeedTarget(db: Db) {
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(t.users)
+    .where(sql`not starts_with(${t.users.clerkUserId}, 'seed_')`);
+  const lessons = await db
+    .select({ id: t.lessons.id })
+    .from(t.lessons)
+    .where(notInArray(t.lessons.id, buildLessons().map((lesson) => lesson.id)));
+  return { nonSeedUsers: n, unknownLessonIds: lessons.map((lesson) => lesson.id) };
+}
+
+// Counts only: the message never carries a user's or a lesson's data.
+export function requireSeedTarget(target: { nonSeedUsers: number; unknownLessonIds: string[] }) {
+  if (target.nonSeedUsers > 0 || target.unknownLessonIds.length > 0) {
+    throw new Error(
+      `Refusing to seed: the database has ${target.nonSeedUsers} non-seed users and ${target.unknownLessonIds.length} lessons the seed did not write.`,
+    );
+  }
 }
 
 export async function seed(db: Db) {
