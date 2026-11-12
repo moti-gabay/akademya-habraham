@@ -38,6 +38,7 @@ Who: **owner** (the project owner), **Claude Code**, or a **third party**. Chang
 | Clerk production setup: email templates, sender, languages | Verification emails use Clerk's templates and stay in English unless edited (README "Sign-in", step 7) | owner | open | A test sign-up on the production instance gets the email in Hebrew from the chosen sender; sender options to check in the console |
 | Neon backup and restore | Learners' progress must survive a mistake | owner | open | The plan's restore window: to check in the console. Restore steps written down; one restore tried into a new branch |
 | Error visibility | The error page shows only a Reference digest; it helps only if it can be found in the logs | owner, Claude Code | open | Steps to find a digest in Vercel's logs written down; Hobby log retention: to check in the console; one test error found by its digest; the matching log line has no email or name |
+| Launch mode: invitation only, about 10 learners | The first learners show problems before everyone meets them; the hard gate still applies. Opening to everyone waits for the usability test and the first learners' feedback | owner | open | Sign-up limited to invited addresses (Clerk setting, to check in the console); the number of learners known |
 | Drizzle pinned, with an upgrade checklist | `safeErrors.ts` wraps an internal Drizzle method | Claude Code | done (6a6785c) | `safeErrors.test.ts` fails if the wrapper stops applying; checklist in ARCHITECTURE §1.3 "Error log" |
 | Seed guard | The seed must never write to production | Claude Code | done (e0a9431) | Needs `DATA_SOURCE=db` on the command line; refuses `NODE_ENV=production`, `VERCEL`, and data the seed did not write; unit-tested |
 
@@ -45,7 +46,6 @@ Who: **owner** (the project owner), **Claude Code**, or a **third party**. Chang
 
 | What | Why | Who | Status | Verified by |
 |---|---|---|---|---|
-| Staged launch: invitation only, about 10 learners | The first learners show problems before everyone meets them; the hard gate still applies | owner | open | Sign-up limited to invited addresses (Clerk setting, to check in the console); the number of learners known |
 | Real-device tests: iPhone Safari (HLS, fullscreen), Android Chrome | iOS needs captions from the HLS manifest, which has not been tried (README "Known limits") | owner | open | Notes per device and lesson |
 | Text-size and accessibility pass on real devices | Older adults; automated axe runs on emulated viewports only | owner | open | Largest text size usable on both phones; screen reader reads every control |
 | ISR on Preview | Tag revalidation on a production build is not verified (the admin e2e runs in dev mode) | owner, Claude Code | unverified | Publish in admin, then the holiday page shows the lesson without a redeploy |
