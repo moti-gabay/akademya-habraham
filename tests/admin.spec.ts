@@ -28,6 +28,9 @@ async function uploadVideo(request: APIRequestContext, lessonId: string) {
   await expect.poll(async () => (await (await request.get(media)).json()).media.video.status, { timeout: 15_000 }).toBe("ready");
 }
 
+// Polling the public holiday page while its cached copy is regenerated (see admin:236 below).
+const REGENERATION = { intervals: [1_000, 2_000, 5_000], timeout: 30_000 };
+
 async function withPrefs(page: Page) {
   await page.context().addCookies([{ name: "ah_text_size", value: "m", url: ORIGIN }]);
 }
@@ -267,7 +270,9 @@ test("a lesson appears on the public holiday page when published and leaves it w
   await page.getByRole("button", { name: "פרסום", exact: true }).click();
   await expect(page.getByText("מצב: מפורסם")).toBeVisible();
   // The cached page is refreshed in the background, so the first visit may still be the old one.
-  await expect.poll(listed).toBe(1);
+  // These limits are about that cache regeneration, not something the test times: on a loaded
+  // dev server it outlasts the default 5 s. They stay within the project's 90 s.
+  await expect.poll(listed, REGENERATION).toBe(1);
 
   // Only Hebrew exists, so the English preview shows the Hebrew text.
   await page.goto(`/en/holidays/purim/${slug}`);
@@ -282,7 +287,7 @@ test("a lesson appears on the public holiday page when published and leaves it w
   await expect(page.getByRole("main").getByRole("alert")).toContainText("אפשר למחוק רק טיוטות");
   await page.getByRole("button", { name: "ביטול פרסום" }).click();
   await expect(page.getByText("מצב: טיוטה")).toBeVisible();
-  await expect.poll(listed).toBe(0);
+  await expect.poll(listed, REGENERATION).toBe(0);
 
   await page.goto(editUrl);
   await page.getByRole("button", { name: "מחיקה" }).click();

@@ -83,9 +83,13 @@ for (const locale of ["he", "en"] as const) {
     const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
     expect(axe.violations.map((violation) => `${violation.id}: ${violation.nodes[0]?.html}`)).toEqual([]);
 
-    // Local only, as the other baselines. The reference may change from build to build.
+    // Local only, as the other baselines. The real digest is checked first, then replaced by
+    // a fixed one: its length and digits change with the code, and a mask would follow the
+    // box's width (about 10 px per digit). Only the text changes; the span keeps dir="ltr".
+    await expect(reference(page)).toHaveText(TEXT[locale].reference);
     if (!process.env.CI) {
-      await expect(page).toHaveScreenshot(`error-${locale}.png`, { fullPage: true, mask: [reference(page)] });
+      await reference(page).locator("span[dir='ltr']").evaluate((span) => (span.textContent = "0000000000"));
+      await expect(page).toHaveScreenshot(`error-${locale}.png`, { fullPage: true });
     }
 
     await page.evaluate(() => (document.documentElement.dataset.textSize = "l"));
