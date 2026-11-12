@@ -9,7 +9,7 @@ import type { Db } from "./client";
 import { createDrizzleRepos } from "./repos";
 import * as t from "./schema";
 import { createTestDb } from "./testDb";
-import { lessonSeedId, seed } from "./seed";
+import { lessonSeedId, readSeedTarget, requireSeedEnv, requireSeedTarget, seed } from "./seed";
 
 const LESSON = "shabbat-6";
 const lessonId = lessonSeedId(LESSON);
@@ -121,6 +121,40 @@ test("seeding again changes nothing and keeps existing progress", async () => {
   await seed(db);
   assert.deepEqual(await db.select({ n: count() }).from(t.lessons), rowsBefore);
   assert.equal(await repos.progressRepo.getPosition(SAMPLE_USER_ID, lessonId), 900);
+});
+
+test("db:seed needs DATA_SOURCE=db, and refuses production and Vercel", () => {
+  for (const env of [{}, { DATA_SOURCE: "mock" }, { DATA_SOURCE: "DB" }]) {
+    assert.throws(() => requireSeedEnv(env), /DATA_SOURCE=db/);
+  }
+  assert.throws(() => requireSeedEnv({ DATA_SOURCE: "db", NODE_ENV: "production" }), /NODE_ENV=production/);
+  assert.throws(() => requireSeedEnv({ DATA_SOURCE: "db", VERCEL: "1" }), /Vercel/);
+  assert.doesNotThrow(() => requireSeedEnv({ DATA_SOURCE: "db" }));
+  assert.doesNotThrow(() => requireSeedEnv({ DATA_SOURCE: "db", NODE_ENV: "development" }));
+});
+
+test("db:seed refuses a database with users or lessons it did not write, naming counts only", () => {
+  assert.doesNotThrow(() => requireSeedTarget({ nonSeedUsers: 0, unknownLessonIds: [] }));
+  assert.throws(() => requireSeedTarget({ nonSeedUsers: 2, unknownLessonIds: [] }), /2 non-seed users and 0 lessons/);
+  const lessonId = "0b7e2f6a-1c3d-4e5f-8a9b-0c1d2e3f4a5b";
+  assert.throws(
+    () => requireSeedTarget({ nonSeedUsers: 0, unknownLessonIds: [lessonId] }),
+    (error: Error) => /0 non-seed users and 1 lessons/.test(error.message) && !error.message.includes(lessonId),
+  );
+});
+
+test("readSeedTarget finds only what the seed did not write", async () => {
+  const fresh = await createTestDb();
+  await seed(fresh);
+  assert.deepEqual(await readSeedTarget(fresh), { nonSeedUsers: 0, unknownLessonIds: [] });
+
+  // "seedX" would pass a LIKE 'seed_%' (the _ is a wildcard); starts_with does not.
+  await fresh.insert(t.users).values([
+    { clerkUserId: "user_2abc", email: "rivka@example.com", name: "Rivka" },
+    { clerkUserId: "seedX", email: "yael@example.com", name: "Yael" },
+  ]);
+  const [lesson] = await fresh.insert(t.lessons).values({ durationSec: 60 }).returning({ id: t.lessons.id });
+  assert.deepEqual(await readSeedTarget(fresh), { nonSeedUsers: 2, unknownLessonIds: [lesson.id] });
 });
 
 test("seed refuses to run in production", async () => {
