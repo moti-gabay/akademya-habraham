@@ -11,9 +11,13 @@ const NEW_USER_PORT = 3102;
 // or a real media account, even when a local .env selects one (Next keeps a variable that
 // is already set, even to ""). The fake "encoding" is kept short.
 const env = { DATA_SOURCE: "mock", DATABASE_URL: "", MEDIA_PROVIDER: "", FILE_STORAGE: "", FAKE_MEDIA_PROCESSING_MS: "500" };
+// How long each server may take to answer /api/healthz. 180 s on CI; a slow local machine
+// (WSL measured 237–296 s with all three starting at once) sets E2E_SERVER_TIMEOUT_MS.
+const SERVER_TIMEOUT = Number(process.env.E2E_SERVER_TIMEOUT_MS) || 180_000;
 
 export default defineConfig({
   testDir: "tests",
+  globalSetup: "./tests/global-setup.ts",
   // The mock repos keep progress in server memory, so tests share state: run them in order.
   workers: 1,
   fullyParallel: false,
@@ -61,7 +65,7 @@ export default defineConfig({
       url: `http://localhost:${PORT}/api/healthz`,
       env,
       reuseExistingServer: !process.env.CI,
-      timeout: 180_000,
+      timeout: SERVER_TIMEOUT,
     },
     {
       // Always from an empty output directory: a dev cache left by an earlier, interrupted
@@ -72,14 +76,14 @@ export default defineConfig({
       // overwrite each other's files, and the dev server's pages reloaded in a loop.
       env: { ...env, MOCK_ROLE: "admin", NEXT_DIST_DIR: ".next-e2e-dev" },
       reuseExistingServer: !process.env.CI,
-      timeout: 180_000,
+      timeout: SERVER_TIMEOUT,
     },
     {
       command: `rm -rf .next-e2e-newuser && pnpm dev -p ${NEW_USER_PORT}`,
       url: `http://localhost:${NEW_USER_PORT}/api/healthz`,
       env: { ...env, MOCK_USER: "new", NEXT_DIST_DIR: ".next-e2e-newuser" },
       reuseExistingServer: !process.env.CI,
-      timeout: 180_000,
+      timeout: SERVER_TIMEOUT,
     },
   ],
 });

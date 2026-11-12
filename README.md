@@ -24,6 +24,7 @@ pnpm typecheck
 pnpm build            # before a pull request: STRICT_STATIC_PARAMS=1 DATA_SOURCE=mock pnpm build
 pnpm test:e2e         # Playwright: 375px and 1280px, Hebrew and English, axe, screenshots (screenshots compare locally only, not in CI)
 pnpm test:e2e --update-snapshots   # after an intended visual change
+E2E_SERVER_TIMEOUT_MS=420000 pnpm test:e2e   # on a slow machine: each server may take up to 7 min to start (default 180 s)
 ```
 
 Database (optional; the app defaults to mock data):
