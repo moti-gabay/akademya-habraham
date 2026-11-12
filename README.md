@@ -3,6 +3,7 @@
 Recorded Torah lessons for people studying toward conversion. Hebrew first (RTL), with English, Russian and Spanish.
 
 - Architecture and decisions: [`ARCHITECTURE.md`](ARCHITECTURE.md)
+- What stands between this site and real learners: [`LAUNCH.md`](LAUNCH.md)
 - Visual source of truth: [`design/final-sketch.pdf`](design/final-sketch.pdf) (page renders in `design/reference/`)
 
 Current state: the UI from the sketch (language selection, home, lesson player), public holiday pages and the admin catalog screens run on mock data by default, or on Postgres with `DATA_SOURCE=db`. No keys are needed for mock mode. Video hosting, search and billing are later milestones.
