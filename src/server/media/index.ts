@@ -24,6 +24,12 @@ function fakeProcessingMs(env: Env): number | undefined {
   return env.FAKE_MEDIA_PROCESSING_MS && ms >= 0 ? ms : undefined;
 }
 
+// For /api/healthz: the real provider is selected and every variable it needs is set,
+// including the token key that getMediaProvider leaves to playback time. Never the values.
+const BUNNY_VARS = ["BUNNY_LIBRARY_ID", "BUNNY_API_KEY", "BUNNY_PULL_ZONE_HOST", "BUNNY_TOKEN_SECURITY_KEY"] as const;
+export const mediaConfigured = (env: Env = process.env): boolean =>
+  mediaProviderName(env) === "bunny" && BUNNY_VARS.every((name) => Boolean(env[name]));
+
 export function getMediaProvider(env: Env = process.env): MediaProvider {
   if (mediaProviderName(env) === "fake") return createFakeMediaProvider(fakeMediaState, { processingMs: fakeProcessingMs(env) });
   return createBunnyMediaProvider({

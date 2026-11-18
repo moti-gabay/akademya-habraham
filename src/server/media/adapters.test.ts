@@ -13,7 +13,7 @@ import {
   rewritePlaylist,
   verifyFakePlaybackToken,
 } from "./fake";
-import { fileStorageName, getFileStorage, getMediaProvider, mediaProviderName } from "./index";
+import { fileStorageName, getFileStorage, getMediaProvider, mediaConfigured, mediaProviderName } from "./index";
 import { createR2FileStorage } from "./r2";
 import { presignUrl } from "./sigv4";
 
@@ -230,6 +230,18 @@ test("the real services are opt-in, and a missing key is named without showing a
   assert.ok(getMediaProvider({}) && getFileStorage({}));
   // The playback key is not needed to start; uploads work without it.
   assert.ok(getMediaProvider({ MEDIA_PROVIDER: "bunny", BUNNY_LIBRARY_ID: "1", BUNNY_API_KEY: "k", BUNNY_PULL_ZONE_HOST: "h" }));
+});
+
+test("mediaConfigured: Bunny selected with every variable set, the token key included", () => {
+  const bunny = { MEDIA_PROVIDER: "bunny", BUNNY_LIBRARY_ID: "1", BUNNY_API_KEY: "k", BUNNY_PULL_ZONE_HOST: "h", BUNNY_TOKEN_SECURITY_KEY: "t" };
+  assert.equal(mediaConfigured(bunny), true);
+  for (const name of ["BUNNY_LIBRARY_ID", "BUNNY_API_KEY", "BUNNY_PULL_ZONE_HOST", "BUNNY_TOKEN_SECURITY_KEY"] as const) {
+    assert.equal(mediaConfigured({ ...bunny, [name]: "" }), false, name);
+  }
+  // Keys alone, the fakes, or no provider at all.
+  assert.equal(mediaConfigured({ ...bunny, MEDIA_PROVIDER: undefined }), false);
+  assert.equal(mediaConfigured({ MEDIA_PROVIDER: "fake" }), false);
+  assert.equal(mediaConfigured({}), false);
 });
 
 test("FAKE_MEDIA_PROCESSING_MS sets how long the fake encoding takes; anything else keeps the default", async () => {
