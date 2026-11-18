@@ -39,4 +39,8 @@ export default authMode === "clerk"
   ? clerkMiddleware((auth, request) => handle(request, async () => Boolean((await auth()).userId)))
   : (request: NextRequest) => handle(request, async () => true);
 
-export const config = { matcher: ["/((?!_next|_vercel|.*\\..*).*)"] };
+// Everything except Next's own files and static files by extension, so a page or API
+// address with a dot (a slug, /api/captions/…) still runs through here. API routes always do.
+export const config = {
+  matcher: ["/((?!_next|_vercel|[^?]*\\.(?:svg|vtt|ico|png|jpe?g|webp|gif|css|js|txt|xml|webmanifest|woff2?)$).*)", "/(api)(.*)"],
+};
