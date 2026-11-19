@@ -1,22 +1,17 @@
-// pnpm test:unit — which addresses the proxy runs on, compiled the way Next compiles the matcher.
+// pnpm test:unit — which addresses the proxy runs on, checked with Next's own matcher test helper.
 import assert from "node:assert/strict";
 import { readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { test } from "node:test";
-// Next's own matcher compiler, so the test cannot disagree with the build.
-import * as staticInfo from "next/dist/build/analysis/get-page-static-info";
+import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server";
 import { config } from "./proxy";
 
-// Cast: the function is exported at runtime but missing from Next's type declarations.
-const { getMiddlewareMatchers } = staticInfo as unknown as {
-  getMiddlewareMatchers?: (matchers: string[], nextConfig: object) => { regexp: string }[];
-};
-// After a Next upgrade that moves or renames it, fail the whole file rather than test nothing.
-if (typeof getMiddlewareMatchers !== "function") {
-  throw new Error("next/dist/build/analysis/get-page-static-info no longer exports getMiddlewareMatchers: update src/proxy.test.ts.");
+// The helper is experimental: after a Next upgrade that moves or renames it, fail the
+// whole file rather than test nothing.
+if (typeof unstable_doesMiddlewareMatch !== "function") {
+  throw new Error("next/experimental/testing/server no longer exports unstable_doesMiddlewareMatch: update src/proxy.test.ts.");
 }
-const matchers = getMiddlewareMatchers(config.matcher, {});
-const runs = (path: string) => matchers.some((matcher) => new RegExp(matcher.regexp).test(path));
+const runs = (path: string) => unstable_doesMiddlewareMatch({ config, url: `https://app.example.com${path}` });
 
 test("pages and API routes run through the proxy, dots included", () => {
   for (const path of [
@@ -25,6 +20,8 @@ test("pages and API routes run through the proxy, dots included", () => {
     "/en/path",
     "/he/holidays/purim",
     "/he/holidays/purim/lesson.v2",
+    "/he/path/x.php",
+    "/he/admin/lessons/v1.2",
     "/api/play",
     "/api/healthz",
     "/api/captions/lesson-1/he.vtt",
